@@ -1,0 +1,240 @@
+/**
+ * Create By WangSheng on 2020/05/09 常用scss mixin 封装
+ */
+
+// 设置宽度
+@mixin w($w: 100%) {
+  width: $w;
+};
+
+// 设置高度
+@mixin h($h: 100%) {
+  height: $h;
+};
+
+// 设置宽高
+@mixin wh($w:100%, $h: 100%) {
+  @include w($w);
+  @include h($h);
+};
+
+// 设置浮动
+@mixin float($type: left) {
+  float: $type;
+};
+
+// 设置盒模型
+@mixin display($type: block) {
+  display: $type;
+};
+
+// flex盒模型
+@mixin flex($type: row, $h: flex-start, $v: flex-start) {
+  @include display(flex);
+  // 默认值不重复
+  @if ($type != row) {
+    flex-direction: $type;
+  }
+  // 默认值不重复
+  @if ($h != flex-start) {
+    justify-content: $h;
+  }
+  // 默认值不重复
+  @if ($v != flex-start) {
+    align-items: $v;
+  }
+};
+
+// flex居中
+@mixin flexCenter($type: row) {
+  @include flex($type);
+  align-items: center;
+  justify-content: center;
+};
+
+// 设置文字颜色
+@mixin color($color, $alpha: 1) {
+  @if ($alpha == 1) {
+    color: $color;
+  }
+  @else {
+    color: rgba($color, $alpha);
+  }
+};
+
+// 设置字体大小
+@mixin fontSize($size: 14px) {
+  font-size: $size;
+};
+
+// 设置表框
+@mixin border($color, $width: 1px, $style: solid, $radius: null) {
+  border: {
+    style: $style;
+    width: $width;
+    color: $color;
+  }
+  @if ($radius != null) {
+    border-radius: $radius;
+  }
+};
+
+// 边框圆角
+@mixin borderRadius($radius: 50%) {
+  border-radius: $radius;
+};
+
+// 设置文字对齐方式
+@mixin textAlign($type: center) {
+  text-align: $type;
+};
+
+// 设置行高
+@mixin lh($h) {
+  line-height: $h;
+};
+
+// 文字不能被选中
+@mixin notSelect {
+  user-select: none;
+};
+
+// 设置padding值
+@mixin padding($padding) {
+  padding: $padding;
+};
+
+// 左内边距
+@mixin paddingLeft($left) {
+  padding-left: $left;
+};
+
+// 右内边距
+@mixin paddingRight($right) {
+  padding-right: $right;
+};
+
+// 上内边距
+@mixin paddingTop($top) {
+  padding-top: $top;
+};
+
+// 下内边距
+@mixin paddingBottom($bottom) {
+  padding-bottom: $bottom;
+};
+
+// 设置margin值
+@mixin margin($margin: 0 auto)  {
+  margin: $margin;
+};
+
+// 左边距
+@mixin marginLeft($left) {
+  margin-left: $left;
+};
+
+// 右边距
+@mixin marginRight($right) {
+  margin-right: $right;
+};
+
+// 上边距
+@mixin marginTop($top) {
+  margin-top: $top;
+};
+
+// 下边距
+@mixin marginBottom($bottom) {
+  margin-bottom: $bottom;
+};
+
+// 设置背景色
+@mixin bc($color, $alpha: 1) {
+  @if ($alpha == 1) {
+    background-color: $color;
+  }
+  @else {
+    background-color: rgba($color, $alpha);
+  }
+};
+
+// 设置背景图片
+@mixin bim($url, $repeat: no-repeat) {
+  background: url($url) $repeat;
+};
+
+// 设置背景图片的大小
+@mixin bimSize($size...) {
+  background-size: $size;
+};
+
+// 设置背景图片的位置
+@mixin bimPosition($position...) {
+  background-position: $position;
+};
+
+// 设置定位
+@mixin absoulute($top: null, $left: null, $bottom: null, $right: null) {
+  position: absolute;
+  @if ($top != null) {
+    top: $top;
+  }
+  @if ($left != null) {
+    left: $left;
+  }
+  @if ($right != null) {
+    right: $right;
+  }
+  @if ($bottom != null) {
+    bottom: $bottom;
+  }
+};
+
+// 清除浮动
+@mixin clear {
+  &::after {
+    display: block;
+    content: '';
+    clear: both;
+    visibility: hidden;
+  }
+};
+
+// 单行文本省略号
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+};
+
+// 多行文本显示省略号
+@mixin ellipsisLine ($line: 2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  @include display(-webkit-box);
+  -webkit-line-clamp: $line;
+  -webkit-box-orient: vertical;
+};
+
+// 设置手势
+@mixin cursor($type: pointer) {
+  cursor: $type;
+};
+
+// 设置自定义滚动条
+// @mixin scrollBar($width: 6px, $color: #fff) {
+//   ::-webkit-scrollbar {
+//     @include wh($width, $width);
+//   }
+//   ::-webkit-scrollbar-track {
+//     @include borderRadius($width / 2);
+//     @include bc($color);
+//     @include boxShadow(inset 0 0 5px rgb($color));
+//   }
+//   ::-webkit-scrollbar-thumb {
+//     @include borderRadius($width / 2);
+//     @include bc($color);
+//     @include boxShadow(inset 0 0 5px rgb($color));
+//   }
+// }

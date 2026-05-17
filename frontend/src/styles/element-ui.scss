@@ -1,0 +1,252 @@
+@import './mixin';
+@import './theme.scss';
+@import './setColor.scss';
+
+.customized-notify-message {
+  border: none;
+  border-radius: unset;
+}
+// 消息弹窗去除边框
+.el-message-box {
+  border: none;
+}
+// 覆盖element-ui的button样式
+.el-button {
+  border-radius: 1;
+}
+// 禁用输入框
+.el-input.is-disabled {
+  .el-input__inner {
+    // border: {
+    //   width: 0;
+    //   radius: 0;
+    // }
+  }
+}
+// 覆盖表单样式
+.el-form {
+  // 输入框
+  @at-root .el-input {
+    @at-root .el-input__inner {
+      // border: {
+      //   width: 0;
+      //   radius: 0;
+      // }
+    }
+  }
+
+  // 禁用输入框
+  @at-root .el-input.is-disabled {
+    @at-root .el-input__inner {
+      // border: {
+      //   width: 0;
+      //   radius: 0;
+      // }
+    }
+  }
+}
+
+// 下拉菜单
+.el-dropdown-menu {
+  border: 0;
+  border-radius: 0;
+  @include paddingTop(0);
+  @include paddingBottom(0);
+  .el-dropdown-menu__item {
+    padding: 0 5px;
+    span {
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      margin: 0 10px;
+    }
+    p {
+      width: 100%;
+      height: 100%;
+      margin: 0 10px;
+    }
+  }
+}
+// 下拉菜单结合树形结构
+.el-dropdown-menu {
+  .el-tree-node__content,
+  .el-tree-node__children {
+    height: auto;
+    line-height: 32px;
+  }
+  .el-tree-node__content {
+    .el-tree-node__expand-icon {
+      width: 40px;
+    }
+    .el-tree-node__loading-icon {
+      display: none !important;
+    }
+  }
+}
+
+// 表格样式
+.el-table {
+  font-size: 14px;
+  // 表格头部样式
+  thead {
+    :first-child {
+      &.is-leaf {
+        border-left: none;
+        border-right: none;
+      }
+    }
+    th {
+      font-size: 16px;
+      &.is-leaf {
+        border-right: none;
+      }
+    }
+  }
+  // 表格内容样式
+  tbody {
+    tr {
+      @extend .el-table;
+      &.el-table__row {
+        td {
+          border-right: none;
+        }
+        &:nth-child(odd) {
+          td {
+            border-right: none;
+          }
+        }
+        // 去掉多余的线条
+        :first-child {
+          border-left: none;
+        }
+      }
+    }
+  }
+  .el-table__body-wrapper {
+    // height: calc(100% - 48px) !important;
+  }
+  &::before,
+  &::after {
+    @include display(none);
+  }
+  // 内部的Table
+  td {
+    border-bottom: none;
+  }
+}
+.el-table--enable-row-transition .el-table__body td {
+  transition: none;
+}
+// tab页面
+.el-tabs {
+  &.flex-tab {
+    @include h;
+    @include flex(column);
+    .el-tabs__content {
+      flex: 1;
+    }
+    .el-tab-pane {
+      @include wh;
+    }
+  }
+  &__active-bar {
+    height: 0px;
+  }
+
+  &__item {
+    height: 40px;
+    line-height: 40px;
+    padding: 0 10px !important;
+    font-size: 16px;
+  }
+
+  &__nav-wrap {
+    &::after {
+      height: 0px;
+    }
+  }
+}
+// 弹窗样式
+.el-dialog {
+  position: relative;
+  // 弹窗死角样式图片定位
+  .leftS {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .rightS {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .leftX {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
+  .rightX {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+
+  &__header {
+    padding: 10px 20px;
+    // background: $dialogTtlBgClr;
+  }
+
+  &__body {
+    padding: 20px;
+  }
+  &__headerbtn {
+    top: 14px;
+  }
+}
+
+.el-picker-panel {
+  border: none;
+}
+
+// 隐藏数字输入框上下按钮
+.el-input-number__decrease,
+.el-input-number__increase {
+  border: none;
+}
+
+// 树形结构菜单列表样式（非颜色）
+.el-tree {
+  font-size: 14px;
+  /deep/ .el-tree-node__children {
+    .el-tree-node__content {
+      padding-left: 10px !important;
+    }
+    .el-tree-node__children .el-tree-node__content {
+      padding-left: 20px !important;
+    }
+  }
+  /deep/ .custom-tree-node {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    line-height: 28px;
+    .node-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin: {
+        left: 6px;
+      }
+    }
+  }
+  /deep/ .el-tree-node__expand-icon {
+    display: none;
+  }
+}
+
+.el-form--inline .el-form-item:last-child {
+  margin-right: 0;
+}

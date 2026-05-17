@@ -1,0 +1,144 @@
+/**
+ * Create By WangSheng on 2020/05/09
+ * 样式重置
+ */
+@import '~@/styles/mixin';
+
+// body全局样式
+body {
+  font-family: "微软雅黑", "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  user-select: none;
+}
+
+// a标签全局样式
+a {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+// 设置盒模型
+div, p, h1, h2, h3, h4, h5, h6, main, section, aside, header, footer {
+  box-sizing: border-box;
+}
+
+// 设置默认内外边距
+ol,
+ul,
+dl {
+  @include margin(0);
+  @include padding(0);
+}
+
+// 设置默认列表样式
+ol,
+ul,
+dl,
+li,
+dt,
+dd {
+  list-style: none;
+}
+
+// 居中对齐
+.text-center {
+  @include textAlign;
+}
+
+// 以0到30为区间，5为间隔，设置内外及四个方位边距值
+// margin-0 至 margin-30 padding-o 至 padding-30
+@for $i from 0 through 6 {
+  // 外全
+  .margin-#{$i * 5} {
+    @include margin($i * 5px);
+  }
+  // 外上
+  .margin-top-#{$i * 5} {
+    @include marginTop($i * 5px);
+  }
+  // 外左
+  .margin-left-#{$i * 5} {
+    @include marginLeft($i * 5px);
+  }
+  // 外右
+  .margin-right-#{$i * 5} {
+    @include marginRight($i * 5px);
+  }
+  // 外下
+  .margin-bottom-#{$i * 5} {
+    @include marginBottom($i * 5px);
+  }
+  // 内全
+  .padding-#{$i * 5} {
+    @include padding($i * 5px);
+  }
+  // 内上
+  .padding-top-#{$i * 5} {
+    @include paddingTop($i * 5px);
+  }
+  // 内左
+  .padding-left-#{$i * 5} {
+    @include paddingLeft($i * 5px);
+  }
+  // 内右
+  .padding-right-#{$i * 5} {
+    @include paddingRight($i * 5px);
+  }
+  // 内下
+  .padding-bottom-#{$i * 5} {
+    @include paddingBottom($i * 5px);
+  }
+}
+
+// 清除浮动
+.clearfix {
+  &::after {
+    @include display(block);
+    content: '';
+    clear: both;
+    visibility: hidden;
+  }
+}
+
+// 输入文字都为白色
+// input,
+// textarea {
+//   // color: #fff !important;
+// }
+
+// 新手引导界面
+.new_hand_wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #FFFB8E;
+  border-radius: 10px;
+  font-size: 24px;
+  color: #FFFB8E;
+  text-align: center;
+  background: rgba($color: #000000, $alpha: .5);
+}
+
+// 任务节点文字
+.svg-text-class {
+  position: absolute;
+  width: 90%;
+  height: 100%;
+  top: 0;
+  left: 8%;
+  // display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-all;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-box-align: center;
+}
+// .el-input__inner{
+//   background: #1D2822 !important;
+// }

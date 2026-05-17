@@ -1,0 +1,455 @@
+/**
+ * Create By Leo 2022/10/31
+ * 本文件为集中定义界面所有自定义颜色，以方便后期做主题切换修改等操作
+ * 引入配置的主题色变量进入设置
+ */
+
+@import './mixin';
+@import './theme.scss';
+
+:root {
+  //bg
+  --zg-bg: #1d2926;
+  // base
+  --white-color: $normalWordsClr;
+  // tree
+  --tree-bg: #435b44;
+  --tree-hover-bg: #314b41;
+  --tree-checked: #40ab6d;
+  //button
+  --button-add: #319b85;
+  --button-edit: #d7a625;
+  --button-delete: #ca4c4d;
+  --button-upload: #30ad52;
+  --button-info: #6e7f91;
+  --button-search: #407c39;
+  --button-reset: #ae975e;
+  --button-advance: #4aacda;
+  --button-download: #37a9a8;
+  //popover
+  --popover-bg: #1d2926;
+  --popover-border-color: #3e524b;
+
+  //select
+  --select-options-hover: rgba(56, 74, 57, 0.6);
+  --select-option-selected: #41a245;
+  //input
+  --input-bg: #233129;
+  --input-border: #435b44; //zgContent
+  --normal-border-color: #435b44;
+  --normal-search-skin: rgba(58, 80, 59, 0.5);
+  --normal-skin: #233129;
+}
+// 提示信息背景色
+.customized-notify-message {
+  @include bc(#1f2b25);
+}
+// 消息弹窗背景色
+// .el-message-box {
+//   @include bc($conterBg);
+// }
+// 覆盖element-ui的button样式
+.el-button {
+  // 默认按钮
+  &.el-button--default {
+    @include color($normalWordsClr);
+    border: {
+      color: #1d6641;
+    }
+    @include bc($primaryBtnBg !important);
+    border-color: $primaryBtnBg !important;
+  }
+
+  // primary样式
+  &.el-button--primary {
+    border: {
+      color: $primaryBtnBg;
+    }
+    @include bc($primaryBtnBg);
+  }
+
+  // info样式
+  &.el-button--info {
+    border: {
+      color: $blueWordClr;
+    }
+    @include bc($infoBtnBg);
+    color: $blueWordClr;
+  }
+}
+// 富文本框
+.el-textarea.is-disabled .el-textarea__inner {
+  @include bc(rgba(255, 255, 255, 0.26));
+}
+// 禁用输入框
+.el-input.is-disabled {
+  .el-input__inner {
+    // @include color($normalWordsClr);
+    // @include bc($inputBgClr);
+  }
+}
+// 覆盖表单样式
+.el-form {
+  .el-form-item__label {
+    // @include color($normalWordsClr);
+  }
+  .el-input.is-disabled .el-input__inner {
+    @include bc(rgba(255, 255, 255, 0.26));
+  }
+
+  // 输入框
+  @at-root .el-input {
+    @at-root .el-input__inner {
+      // @include color($normalWordsClr);
+      // @include bc($inputBgClr);
+    }
+  }
+
+  // 禁用输入框
+  @at-root .el-input.is-disabled {
+    @at-root .el-input__inner {
+      // @include color($normalWordsClr);
+      // @include bc($inputBgClr);
+    }
+  }
+
+  // 文本域
+  @at-root .el-textarea {
+    @at-root .el-textarea__inner {
+      @extend .el-input__inner;
+    }
+  }
+
+  // 浮选框
+  @at-root .el-checkbox {
+    @at-root .el-checkbox__input {
+      @at-root .el-checkbox__label {
+        // @include color($normalWordsClr);
+      }
+      // 浮选框内部样式
+      @at-root .el-checkbox__inner {
+        border: {
+          color: #719681;
+        }
+        @include bc($defaultBtnBgClr);
+      }
+      // 浮选框勾选样式
+      &.is-checked {
+        .el-checkbox__inner {
+          @extend .el-checkbox__inner;
+        }
+
+        // & + .el-checkbox__label {
+        //   @extend .el-checkbox__label;
+        // }
+      }
+      // 浮选框聚焦样式
+      &.is-focus {
+        .el-checkbox__inner {
+          @extend .el-checkbox__inner;
+        }
+      }
+    }
+  }
+}
+
+// 下拉菜单
+.el-dropdown-menu {
+  .el-dropdown-menu__item {
+    &:hover {
+      @include color($normalWordsClr);
+      @include bc($currentRow);
+    }
+  }
+}
+// 树状图
+.el-tree {
+  // @include bc($conterBg);
+  .is-current > .el-tree-node__content,
+  .el-tree-node:focus > .el-tree-node__content,
+  .el-tree-node__content:hover {
+    // @include bc(#0e4788);
+  }
+}
+// 下拉选择菜单
+.el-dropdown-menu {
+  .el-tree-node__content,
+  .el-tree-node__children {
+    @include color($normalWordsClr);
+  }
+}
+
+// 表格
+.el-table {
+  // @include bc($conterBg);
+  // border: 1px solid $currentRow;
+  // 滚动条
+  ::-webkit-scrollbar-thumb {
+    @include bc(#585858);
+  }
+  thead {
+    @include color($tableHeaderClr);
+    tr {
+      @include bc($tableHeaderBg);
+      @include bimPosition(center);
+      @include bimSize(100% 100%);
+    }
+    th {
+      // background: repeating-linear-gradient(310deg, #001c30, #001c30 2px, #003a64 2px, #003a64 5px);
+      @include bc(transparent);
+      &.is-leaf {
+        border-bottom: 1px solid $tableBorderClr;
+        border-left: 1px solid $tableBorderClr;
+      }
+      &.gutter:last-of-type {
+        border-bottom: 1px solid $tableBorderClr;
+      }
+    }
+  }
+  tbody {
+    tr {
+      @extend .el-table;
+      &.el-table__row {
+        td {
+          @include color($tableWordClr);
+          border-bottom: 1px solid $tableBorderClr;
+          border-left: 1px solid $tableBorderClr;
+        }
+        &:nth-child(odd) {
+          td {
+            @include bc($tableOddBgClr, 0.00001);
+          }
+        }
+        &:nth-child(even) {
+          td {
+            @include bc($tableEvenBg, 1);
+            border-bottom: 1px solid $tableBorderClr;
+          }
+        }
+        &:hover {
+          td {
+            @include bc($navBg);
+            @include color($whiteWordClr);
+          }
+          .el-table__expand-icon {
+            color: $whiteWordClr;
+          }
+        }
+      }
+      &.current-row {
+        td {
+          @include bc(#2559b9 !important);
+        }
+      }
+    }
+  }
+  &::before {
+    @include bc(transparent);
+  }
+  .el-table__expanded-cell {
+    padding: 20px;
+  }
+  .el-table--border,
+  .el-table--group {
+    border: 1px solid $tableBorderClr;
+  }
+  // 内部的Table
+  &__expanded-cell:hover {
+    @include bc(#ebeef5 !important);
+  }
+  &__fixed-right::before,
+  .el-table__fixed::before {
+    @include bc(transparent);
+  }
+}
+.el-table--striped .el-table__body tr.el-table__row--striped.current-row td {
+  @include bc(#2559b9 !important);
+}
+.el-table--enable-row-transition .el-table__body td {
+  @include bc(#ebeef5);
+}
+// tab页面
+.el-tabs {
+  &.flex-tab {
+    .el-tabs__content {
+      border-top: 1px solid $currentRow;
+    }
+  }
+
+  &__item {
+    // @include color($tableWordClr);
+    border-radius: 6px;
+    &:hover {
+      @include color($whiteWordClr);
+      @include bc($navBg);
+    }
+
+    &.is-active {
+      @include color($whiteWordClr);
+      @include bc($navBg);
+    }
+  }
+}
+// 弹窗
+.el-dialog {
+  // @include bc($dialogContBgClr);
+  &__header {
+    height: $dialogHeaderHei;
+    background: linear-gradient(#fff, #deebf5);
+    // background-size: 100% 100%;
+    padding: 0 !important;
+  }
+  &__title {
+    background: url('~@/assets/mainPage/dialog_header_title_bg.png') left no-repeat;
+    height: 100%;
+    @include color(#366a94);
+    font-size: 16px;
+    font-weight: bold;
+    display: inline-block;
+    width: 200px;
+    line-height: $dialogHeaderHei;
+    text-indent: 45px;
+  }
+
+  &__body {
+    .el-table tbody tr:nth-child(even) td {
+      // @include bc($dialogContBgClr, 1);
+    }
+  }
+}
+// 选择面板
+.el-picker-panel {
+  .el-input__inner {
+    @include color(#666666);
+  }
+}
+// 提示框
+.el-popover {
+  @include bc(#1f2b25);
+}
+// 树形菜单
+.newAssessDialog .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+  @include bc(#324a32);
+}
+// 进度条
+.el-progress {
+  &__text {
+    @include color($normalWordsClr);
+  }
+}
+// 数字输入框样式
+// .el-input-number__decrease,
+// .el-input-number__increase {
+//   @include bc($defaultBtnBgClr);
+//   @include color($normalWordsClr);
+// }
+// 日期选择框
+.el-date-picker {
+  .el-input__inner {
+    @include color($normalWordsClr);
+  }
+}
+
+// 处理流程搭建画布区域下部弹出框颜色配置
+.bottom-container {
+  .el-tabs__header {
+    @include bc($centerTtlBgClr !important);
+  }
+  .el-tabs .el-tabs__content {
+    @include bc($conterBg);
+    @include color($whiteWordClr);
+  }
+  .el-tabs--border-card > .el-tabs__header .el-tabs__item {
+    // @include color($tableWordClr);
+    .is-active {
+      @include bc($navBg);
+      @include color($whiteWordClr);
+    }
+  }
+  .el-tabs--border-card > .el-tabs__header .el-tabs__item:not(.is-disabled):hover {
+    // @include color($navBg);
+    @include color($whiteWordClr);
+  }
+  .el-tabs__content {
+    .el-tab-pane {
+      .log-area {
+        @include bc(transparent);
+        @include color($normalWordsClr);
+      }
+    }
+  }
+}
+
+// 组件树形结构列表颜色样式配置
+.components-tree {
+  .leafNode {
+    .node::before {
+      @include bc(transparent);
+    }
+    &:hover span.node {
+      border: 1px solid #1c9bec !important;
+      &::before {
+        @include bc(#1c9bec);
+      }
+    }
+  }
+}
+
+// 消息弹框
+// .el-message-box {
+//   @include bc($messageBoxBgClr !important);
+
+//   .el-message-box__title {
+//     @include color($normalWordsClr);
+//   }
+
+//   .el-message-box__message {
+//     @include color($normalWordsClr);
+//   }
+// }
+
+// 级联下拉框样式
+.el-cascader {
+  .el-cascader__label {
+    @include color($normalWordsClr);
+    span {
+      @include color($normalWordsClr);
+    }
+  }
+}
+
+// 树形结构菜单列表样式（颜色）
+.el-tree {
+  // @include color($normalWordsClr);
+  @include bc(none);
+  /deep/ .el-tree-node:hover {
+    > .el-tree-node__content {
+      // @include color($normalWordsClr);
+      @include bc($crtTreeNode !important);
+    }
+  }
+  /deep/ .el-tree-node.is-current {
+    > .el-tree-node__content {
+      @include bc($crtTreeNode !important);
+      // @include color($normalWordsClr);
+    }
+  }
+  /deep/ .el-tree-node:focus > .el-tree-node__content {
+    @include bc($crtTreeNode !important);
+    // @include color($normalWordsClr);
+  }
+  .addNode {
+    @include color(rgb(56, 163, 109));
+  }
+  .removeNode {
+    @include color(rgb(245, 176, 29));
+  }
+}
+
+/**
+  时间选择器输入框文字颜色
+*/
+.el-picker-panel .el-input__inner,
+.el-picker-panel .el-textarea__inner {
+  @include color(#fff);
+}

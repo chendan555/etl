@@ -1,0 +1,68 @@
+/**
+ * Created By Leo on 2020/08/06
+ * 树形结构菜单样式（菜单前有虚线连接）
+ * 原理：
+ * 通过设置节点::before和::after的样式控制虚线的样式和显隐等属性
+ * 使用：
+ * 在需要使用该样式的树形菜单组件节点上class属性添加tree-line
+ * 可根据实际情况和界面修改样式以达到样式统一
+ */
+
+/deep/ .tree-line {
+  .el-tree-node {
+    position: relative;
+    // padding-left: 16px;
+  }
+  .el-tree-node__children {
+    padding-left: 8px;
+    .el-tree-node__children {
+      padding-left: 26px !important;
+    }
+    > .el-tree-node__children {
+      padding-left: 26px !important;
+    }
+  }
+  .el-tree-node::before {
+    content: '';
+    height: 100%;
+    width: 1px;
+    position: absolute;
+    left: 5px;
+    top: -26px;
+    border-width: 1px;
+    border-left: 1px solid #28888a;
+  }
+  .el-tree-node:last-child::before {
+    height: 38px;
+  }
+  .el-tree-node::after {
+    content: '';
+    height: 20px;
+    width: 12px;
+    position: absolute;
+    left: 5px;
+    top: 12px;
+    border-width: 1px;
+    border-top: 1px solid #28888a;
+  }
+  & > .el-tree-node::before {
+    border-left: none;
+  }
+  & > .el-tree-node::after {
+    border-top: none;
+  }
+  .el-tree-node__expand-icon {
+    font-size: 14px;
+    // display: none;
+    &.is-leaf {
+      color: transparent;
+      // display: none;
+    }
+  }
+}
+/deep/ .el-tree .el-tree-node__children .el-tree-node__content {
+  padding-left: 18px !important;
+}
+// /deep/ .tree-line>.el-tree-node>.el-tree-node__content>.el-tree-node__expand-icon{
+//     display: block;
+// }

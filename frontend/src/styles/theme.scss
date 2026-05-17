@@ -1,0 +1,61 @@
+// 页面头部区域背景色
+$headerBg: var(--headerBg, #253025);
+// 页面内容区域背景色
+$conterBg: var(--conterBg, #e1eaf2);
+// 页面侧边标题区域背景色
+$sideBarTtlBgClr: var(--sideBarTtlBgClr, #2b4538);
+// 当前树形菜单节点背景配色
+$crtTreeNode: var(--crtTreeNode, #dce7f3);
+// 中心区标题背景配色
+$centerTtlBgClr: var(--centerTtlBgClr, #334536);
+// 卡片标题区域背景配色
+$cardTtlBgClr: var(--cardTtlBgClr, #23342b);
+// 卡片内容区域背景配色
+$cardContBgClr: var(--cardContBgClr, #2b4538);
+// 输入框背景配色
+$inputBgClr: var(--inputBgClr, #1d2822);
+// 当前菜单背景配色
+$crtNavBgClr: var(--crtNavBgClr, #345740);
+// 当前页面背景配色
+$crtPageBgClr: var(--crtPageBgClr, #435b44);
+// 表格偶数行背景配色
+$tableOddBgClr: var(--tableOddBgClr, #2b4538);
+// 菜单栏字体配色
+$mainNavClr: var(--mainNavClr, #fefcb9);
+// 时间字体配色
+$timeClr: var(--timeClr, #b5d0c3);
+// 一般字体配色
+$normalWordsClr: var(--normalWordsClr, #fff);
+// 页面箭头配色
+$pageArrowClr: var(--pageArrowClr, #fff);
+// 弹窗标题区背景配色
+$dialogTtlBgClr: var(--dialogTtlBgClr, #394e39);
+// 弹窗内容区背景配色
+$dialogContBgClr: var(--dialogContBgClr, #1f2b25);
+$mainPageItemBgClr: var(--mainPageItemBgClr, #132f20);
+$mainPageItemTtlBgClr: var(--mainPageItemTtlBgClr, #2b4538);
+$defaultBtnBgClr: var(--defaultBtnBgClr, #1d6641);
+$messageBoxBgClr: var(--messageBoxBgClr, #1d2822);
+$currentRow: var(--currentRow, #061730);
+$dropMenuBgClr: var(--dropMenuBgClr, #253025);
+$tableBorder: var(--tableBorder, #fff);
+$flowBgClr: var(--flowBgClr, #082b5f);
+$expandTable: var(--expandTable, #003a64); //扩展Table
+
+// 武汉数据接入处理项目配色
+$mainBg: var(--mainBg, #e1eaf2);
+$contBg: var(--contBg, #fff);
+$primaryBtnBg: var(--primaryBtnBg, #0288f4);
+$tableEvenBg: var(--tableEvenBg, #f2f5f9);
+$infoBtnBg: var(--infoBtnBg, #e5f3fe);
+$blueWordClr: var(--blueWordClr, #0288f4);
+$redWordClr: var(--redWordClr, #ff4849);
+$tableHeaderBg: var(--tableHeaderBg, #e4effa);
+$tableHeaderClr: var(--tableHeaderClr, #354859);
+$tableBorderClr: var(--tableBorderClr, #ccc);
+$tableWordClr: var(--tableWordClr, #333333);
+$formLabelClr: var(--formLabelClr, #666666);
+$whiteWordClr: var(--whiteWordClr, #fff);
+$navBg: var(--navBg, #366d94);
+$pageCardBg: var(--pageCardBg, #dfe5e9);
+$dialogHeaderHei: var(--dialogHeaderHei, 48px);

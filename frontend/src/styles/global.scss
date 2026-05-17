@@ -1,0 +1,173 @@
+/**
+ * Created By Leo
+ * 定义全局样式
+ */
+
+@import '@/styles/theme.scss';
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.08);
+}
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+// 最高高度
+.maxHeight {
+  margin: 80px auto;
+  max-height: calc(100% - 160px);
+}
+// 元素水平放置，两头对齐
+.item_horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  .itemdiv {
+    flex: 1;
+    text-align: center;
+  }
+}
+// 元素垂直居中放置
+.item_vertical {
+  font-size: 14px;
+  .itemdiv {
+    display: flex;
+    align-items: center;
+    text-align: center;
+  }
+}
+// 信息展示布局样式
+.infordiv > .item {
+  display: flex;
+  color: $normalWordsClr;
+  line-height: 40px;
+  height: auto;
+  align-items: flex-start;
+  width: 100%;
+  .label {
+    width: 80px;
+    text-align: right;
+    margin-right: 5px;
+  }
+  .value {
+    flex: 1;
+  }
+}
+
+// 下拉框
+.drop-menu > li {
+  text-indent: 0;
+  > .icon {
+    margin: 0 5px;
+  }
+}
+// 修改输入框默认样式
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+// 设置main元素内边距
+.el-main {
+  padding: 0;
+}
+
+// 处理流程搭建画布区域下部弹出框非颜色样式配置
+.bottom-container {
+  .el-tabs {
+    height: 100%;
+    border: none;
+  }
+  .el-tabs__header {
+    border-bottom: none;
+  }
+  .el-tabs .el-tabs__content {
+    height: calc(100% - 37px);
+    overflow: hidden;
+    overflow-y: auto;
+    padding: 10px;
+  }
+  .el-tabs .el-tabs__item {
+    height: 36px;
+    line-height: 36px;
+    margin-top: 6px;
+    border: none;
+  }
+  .el-tabs .el-tabs__item span {
+    display: flex;
+    align-items: center;
+  }
+  .el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+  }
+  .el-tabs__content {
+    padding: 0;
+    height: calc(300px - 41px);
+
+    .el-tab-pane {
+      height: 100%;
+
+      .log-area {
+        height: 100%;
+        width: 100%;
+        resize: none;
+        border: none;
+        outline: none;
+        padding: 5px;
+      }
+    }
+  }
+}
+
+// 组件树形结构列表非颜色样式配置
+.components-tree {
+  .el-tree-node__content,
+  .el-tree-node {
+    min-height: 38px !important;
+    // background: #1F2B25 !important;
+  }
+
+  .leafNode {
+    .node::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 3px;
+      border-radius: 2px;
+      padding: 13px 2px;
+    }
+  }
+}
+
+// 表格操作栏
+.table-operation {
+  span {
+    margin-right: 10px;
+    font-size: 18px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+// 消息弹框
+.el-message-box {
+  border: none !important;
+}
+
+// 级联下拉框样式
+.el-cascader {
+  width: 100%;
+}
