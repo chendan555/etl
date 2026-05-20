@@ -28,6 +28,9 @@ public class Transformation {
 
     private String remark;
 
+    /** 绑定目标表名，多表逗号分隔 */
+    private String bindTableNames;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 

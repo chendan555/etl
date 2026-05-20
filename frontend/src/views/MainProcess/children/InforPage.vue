@@ -95,7 +95,7 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 0 5px;
-    background: #2b4538;
+    background: $sideBarTtlBgClr;
     > div {
       display: flex;
       align-items: center;

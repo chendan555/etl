@@ -1,39 +1,110 @@
 package com.gx.etl.operator.core;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.gx.etl.flow.entity.OperatorType;
+import com.gx.etl.flow.mapper.OperatorTypeMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Registry of all operators. Auto-discovers @Component annotated operators.
+ * Registry of all operators. Auto-discovers @Component annotated operators
+ * and dynamically uploaded operators from database.
  */
 @Component
 public class OperatorRegistry {
 
+    private static final Logger log = LoggerFactory.getLogger(OperatorRegistry.class);
+    private static final String CUSTOM_PACKAGE = "com.gx.etl.operators.custom";
+    private static final String CUSTOM_DIR = "operators/custom";
+
     private final Map<String, AbstractOperator> operatorMap = new LinkedHashMap<>();
     private final List<AbstractOperator> operatorList;
+    private final OperatorTypeMapper operatorTypeMapper;
 
-    public OperatorRegistry(List<AbstractOperator> operators) {
+    public OperatorRegistry(List<AbstractOperator> operators, OperatorTypeMapper operatorTypeMapper) {
         this.operatorList = operators;
+        this.operatorTypeMapper = operatorTypeMapper;
     }
 
     @PostConstruct
     public void init() {
+        // 1. 注册 Spring @Component 算子
         for (AbstractOperator op : operatorList) {
             operatorMap.put(op.getId(), op);
+        }
+
+        // 2. 加载数据库中动态上传的算子
+        loadDynamicOperators();
+    }
+
+    /**
+     * 从数据库加载动态上传的算子（com.gx.etl.operators.custom 包下的类）
+     */
+    private void loadDynamicOperators() {
+        try {
+            List<OperatorType> ops = operatorTypeMapper.selectList(
+                    new LambdaQueryWrapper<OperatorType>()
+                            .eq(OperatorType::getStatus, 1)
+                            .isNotNull(OperatorType::getImplementation)
+                            .ne(OperatorType::getImplementation, "")
+                            .ne(OperatorType::getImplementation, "null"));
+
+            Path classesDir = Paths.get(CUSTOM_DIR, "classes");
+            if (!Files.exists(classesDir)) {
+                return;
+            }
+
+            URL url = classesDir.toAbsolutePath().toUri().toURL();
+            URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, this.getClass().getClassLoader());
+
+            for (OperatorType op : ops) {
+                String impl = op.getImplementation();
+                // 只加载 custom 包下的动态算子
+                if (impl == null || !impl.startsWith(CUSTOM_PACKAGE + ".")) {
+                    continue;
+                }
+                // 跳过已注册的（Spring @Component 优先）
+                if (operatorMap.containsKey(op.getPluginId())) {
+                    continue;
+                }
+                try {
+                    Class<?> clazz = classLoader.loadClass(impl);
+                    AbstractOperator operator = (AbstractOperator) clazz.newInstance();
+                    operatorMap.put(operator.getId(), operator);
+                    log.info("动态算子加载成功: pluginId={}, name={}, class={}", operator.getId(), operator.getName(), impl);
+                } catch (Exception e) {
+                    log.warn("动态算子加载失败: pluginId={}, class={}, error={}", op.getPluginId(), impl, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.error("加载动态算子失败", e);
         }
     }
 
     public AbstractOperator getOperator(String id) {
         AbstractOperator op = operatorMap.get(id);
         if (op == null) {
-            // 未注册的算子返回通用透传算子
             op = new GenericPassThroughOperator(id);
             operatorMap.put(id, op);
         }
         return op;
+    }
+
+    /**
+     * 动态注册算子
+     */
+    public void registerOperator(AbstractOperator op) {
+        operatorMap.put(op.getId(), op);
     }
 
     public Collection<AbstractOperator> getAll() {

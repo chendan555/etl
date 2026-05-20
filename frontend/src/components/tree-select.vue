@@ -233,6 +233,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+@import '@/styles/theme.scss';
 .tree-select-box {
   display: inline-block;
   position: relative;
@@ -253,7 +254,7 @@ export default {
     height: 300px;
     box-shadow: 0 0 5px gray;
     z-index: 100;
-    background-color: #ffffff;
+    background-color: $contBg;
     padding: 10px;
     display: flex;
     flex-direction: column;

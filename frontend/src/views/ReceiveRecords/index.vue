@@ -82,7 +82,8 @@ export default Vue.extend({
     pageIndex: 30,
     title: '引接记录查询',
     pageType: 'mainNav',
-    belongTo: 'receive'
+    belongTo: 'receive',
+    hidden: true
   },
   data() {
     return {

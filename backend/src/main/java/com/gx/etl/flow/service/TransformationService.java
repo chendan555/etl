@@ -25,22 +25,31 @@ public class TransformationService extends ServiceImpl<TransformationMapper, Tra
         if (categoriesId != null) {
             wrapper.eq(Transformation::getCategoriesId, categoriesId);
         }
-        wrapper.orderByDesc(Transformation::getUpdateTime);
+        wrapper.orderByDesc(Transformation::getCreateTime);
         Page<Transformation> result = page(page, wrapper);
         // 设置前端需要的字段
         for (Transformation trans : result.getRecords()) {
             trans.setTransformationId(trans.getId());
             trans.setDirectoryName("transformation/" + trans.getId());
+            if (trans.getCategoriesId() != null) {
+                trans.setBelongToTaskGroupId(trans.getCategoriesId().toString());
+            }
         }
         return result;
     }
 
-    public Long saveTransformation(String name, Long categoriesId, String flowJson, String imgUrl) {
+    public Long saveTransformation(String name, Long categoriesId, String flowJson, String imgUrl, String remark) {
+        return saveTransformation(name, categoriesId, flowJson, imgUrl, remark, null);
+    }
+
+    public Long saveTransformation(String name, Long categoriesId, String flowJson, String imgUrl, String remark, String bindTableNames) {
         Transformation trans = new Transformation();
         trans.setName(name);
         trans.setCategoriesId(categoriesId);
         trans.setFlowJson(flowJson);
         trans.setImgUrl(imgUrl);
+        trans.setRemark(remark);
+        trans.setBindTableNames(bindTableNames);
         trans.setStatus(0);
         trans.setCreateTime(LocalDateTime.now());
         trans.setUpdateTime(LocalDateTime.now());
@@ -48,12 +57,18 @@ public class TransformationService extends ServiceImpl<TransformationMapper, Tra
         return trans.getId();
     }
 
-    public void updateTransformation(Long id, String name, String flowJson, String imgUrl) {
+    public void updateTransformation(Long id, String name, String flowJson, String imgUrl, String remark) {
+        updateTransformation(id, name, flowJson, imgUrl, remark, null);
+    }
+
+    public void updateTransformation(Long id, String name, String flowJson, String imgUrl, String remark, String bindTableNames) {
         Transformation trans = getById(id);
         if (trans != null) {
             if (name != null) trans.setName(name);
             if (flowJson != null) trans.setFlowJson(flowJson);
             if (imgUrl != null) trans.setImgUrl(imgUrl);
+            if (remark != null) trans.setRemark(remark);
+            if (bindTableNames != null) trans.setBindTableNames(bindTableNames);
             trans.setUpdateTime(LocalDateTime.now());
             updateById(trans);
         }
@@ -83,5 +98,9 @@ public class TransformationService extends ServiceImpl<TransformationMapper, Tra
                 new LambdaQueryWrapper<ExecutionLog>()
                         .eq(ExecutionLog::getTransId, transId)
                         .orderByDesc(ExecutionLog::getCreateTime));
+    }
+
+    public Page<ExecutionLog> getExecutionLogPage(Page<ExecutionLog> page, LambdaQueryWrapper<ExecutionLog> wrapper) {
+        return executionLogMapper.selectPage(page, wrapper);
     }
 }

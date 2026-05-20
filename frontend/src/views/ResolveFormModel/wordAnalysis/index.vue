@@ -1114,6 +1114,7 @@ export default Vue.extend({
 });
 </script>
 <style lang="scss" scoped>
+@import '@/styles/theme.scss';
 .wordAnalysis {
   width: 100%;
   height: 100%;
@@ -1124,8 +1125,8 @@ export default Vue.extend({
     #wordContainer {
       width: calc(100% - 300px);
       height: calc(100% - 40px);
-      background: #fff;
-      color: #000;
+      background: $contBg;
+      color: $normalWordsClr;
       overflow: hidden;
       overflow-y: auto;
       overflow-x: auto;
@@ -1149,9 +1150,9 @@ export default Vue.extend({
       overflow: hidden;
       overflow-y: auto;
       position: relative;
-      background: #fff;
+      background: $contBg;
       padding: 5px;
-      color: #000;
+      color: $normalWordsClr;
     }
     .attributePart {
       width: 300px;

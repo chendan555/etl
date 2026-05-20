@@ -175,7 +175,7 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 0 5px;
-    background: #2b4538;
+    background: $sideBarTtlBgClr;
     > div {
       display: flex;
       align-items: center;
@@ -219,7 +219,7 @@ export default {
       }
       /deep/ .el-tree-node.is-current {
         .el-tree-node__content {
-          background: #324a32 !important;
+          background: $crtTreeNode !important;
         }
       }
     }

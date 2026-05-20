@@ -59,6 +59,7 @@ import ResolveFormModel from './modules/resolve-form-model';
 import MainPageStat from './modules/main-page';
 // 引接工具集接口模块
 import Toolset from './modules/toolset';
+import SampleCascade from './modules/sample-cascade';
 
 const projectManage = new ProjectManage();
 const configRelation = new ConfigRelation();
@@ -68,6 +69,7 @@ const tableRelation = new TableRelation();
 const resolveFormModel = new ResolveFormModel();
 const mainPageStat = new MainPageStat();
 const toolset = new Toolset();
+const sampleCascade = new SampleCascade();
 
 /**
  * 获取步骤名称
@@ -763,6 +765,42 @@ function execModel(params: any, execParams?: any) {
   return new Promise((resolve, reject) => {
     axios
       .post('/api/transNew/run.do', newConfig.formData, newConfig.config)
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
+ * 批量执行 - 一次传入多组参数，后端循环执行
+ * transformationId：流程ID
+ * params：参数列表 [{key: value, ...}, ...]
+ */
+function execBatchRun(transformationId: number, params: any[]) {
+  let formData = new FormData();
+  formData.append('transformationId', String(transformationId));
+  formData.append('params', JSON.stringify(params));
+  let config = {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    loadText: '批量执行中...'
+  };
+  return new Promise((resolve, reject) => {
+    axios
+      .post('/api/transNew/batchRun', formData, config)
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
+ * 取消批量执行任务
+ * @param taskId 任务ID
+ */
+function cancelBatch(taskId: string) {
+  let formData = new FormData();
+  formData.append('taskId', taskId);
+  return new Promise((resolve, reject) => {
+    axios
+      .post('/api/transNew/cancelBatch', formData)
       .then(resolve)
       .catch(reject);
   });
@@ -2043,6 +2081,45 @@ function getTypeInputHis(params?: any) {
   });
 }
 
+/**
+ * 获取绑定表列表（ETL数据库中的所有表名）
+ */
+function getBindTables() {
+  return new Promise((resolve, reject) => {
+    axios
+      .get('/api/transNew/bindTables')
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
+ * 获取绑定表的字段列表
+ * params：{ tableName: string }
+ */
+function getBindTableColumns(params: any) {
+  return new Promise((resolve, reject) => {
+    axios
+      .get('/api/transNew/bindTableColumns', { params })
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
+ * 更新流程绑定的表名
+ * params：{ transformationId: number, bindTableNames: string }
+ */
+function updateBindTables(params: any) {
+  let newConfig = transferToFormData(params);
+  return new Promise((resolve, reject) => {
+    axios
+      .post('/api/transNew/updateBindTables', newConfig.formData, newConfig.config)
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
 export default {
   getTypeInputHis,
   downloadFileToServer,
@@ -2130,6 +2207,8 @@ export default {
   SaveJSON,
   SaveJSONAuto,
   execModel,
+  execBatchRun,
+  cancelBatch,
   execRunResult,
   getInputOutputFields,
   getIputOutputFieldsName,
@@ -2192,7 +2271,11 @@ export default {
   tableRelation,
   resolveFormModel,
   mainPageStat,
-  toolset
+  toolset,
+  getBindTables,
+  getBindTableColumns,
+  updateBindTables,
+  sampleCascade
 };
 
 export var dataCenterService = new DataCenterService();

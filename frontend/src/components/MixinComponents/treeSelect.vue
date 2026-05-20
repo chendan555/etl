@@ -110,7 +110,7 @@ export default Vue.extend({
     }
     /deep/ .el-tree-node__content:hover,
     /deep/ .el-tree-node:focus > .el-tree-node__content {
-      background: #324a32;
+      background: $crtTreeNode;
     }
   }
 }

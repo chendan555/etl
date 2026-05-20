@@ -8,9 +8,11 @@ import com.gx.etl.flow.entity.OperatorType;
 import com.gx.etl.flow.mapper.OperatorCategoryMapper;
 import com.gx.etl.flow.mapper.OperatorTypeMapper;
 import com.gx.etl.operator.core.AbstractOperator;
+import com.gx.etl.operator.core.DynamicOperatorCompiler;
 import com.gx.etl.operator.core.OperatorRegistry;
 import com.gx.etl.operator.core.OperatorSchema;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,11 +24,13 @@ public class PluginManageController {
     private final OperatorCategoryMapper operatorCategoryMapper;
     private final OperatorTypeMapper operatorTypeMapper;
     private final OperatorRegistry operatorRegistry;
+    private final DynamicOperatorCompiler dynamicOperatorCompiler;
 
-    public PluginManageController(OperatorCategoryMapper operatorCategoryMapper, OperatorTypeMapper operatorTypeMapper, OperatorRegistry operatorRegistry) {
+    public PluginManageController(OperatorCategoryMapper operatorCategoryMapper, OperatorTypeMapper operatorTypeMapper, OperatorRegistry operatorRegistry, DynamicOperatorCompiler dynamicOperatorCompiler) {
         this.operatorCategoryMapper = operatorCategoryMapper;
         this.operatorTypeMapper = operatorTypeMapper;
         this.operatorRegistry = operatorRegistry;
+        this.dynamicOperatorCompiler = dynamicOperatorCompiler;
     }
 
     /**
@@ -82,8 +86,11 @@ public class PluginManageController {
     @GetMapping("/list")
     public Result<?> list(@RequestParam(required = false) String name,
                           @RequestParam(required = false) String type,
-                          @RequestParam(required = false) String status) {
+                          @RequestParam(required = false) String status,
+                          @RequestParam(required = false) String count) {
         try {
+            boolean needCount = "true".equals(count);
+
             // 查询所有分类
             List<OperatorCategory> categories = operatorCategoryMapper.selectList(
                     new LambdaQueryWrapper<OperatorCategory>().orderByAsc(OperatorCategory::getSortOrder));
@@ -118,8 +125,12 @@ public class PluginManageController {
                 node.put("sortOrder", cat.getSortOrder());
                 node.put("type", cat.getType());
 
-                List<Map<String, Object>> children = new ArrayList<>();
                 List<OperatorType> catOps = grouped.getOrDefault(cat.getId(), Collections.emptyList());
+                if (needCount) {
+                    node.put("count", catOps.size());
+                }
+
+                List<Map<String, Object>> children = new ArrayList<>();
                 for (OperatorType op : catOps) {
                     Map<String, Object> child = new HashMap<>();
                     child.put("id", op.getId());
@@ -129,6 +140,9 @@ public class PluginManageController {
                     child.put("icon", op.getIcon());
                     child.put("dragIcon", op.getDragIcon());
                     child.put("description", op.getDescription());
+                    child.put("remark", op.getDescription());
+                    child.put("sortOrder", op.getSortOrder());
+                    child.put("idIndex", op.getSortOrder());
                     child.put("parentName", cat.getName());
                     child.put("status", op.getStatus());
                     child.put("type", op.getType());
@@ -207,6 +221,119 @@ public class PluginManageController {
             operatorTypeMapper.insert(op);
         }
         return Result.ok(op);
+    }
+
+    /**
+     * 重新上传 .java 算子源文件（保留原有配置）
+     */
+    @PostMapping("/reUploadOperator")
+    public Result<?> reUploadOperator(@RequestParam("file") MultipartFile file,
+                                       @RequestParam String id) {
+        try {
+            if (file.isEmpty()) {
+                return Result.fail("请上传文件");
+            }
+
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || !fileName.endsWith(".java")) {
+                return Result.fail("请上传 .java 文件");
+            }
+
+            // 查询原有算子
+            OperatorType existing = operatorTypeMapper.selectById(id);
+            if (existing == null) {
+                return Result.fail("算子不存在");
+            }
+
+            // 读取文件内容
+            String sourceCode = new String(file.getBytes(), "UTF-8");
+
+            // 编译并注册
+            DynamicOperatorCompiler.CompileResult result = dynamicOperatorCompiler.compileAndRegister(sourceCode);
+            if (!result.isSuccess()) {
+                return Result.fail(result.getMessage());
+            }
+
+            // 更新原有记录（保留dom、categoryId等配置）
+            existing.setImplementation(result.getClassName());
+            operatorTypeMapper.updateById(existing);
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("pluginId", result.getPluginId());
+            data.put("name", result.getName());
+            data.put("className", result.getClassName());
+            return Result.ok(data);
+
+        } catch (Exception e) {
+            return Result.fail("上传失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 上传 .java 算子源文件并动态编译注册
+     */
+    @PostMapping("/uploadOperator")
+    public Result<?> uploadOperator(@RequestParam("file") MultipartFile file,
+                                     @RequestParam(required = false) String pluginId,
+                                     @RequestParam(required = false) String name,
+                                     @RequestParam(required = false) String categoryId,
+                                     @RequestParam(required = false) String description,
+                                     @RequestParam(required = false, defaultValue = "0") Integer sortOrder) {
+        try {
+            if (file.isEmpty()) {
+                return Result.fail("请上传文件");
+            }
+
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || !fileName.endsWith(".java")) {
+                return Result.fail("请上传 .java 文件");
+            }
+
+            // 读取文件内容
+            String sourceCode = new String(file.getBytes(), "UTF-8");
+
+            // 编译并注册
+            DynamicOperatorCompiler.CompileResult result = dynamicOperatorCompiler.compileAndRegister(sourceCode);
+            if (!result.isSuccess()) {
+                return Result.fail(result.getMessage());
+            }
+
+            // 使用编译后提取的 pluginId
+            String finalPluginId = result.getPluginId();
+
+            // 检查 pluginId 是否已存在
+            List<OperatorType> existing = operatorTypeMapper.selectList(
+                    new LambdaQueryWrapper<OperatorType>().eq(OperatorType::getPluginId, finalPluginId));
+            if (existing != null && !existing.isEmpty()) {
+                return Result.fail("算子编码 " + finalPluginId + " 已存在");
+            }
+
+            // 保存到数据库
+            OperatorType op = new OperatorType();
+            op.setId(finalPluginId);
+            op.setPluginId(finalPluginId);
+            op.setName(name != null && !name.isEmpty() ? name : result.getName());
+            op.setCategoryId(categoryId);
+            op.setImplementation(result.getClassName());
+            op.setDescription(description != null ? description : "");
+            op.setIcon("");
+            op.setDragIcon("");
+            op.setSortOrder(sortOrder);
+            op.setType(1);
+            op.setStatus(1);
+            op.setDom("[]");
+            operatorTypeMapper.insert(op);
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("pluginId", finalPluginId);
+            data.put("name", result.getName());
+            data.put("category", result.getCategory());
+            data.put("className", result.getClassName());
+            return Result.ok(data);
+
+        } catch (Exception e) {
+            return Result.fail("上传失败: " + e.getMessage());
+        }
     }
 
     /**

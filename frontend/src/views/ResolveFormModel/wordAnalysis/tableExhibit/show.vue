@@ -702,6 +702,7 @@ td .td-edit {
 </style>
 
 <style lang='scss' scoped>
+@import '@/styles/theme.scss';
 .td-edit-table {
   display: table;
   width: 100%;
@@ -769,7 +770,7 @@ td .td-edit {
   height: 100%;
   z-index: 10;
   border-collapse: collapse;
-  background-color: #fff;
+  background-color: $contBg;
   border-top: 1px solid #999;
   border-left: 1px solid #999;
   // table-layout: fixed;
@@ -781,7 +782,7 @@ td .td-edit {
     border-bottom: 1px solid #999;
     border-right: 1px solid #999;
     height: 30px;
-    background-color: #fff;
+    background-color: $contBg;
     font-size: 20px;
     padding-left: 10px;
     text-align-last: left;

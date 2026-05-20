@@ -10,18 +10,22 @@ import java.util.function.Predicate;
 public class DataSet implements Iterable<DataRow> {
 
     private List<String> columnNames;
+    /** 字段注释：columnName -> comment */
+    private Map<String, String> columnComments;
     private Iterator<DataRow> iterator;
     private List<DataRow> cachedRows;
     private boolean materialized;
 
     public DataSet(List<String> columnNames, Iterator<DataRow> iterator) {
         this.columnNames = columnNames != null ? columnNames : new ArrayList<>();
+        this.columnComments = new LinkedHashMap<>();
         this.iterator = iterator;
         this.materialized = false;
     }
 
     public DataSet(List<String> columnNames, List<DataRow> rows) {
         this.columnNames = columnNames != null ? columnNames : new ArrayList<>();
+        this.columnComments = new LinkedHashMap<>();
         this.cachedRows = rows;
         this.materialized = true;
     }
@@ -40,6 +44,27 @@ public class DataSet implements Iterable<DataRow> {
 
     public void setColumnNames(List<String> columnNames) {
         this.columnNames = columnNames;
+    }
+
+    public Map<String, String> getColumnComments() {
+        return columnComments;
+    }
+
+    public void setColumnComments(Map<String, String> columnComments) {
+        this.columnComments = columnComments != null ? columnComments : new LinkedHashMap<>();
+    }
+
+    /** 设置单个字段注释 */
+    public void setColumnComment(String columnName, String comment) {
+        if (columnComments == null) {
+            columnComments = new LinkedHashMap<>();
+        }
+        columnComments.put(columnName, comment);
+    }
+
+    /** 获取单个字段注释 */
+    public String getColumnComment(String columnName) {
+        return columnComments != null ? columnComments.get(columnName) : null;
     }
 
     @Override
@@ -83,7 +108,9 @@ public class DataSet implements Iterable<DataRow> {
                 result.add(row);
             }
         }
-        return new DataSet(columnNames, result);
+        DataSet ds = new DataSet(columnNames, result);
+        ds.setColumnComments(this.columnComments);
+        return ds;
     }
 
     public boolean isEmpty() {

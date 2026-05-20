@@ -169,6 +169,7 @@ export default {
 
 
 <style lang="scss" scoped>
+@import '@/styles/theme.scss';
 @import '@/styles/dashLineTree.scss';
 .treeLine {
   width: 100%;
@@ -197,7 +198,7 @@ export default {
       }
     }
     /deep/ .el-loading-mask {
-      background-color: #233129;
+      background-color: $inputBgClr;
     }
   }
 }

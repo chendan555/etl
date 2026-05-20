@@ -15,9 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -200,13 +198,16 @@ public class PlanService extends ServiceImpl<TransPlanMapper, TransPlan> {
         List<PlanCategory> allCategories = planCategoryMapper.selectList(
                 new LambdaQueryWrapper<PlanCategory>()
                         .orderByAsc(PlanCategory::getSortOrder));
-        return buildCategoryTree(allCategories, -1L);
+        Set<Long> visited = new HashSet<>();
+        visited.add(-1L);
+        return buildCategoryTree(allCategories, -1L, visited);
     }
 
-    private List<PlanCategory> buildCategoryTree(List<PlanCategory> allCategories, Long parentId) {
+    private List<PlanCategory> buildCategoryTree(List<PlanCategory> allCategories, Long parentId, Set<Long> visited) {
         return allCategories.stream()
                 .filter(c -> parentId.equals(c.getParentId()))
-                .peek(c -> c.setChildren(buildCategoryTree(allCategories, c.getId())))
+                .filter(c -> visited.add(c.getId()))
+                .peek(c -> c.setChildren(buildCategoryTree(allCategories, c.getId(), visited)))
                 .collect(Collectors.toList());
     }
 

@@ -94,6 +94,8 @@ public class FlowExecutionEngine {
             DataSet input;
             if (node.getUpstreamIds().isEmpty()) {
                 input = DataSet.empty();
+            } else if (operator.requiresSeparateInputs()) {
+                input = DataSet.empty();
             } else if (node.getUpstreamIds().size() == 1) {
                 input = nodeOutputs.getOrDefault(node.getUpstreamIds().get(0), DataSet.empty());
             } else {
@@ -121,12 +123,30 @@ public class FlowExecutionEngine {
             }
             OperatorContext ctx = new OperatorContext(config, dataSources);
 
+            // 多输入算子：将各上游输出单独传入 context
+            if (operator.requiresSeparateInputs() && node.getUpstreamIds().size() > 1) {
+                Map<String, DataSet> upstreamMap = new LinkedHashMap<>();
+                for (String upstreamId : node.getUpstreamIds()) {
+                    FlowChartNode upstreamNode = nodeMap.get(upstreamId);
+                    String stepName = upstreamNode != null ? upstreamNode.getName() : upstreamId;
+                    DataSet ds = nodeOutputs.get(upstreamId);
+                    System.out.println("[execute] 多输入算子: upstreamId=" + upstreamId + " stepName=" + stepName + " ds=" + (ds != null ? ds.count() + "行" : "null"));
+                    upstreamMap.put(stepName, ds != null ? ds : DataSet.empty());
+                }
+                ctx.setUpstreamOutputs(upstreamMap);
+            }
+
             // Execute
             DataSet output;
             long startTime = System.currentTimeMillis();
             String status = "完成";
             try {
                 output = operator.execute(ctx, input);
+                // 传播字段注释：如果算子没有自己设置注释，从输入继承
+                if (output != null && (output.getColumnComments() == null || output.getColumnComments().isEmpty())
+                        && input.getColumnComments() != null && !input.getColumnComments().isEmpty()) {
+                    output.setColumnComments(new LinkedHashMap<>(input.getColumnComments()));
+                }
             } catch (Exception e) {
                 status = "失败";
                 log.append("算子[").append(node.getName()).append("]执行失败: ").append(e.getMessage()).append("\n");
@@ -229,16 +249,24 @@ public class FlowExecutionEngine {
         // Default: concatenate all upstream outputs
         List<String> allColumns = new ArrayList<>();
         List<DataRow> allRows = new ArrayList<>();
+        Map<String, String> mergedComments = new LinkedHashMap<>();
         for (String upstreamId : node.getUpstreamIds()) {
             DataSet ds = nodeOutputs.get(upstreamId);
             if (ds != null) {
-                if (allColumns.isEmpty()) allColumns.addAll(ds.getColumnNames());
+                if (allColumns.isEmpty()) {
+                    allColumns.addAll(ds.getColumnNames());
+                    if (ds.getColumnComments() != null) {
+                        mergedComments.putAll(ds.getColumnComments());
+                    }
+                }
                 for (DataRow row : ds) {
                     allRows.add(row);
                 }
             }
         }
-        return DataSet.of(allColumns, allRows);
+        DataSet result = DataSet.of(allColumns, allRows);
+        result.setColumnComments(mergedComments);
+        return result;
     }
 
     private Map<Long, DatabaseSource> loadDataSources() {

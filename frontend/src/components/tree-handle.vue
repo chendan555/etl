@@ -91,6 +91,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+@import '@/styles/theme.scss';
 .tree-handle {
   display: flex;
   flex-direction: column;
@@ -119,10 +120,10 @@ export default {
     background-color: transparent;
   }
   /deep/ .el-tree-node__content:hover {
-    background-color: #345740;
+    background-color: $crtNavBgClr;
   }
   /deep/ .el-tree-node__content:focus {
-    background-color: #345740;
+    background-color: $crtNavBgClr;
   }
 }
 </style>

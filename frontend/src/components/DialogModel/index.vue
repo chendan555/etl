@@ -263,7 +263,7 @@ export default {
 .dialogModel1 >>> .form-line,
 .dialogAppend >>> .form-line {
   width: 100%;
-  border-bottom: 1px #435b44 dashed;
+  border-bottom: 1px $tableBorderClr dashed;
   height: 1px;
   margin-bottom: 17px;
   padding: 0;
@@ -288,7 +288,7 @@ export default {
 .dialogModel1 >>> .el-dialog__header,
 .dialogAppend >>> .el-dialog__header {
   padding: 10px 20px 10px;
-  border-bottom: 1px solid #394e39;
+  border-bottom: 1px solid $dialogTtlBgClr;
 }
 
 .dialogModel1 .dialog-form-body,
@@ -304,7 +304,7 @@ export default {
 .dialogModel1 .dialog-form-body .dialog-form-tree,
 .dialogAppend .dialog-form-body .dialog-form-tree {
   width: 100%;
-  /*border-right: 1px solid #435b44;*/
+  /*border-right: 1px solid $tableBorderClr;*/
   height: 100%;
   overflow: auto;
 }
@@ -339,14 +339,14 @@ export default {
 }
 
 .dialogModel1 .dialog-form-body .dialog-form-content .dialog-form-tree1 .dialogAppend .dialog-form-body .dialog-form-content .dialog-form-tree1 {
-  border-right: 1px solid #435b44;
+  border-right: 1px solid $tableBorderClr;
 }
 
 /*表单颜色*/
 .dialogModel1 >>> .el-form .el-input__inner,
 .dialogAppend >>> .el-form .el-input__inner {
   background: none;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
   color: #fff;
 }
 
@@ -354,8 +354,8 @@ export default {
 .dialogModel1 >>> .el-input-group__append,
 .dialogAppend >>> .el-input-group__append .el-button,
 .dialogAppend >>> .el-input-group__append {
-  background-color: #435b44;
-  border-color: #435b44;
+  background-color: $tableBorderClr;
+  border-color: $tableBorderClr;
   color: #fff;
 }
 
@@ -404,7 +404,7 @@ export default {
 .dialogAppend >>> .el-textarea__inner {
   background: none;
   color: #fff;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
   height: 100px;
   resize: none;
   width: 100%;
@@ -419,7 +419,7 @@ export default {
 .dialogModel1 >>> .el-select-dropdown__item:hover,
 .dialogAppend >>> .el-select-dropdown__item.hover,
 .dialogAppend >>> .el-select-dropdown__item:hover {
-  background-color: #435b44;
+  background-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-input-number .el-input__inner,
@@ -429,7 +429,7 @@ export default {
 
 .dialogModel1 >>> .el-checkbox__inner,
 .dialogAppend >>> .el-checkbox__inner {
-  background-color: #1d2822;
+  background-color: $inputBgClr;
   border-color: #557656;
 }
 
@@ -448,14 +448,14 @@ export default {
 
 .dialogModel1 >>> .el-switch.is-checked .el-switch__core,
 .dialogAppend >>> .el-switch.is-checked .el-switch__core {
-  background-color: #435b44;
-  border-color: #435b44;
+  background-color: $tableBorderClr;
+  border-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-radio__input.is-checked .el-radio__inner,
 .dialogAppend >>> .el-radio__input.is-checked .el-radio__inner {
-  background-color: #435b44;
-  border-color: #435b44;
+  background-color: $tableBorderClr;
+  border-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-form-item,
@@ -471,7 +471,7 @@ export default {
 .dialogAppend >>> .el-form-item.is-success .el-input__inner:focus,
 .dialogAppend >>> .el-form-item.is-success .el-textarea__inner,
 .dialogAppend >>> .el-form-item.is-success .el-textarea__inner:focus {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .dialogAppend >>> .el-range-editor .el-range-input,
@@ -493,9 +493,9 @@ export default {
 /*列表样式*/
 .dialogModel1 >>> .el-table th,
 .dialogAppend >>> .el-table th {
-  // background-color: #394e39;
+  // background-color: $dialogTtlBgClr;
   // color: #fff;
-  // border-color: #435b44;
+  // border-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table tr,
@@ -508,7 +508,7 @@ export default {
 .dialogAppend >>> .el-table,
 .dialogAppend >>> .el-table__expanded-cell {
   // background: none;
-  // border-color: #435b44;
+  // border-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table .cell,
@@ -531,7 +531,7 @@ export default {
 
 .dialogModel1 >>> .el-table--striped .el-table__body tr.el-table__row--striped td,
 .dialogAppend >>> .el-table--striped .el-table__body tr.el-table__row--striped td {
-  background-color: #233129;
+  background-color: $tableOddBgClr;
 }
 
 .dialogModel1 >>> .el-table--enable-row-hover .el-table__body tr:hover > td,
@@ -560,17 +560,17 @@ export default {
 
 .dialogModel1 >>> .el-table__fixed,
 .dialogAppend >>> .el-table__fixed {
-  background-color: #1d2822;
+  background-color: $inputBgClr;
 }
 
 .dialogModel1 >>> .el-table__fixed .el-table__row td,
 .dialogAppend >>> .el-table__fixed .el-table__row td {
-  background-color: #1d2822;
+  background-color: $inputBgClr;
 }
 
 .dialogModel1 >>> .el-table__fixed .el-table__row--striped td,
 .dialogAppend >>> .el-table__fixed .el-table__row--striped td {
-  background-color: #233129;
+  background-color: $tableOddBgClr;
 }
 
 .dialogModel1 >>> .el-table__footer-wrapper tbody td .cell,
@@ -587,12 +587,12 @@ export default {
 .dialogAppend >>> .el-table th.is-leaf,
 .dialogAppend >>> .el-table--border,
 .dialogAppend >>> .el-table--group {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table,
 .dialogAppend >>> .el-table {
-  border-right: 1px solid #435b44;
+  border-right: 1px solid $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table--border::after,
@@ -601,14 +601,14 @@ export default {
 .dialogAppend >>> .el-table--border::after,
 .dialogAppend >>> .el-table--group::after,
 .dialogAppend >>> .el-table::before {
-  background-color: #435b44;
+  background-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table td,
 .el-table th.is-leaf,
 .dialogAppend >>> .el-table td,
 .el-table th.is-leaf {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table td .el-input-number,
@@ -625,13 +625,13 @@ export default {
 .dialogModel1 >>> .el-table__fixed::before,
 .dialogAppend >>> .el-table__fixed-right::before,
 .dialogAppend >>> .el-table__fixed::before {
-  background-color: #435b44;
+  background-color: $tableBorderClr;
 }
 
 .dialogModel1 >>> .el-table td .el-input__inner,
 .dialogAppend >>> .el-table td .el-input__inner {
   background: none;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
   color: #fff;
 }
 
@@ -692,7 +692,7 @@ export default {
 .dialogAppend >>> .el-tabs--card > .el-tabs__header .el-tabs__item,
 .dialogAppend >>> .el-tabs--card > .el-tabs__header .el-tabs__item.is-active,
 .dialogAppend >>> .el-tabs--card > .el-tabs__header {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
   color: #fff;
 }
 
@@ -700,7 +700,7 @@ export default {
 .dialogModel1 >>> .el-tabs--card > .el-tabs__header .el-tabs__item:hover,
 .dialogAppend >>> .el-tabs--card > .el-tabs__header .el-tabs__item.is-active,
 .dialogAppend >>> .el-tabs--card > .el-tabs__header .el-tabs__item:hover {
-  background-color: #435b44;
+  background-color: $tableBorderClr;
   color: #fff;
   font-weight: normal;
 }

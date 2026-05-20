@@ -48,18 +48,13 @@ export const procInforLabel = [
     value: ''
   },
   {
-    label: '创建人',
-    prop: 'createBy',
-    value: ''
-  },
-  {
     label: '创建时间',
-    prop: 'createDate',
+    prop: 'createTime',
     value: ''
   },
   {
-    label: '编辑状态',
-    prop: 'status',
+    label: '修改时间',
+    prop: 'updateTime',
     value: ''
   },
   {

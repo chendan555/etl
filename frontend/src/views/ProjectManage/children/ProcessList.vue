@@ -3,22 +3,6 @@
     <div class="headerDiv">
       <div class="btndiv">
         <el-button icon="el-icon-connection" type="primary" size="mini" @click="newProcess">新建流程</el-button>
-        <el-dropdown class="chgView" @command="handleCommand">
-          <el-button size="mini" type="primary">
-            布局
-            <i class="el-icon-arrow-down"></i>
-          </el-button>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item
-              v-for="type in viewTypeList"
-              :key="type.value"
-              :command="type.value"
-            >{{type.label}}</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-        <div class="leftdiv">
-          <el-button size="mini" type="primary" icon="el-icon-attract" @click="mergeTXT">合并TXT文件</el-button>
-        </div>
       </div>
       <div class="filterdiv">
         <el-form ref="form" :model="filterForm" size="mini" :inline="true">
@@ -83,6 +67,7 @@
               </div>
               <div class="cont">
                 <div v-if="it.prop === 'status'">{{item.status | rtnStatus}}</div>
+                <p v-else-if="it.prop === 'createTime' || it.prop === 'updateTime'">{{item[it.prop] | formatDate}}</p>
                 <p v-else>{{item[it.prop]}}</p>
               </div>
             </div>
@@ -135,12 +120,8 @@
                 <div class="cont">
                   <div v-if="it.prop === 'status'">
                     {{item.status | rtnStatus}}
-                    <!-- <span>
-                    <i class="success el-icon-success" v-if="item.status === 1"></i>
-                    <i class="error el-icon-error" v-else-if="item.status === 2"></i>
-                    <i class="info el-icon-info" v-else></i>
-                    </span>-->
                   </div>
+                  <p v-else-if="it.prop === 'createTime' || it.prop === 'updateTime'">{{item[it.prop] | formatDate}}</p>
                   <p v-else>{{item[it.prop]}}</p>
                 </div>
               </div>
@@ -175,6 +156,7 @@
                 class="status"
                 :title="scope.row[item.prop] | rtnStatus"
               >{{scope.row[item.prop] | rtnStatus}}</p>
+              <p v-else-if="item.prop === 'createTime' || item.prop === 'updateTime'">{{scope.row[item.prop] | formatDate}}</p>
               <p v-else>{{scope.row[item.prop]}}</p>
             </template>
           </el-table-column>
@@ -261,6 +243,16 @@
           <el-form-item label="描述">
             <el-input placeholder="请输入描述（示例：流程描述）" type="textarea" v-model="formList.describe"></el-input>
           </el-form-item>
+          <el-form-item label="绑定表名">
+            <el-select v-model="bindTableList" multiple placeholder="请选择绑定的表（可多选）" filterable style="width: 100%">
+              <el-option
+                v-for="item in bindTableOptions"
+                :key="item"
+                :label="item"
+                :value="item"
+              ></el-option>
+            </el-select>
+          </el-form-item>
           <!-- <el-form-item label="定时策略">
             <el-checkbox v-model="isMakeStratagy">是否定制</el-checkbox>
             <Cron v-if="isMakeStratagy" v-model="formList.cron"></Cron>
@@ -296,18 +288,6 @@
         </el-form>
       </div>
     </base-dialog>
-    <base-dialog
-      :dialogConfig="baseDialogConfig"
-      @closeDialog="closeDialogTxt"
-      @save="saveDialogTxt"
-    >
-      <merge-txt
-        ref="mergeTxt"
-        v-if="baseDialogConfig.visible"
-        :ruleForm="baseDialogConfig.data.ruleForm"
-        @closeDialog="closeDialogTxt"
-      ></merge-txt>
-    </base-dialog>
   </div>
 </template>
 <script>
@@ -322,14 +302,13 @@ import BaseTable from '@/components/BaseTable/index.vue';
 import BaseDialog from '@/components/BaseDialog/index.vue';
 import copyFlow from './copyFlow';
 import Cron from '@/components/Cron';
-import MergeTxt from './MergeTxt.vue';
 import OperationBtn from './OperationBtn.vue';
 import { taskManagerService } from '@/api/index.ts';
-import { procInforLabel, detailInforLabel, mergeTxtFormConfig } from './config.js';
+import { procInforLabel, detailInforLabel } from './config.js';
 // import config from './config.ts';
 export default {
   name: 'processList',
-  components: { MergeTxt, BasePagination, BaseTable, Cron, copyFlow, BaseDialog, OperationBtn },
+  components: { BasePagination, BaseTable, Cron, copyFlow, BaseDialog, OperationBtn },
   props: ['treeData'],
   data() {
     return {
@@ -338,31 +317,13 @@ export default {
        */
       treeDataNew: [],
       /**
-       * 合并TXT功能弹框配置项
-       */
-      baseDialogConfig: {
-        visible: false,
-        title: '合并TXT',
-        data: {
-          ruleForm: this.$utils.deepCopy(mergeTxtFormConfig.ruleForm)
-        }
-      },
-      /**
        * 列表展示方式列表
        */
       viewTypeList: [
         {
           label: '列表',
           value: 1
-        },
-        {
-          label: '缩略图',
-          value: 2
         }
-        // {
-        //   label: '大图',
-        //   value: 3
-        // }
       ],
       /**
        * 流程设置为模板弹框配置
@@ -468,8 +429,8 @@ export default {
           taskNodePath: '',
           createBy: '',
           createDate: '',
-          status: 0,
-          cron: ''
+          cron: '',
+          bindTableNames: ''
         }
       },
       /**
@@ -502,6 +463,18 @@ export default {
        * 数据源列表
        */
       dataSourceList: [],
+      /**
+       * 绑定表选项列表
+       */
+      bindTableOptions: [],
+      /**
+       * 绑定表选中列表（多选）
+       */
+      bindTableList: [],
+      /**
+       * 本地分组列表数据（用于弹框下拉）
+       */
+      groupListData: [],
       /**
        * 任务组列表
        */
@@ -557,6 +530,7 @@ export default {
      */
     flatGroupList() {
       const result = [];
+      const source = (this.treeData && Array.isArray(this.treeData) && this.treeData.length) ? this.treeData : this.groupListData;
       const flatten = (list) => {
         if (!list || !Array.isArray(list)) return;
         list.forEach(item => {
@@ -566,7 +540,7 @@ export default {
           }
         });
       };
-      flatten(this.treeData);
+      flatten(source);
       return result;
     }
   },
@@ -634,19 +608,6 @@ export default {
       });
     },
     /**
-     * 关闭多TXT文件合并弹框
-     */
-    closeDialogTxt() {
-      this.baseDialogConfig.visible = false;
-      this.baseDialogConfig.data.ruleForm = this.$utils.deepCopy(mergeTxtFormConfig.ruleForm);
-    },
-    /**
-     * 展示多TXT文件合并弹框
-     */
-    mergeTXT() {
-      this.baseDialogConfig.visible = true;
-    },
-    /**
      * 获取数据源列表
      */
     // getServerSource() {
@@ -667,12 +628,6 @@ export default {
      */
     closeDialog() {
       this.dialogConfig.visible = false;
-    },
-    /**
-     * 执行多TXT文件合并
-     */
-    saveDialogTxt() {
-      this.$refs.mergeTxt.submit();
     },
     /**
      * 设置流程到选定模板分组
@@ -799,29 +754,15 @@ export default {
      */
     editProc(scope, index) {
       this.procDialog.isNew = false;
-      // this.editProcIndex = index;
-      let taskGroupObj = null;
-      if (scope.isModel) {
-        taskGroupObj = this.treeData[0];
-      } else {
-        taskGroupObj = this.treeData.find(task => task.type === scope.type.toString());
-      }
-      // console.log(taskGroupObj);
-      taskGroupObj && (scope.taskGroupId = scope.belongToTaskGroupId ? Number(scope.belongToTaskGroupId) : taskGroupObj.idTaskGroup);
       Object.assign(this.procDialog.data, scope);
-      // console.log(this.procDialog.data);
-      // 判断流程任务配置项是否有数据，有则获取任务关联的节点列表
+      if (scope.belongToTaskGroupId) {
+        this.procDialog.data.taskGroupId = Number(scope.belongToTaskGroupId);
+      }
       if (this.procDialog.data.taskId) {
         this.setTaskName(this.procDialog.data.taskId);
       }
-      // let belongToTaskGroup = this.procDialog.data.belongToTaskGroupId ? this.procDialog.data.belongToTaskGroupId.split(',') : [];
-      /* this.procDialog.data.dataBaseId = this.procDialog.data.dataBaseId ? this.procDialog.data.dataBaseId.split(',') : [];
-      // // this.procDialog.data.dataBaseId = this.procDialog.data.dataBaseId.map(ele => {
-        return parseInt(ele);
-      }); */
-      // this.procDialog.data.taskGroupId = belongToTaskGroup.map(ele => {
-      //   return parseInt(ele);
-      // });
+      // 加载已绑定的表
+      this.bindTableList = scope.bindTableNames ? scope.bindTableNames.split(',').filter(Boolean) : [];
       this.newProcess();
     },
     /**
@@ -853,6 +794,7 @@ export default {
      */
     submitNewProc() {
       // this.procDialog.data.dataBaseId = this.procDialog.data.dataBaseId.join(',');
+      this.procDialog.data.bindTableNames = this.bindTableList.join(',');
       let params = {
         // isMakeStratagy: this.isMakeStratagy,
         dir: '/',
@@ -877,6 +819,7 @@ export default {
      */
     modifyProc() {
       // this.procDialog.data.dataBaseId = this.procDialog.data.dataBaseId.join(',');
+      this.procDialog.data.bindTableNames = this.bindTableList.join(',');
       let params = {
         // isMakeStratagy: this.isMakeStratagy,
         dir: '/',
@@ -911,14 +854,11 @@ export default {
         taskNodePath: '',
         createBy: '',
         createDate: '',
-        status: 0,
-        cron: ''
+        cron: '',
+        bindTableNames: ''
       };
       // 设置初始化数据
       this.procDialog.data = Object.assign(this.procDialog.data, procDialogData);
-      if (typeof this.procDialog.data.taskGroupId == 'string') {
-        this.procDialog.data.taskGroupId = this.procDialog.data.taskGroupId.split(',');
-      }
       // 清除任务名称数据，避免缓存数据污染其他流程数据  --Leo 2022/10/21
       this.formList.taskName = '';
 
@@ -930,15 +870,33 @@ export default {
      */
     newProcess() {
       // this.getServerSource();
+      let promises = [];
       if (!this.dataSourceList.length) {
-        let p1 = this.initDataSource();
-        // let p2 = this.initTaskGroupList();
-        Promise.all([p1]).then(() => {
-          this.procDialog.visible = true;
-        });
-      } else {
-        this.procDialog.visible = true;
+        promises.push(this.initDataSource());
       }
+      if (this.flatGroupList.length === 0) {
+        promises.push(this.loadGroupList());
+      }
+      promises.push(this.loadBindTables());
+      Promise.all(promises).then(() => {
+        this.bindTableList = [];
+        this.procDialog.visible = true;
+      });
+    },
+    loadGroupList() {
+      return this.$API.getProjListData().then(res => {
+        if (res.data.code == 200 && Array.isArray(res.data.data)) {
+          this.groupListData = res.data.data;
+        }
+      });
+    },
+    loadBindTables() {
+      return this.$API.getBindTables().then(res => {
+        const data = res.data.data || res.data;
+        if (Array.isArray(data)) {
+          this.bindTableOptions = data;
+        }
+      }).catch(() => {});
     },
     /**
      * 获取项目列表
@@ -984,9 +942,7 @@ export default {
      */
     removeProc(scope) {
       let params = {
-        path: scope.directoryName,
-        flag: 'transformation',
-        idTransformation: scope.transformationId
+        id: scope.transformationId
       };
       // 弹框确认是否删除
       this.$confirm('此操作将删除该流程, 是否继续?', '提示', {
@@ -1037,7 +993,10 @@ export default {
         if (code === 200) {
           const { data: listObj } = data;
           const { records, total } = listObj;
-          this.procListData = [...records];
+          this.procListData = records.map(item => ({
+            ...item,
+            describe: item.remark || ''
+          }));
           this.page.total = total;
         }
       });
@@ -1068,6 +1027,13 @@ export default {
       } else {
         return '';
       }
+    },
+    formatDate(val) {
+      if (!val) return '';
+      let d = new Date(val);
+      if (isNaN(d.getTime())) return val;
+      let pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
   }
 };

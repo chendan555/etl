@@ -2,34 +2,34 @@
 export const cljgTableConfig = {
   tableColumnConfig: [
     {
-      label: '输出数据名称',
-      prop: 'stepName',
+      label: '流程名称',
+      prop: 'transName',
       align: 'center'
     },
     {
-      label: '处理时间',
-      prop: 'opDateString',
+      label: '执行状态',
+      prop: 'status',
       align: 'center'
     },
     {
-      label: '处理流程名称',
-      prop: 'jobName',
+      label: '数据行数',
+      prop: 'rowCount',
       align: 'center'
     },
     {
-      label: '执行人',
-      prop: 'opUserName',
+      label: '开始时间',
+      prop: 'startTime',
       align: 'center'
     },
-    // {
-    //   label: '执行批次',
-    //   prop: 'runBatch',
-    //   align: 'center'
-    // },
-    // {
-    //   label: '数据来源',
-    //   prop: 'useType',
-    //   align: 'center'
-    // }
+    {
+      label: '结束时间',
+      prop: 'endTime',
+      align: 'center'
+    },
+    {
+      label: '创建时间',
+      prop: 'createTime',
+      align: 'center'
+    }
   ]
 };

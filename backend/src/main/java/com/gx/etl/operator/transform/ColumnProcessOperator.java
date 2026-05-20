@@ -145,19 +145,26 @@ public class ColumnProcessOperator extends AbstractOperator {
 
         // ---- 4. 第二遍遍历：把聚合结果写入每一行 ----
         // 输出列 = 原始列 + 结果列（如果结果列是新列）
-        List<String> columns = new ArrayList<>(input.getColumnNames());
-        if (!columns.contains(resultField)) {
-            columns.add(resultField);  // 新列加入列名列表
-        }
+//        List<String> columns = new ArrayList<>(input.getColumnNames());
+//        if (!columns.contains(resultField)) {
+//            columns.add(resultField);  // 新列加入列名列表
+//        }
+
+        List<String> columns = new ArrayList<String>();
+        columns.add(resultField);
 
         List<DataRow> resultRows = new ArrayList<>();
-        for (DataRow row : input) {
-            // row.copy() 复制一行，不修改原始数据
-            DataRow newRow = row.copy();
-            // 把聚合结果写入结果字段
-            newRow.put(resultField, result);
-            resultRows.add(newRow);
-        }
+        DataRow dataRow = new DataRow();
+        dataRow.put(resultField,result);
+        resultRows.add(dataRow);
+
+//        for (DataRow row : input) {
+//            // row.copy() 复制一行，不修改原始数据
+//            DataRow newRow = row.copy();
+//            // 把聚合结果写入结果字段
+//            newRow.put(resultField, result);
+//            resultRows.add(newRow);
+//        }
 
         // DataSet.of(列名列表, 行数据列表) 构建新的数据集
         System.out.println("[ColumnProcess] output columns=" + columns + ", resultField=" + resultField + ", result=" + result);

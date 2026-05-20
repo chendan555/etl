@@ -15,15 +15,23 @@ public class FormulaConversionOperator extends AbstractOperator {
     public OperatorSchema getSchema() {
         return OperatorSchema.builder()
                 .property("stepName", "步骤名称", OperatorSchema.PropertyType.STRING, true)
-                .property("formula", "公式(如: fieldA + fieldB * 2)", OperatorSchema.PropertyType.STRING, true)
-                .property("resultField", "结果字段", OperatorSchema.PropertyType.STRING, true);
+                .property("formula", "公式(用?占位，如: ?+?*2)", OperatorSchema.PropertyType.STRING, true)
+                .property("mapFields", "字段映射(key=?, value=字段名列表)", OperatorSchema.PropertyType.STRING, true)
+                .property("newFieldName", "结果字段", OperatorSchema.PropertyType.STRING, true);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public DataSet execute(OperatorContext ctx, DataSet input) {
         String formula = ctx.getString("formula");
-        String resultField = ctx.getString("resultField");
-        if (formula == null || resultField == null) return input;
+        String resultField = ctx.getString("newFieldName");
+        if (formula == null || formula.isEmpty() || resultField == null || resultField.isEmpty()) {
+            return input;
+        }
+
+        // 解析 mapFields: List<String> 字段名列表，按顺序对应?
+        List<String> mapFields = (List<String>) ctx.get("mapFields");
+        if (mapFields == null || mapFields.isEmpty()) return input;
 
         List<String> columns = input.getColumnNames();
         if (!columns.contains(resultField)) columns.add(resultField);
@@ -33,11 +41,12 @@ public class FormulaConversionOperator extends AbstractOperator {
             DataRow newRow = row.copy();
             try {
                 String expr = formula;
-                for (String col : columns) {
+                for (String col : mapFields) {
                     Object val = row.get(col);
-                    expr = expr.replace(col, val != null ? val.toString() : "0");
+                    String numStr = val != null ? val.toString() : "0";
+                    expr = expr.replaceFirst("\\?", numStr);
                 }
-                newRow.put(resultField, evaluateSimpleExpr(expr));
+                newRow.put(resultField, evaluate(expr));
             } catch (Exception e) {
                 newRow.put(resultField, null);
             }
@@ -46,46 +55,48 @@ public class FormulaConversionOperator extends AbstractOperator {
         return DataSet.of(columns, rows);
     }
 
-    private int exprPos;
+    private String expr;
+    private int pos;
 
-    private double evaluateSimpleExpr(String expr) {
-        expr = expr.replaceAll("\\s+", "");
-        this.exprPos = 0;
-        return parseExpr(expr);
+    private double evaluate(String expression) {
+        this.expr = expression.replaceAll("\\s+", "");
+        this.pos = 0;
+        return parseExpr();
     }
 
-    private double parseExpr(String expr) {
-        double result = parseTerm(expr);
-        while (exprPos < expr.length()) {
-            char op = expr.charAt(exprPos);
-            if (op == '+') { exprPos++; result += parseTerm(expr); }
-            else if (op == '-') { exprPos++; result -= parseTerm(expr); }
+    private double parseExpr() {
+        double result = parseTerm();
+        while (pos < expr.length()) {
+            char op = expr.charAt(pos);
+            if (op == '+') { pos++; result += parseTerm(); }
+            else if (op == '-') { pos++; result -= parseTerm(); }
             else break;
         }
         return result;
     }
 
-    private double parseTerm(String expr) {
-        double result = parseFactor(expr);
-        while (exprPos < expr.length()) {
-            char op = expr.charAt(exprPos);
-            if (op == '*') { exprPos++; result *= parseFactor(expr); }
-            else if (op == '/') { exprPos++; result /= parseFactor(expr); }
+    private double parseTerm() {
+        double result = parseFactor();
+        while (pos < expr.length()) {
+            char op = expr.charAt(pos);
+            if (op == '*') { pos++; result *= parseFactor(); }
+            else if (op == '/') { pos++; result /= parseFactor(); }
+            else if (op == '%') { pos++; result %= parseFactor(); }
             else break;
         }
         return result;
     }
 
-    private double parseFactor(String expr) {
-        if (expr.charAt(exprPos) == '(') {
-            exprPos++;
-            double result = parseExpr(expr);
-            exprPos++;
+    private double parseFactor() {
+        if (expr.charAt(pos) == '(') {
+            pos++;
+            double result = parseExpr();
+            pos++; // skip ')'
             return result;
         }
-        int start = exprPos;
-        if (expr.charAt(exprPos) == '-') exprPos++;
-        while (exprPos < expr.length() && (Character.isDigit(expr.charAt(exprPos)) || expr.charAt(exprPos) == '.')) exprPos++;
-        return Double.parseDouble(expr.substring(start, exprPos));
+        int start = pos;
+        if (expr.charAt(pos) == '-') pos++;
+        while (pos < expr.length() && (Character.isDigit(expr.charAt(pos)) || expr.charAt(pos) == '.')) pos++;
+        return Double.parseDouble(expr.substring(start, pos));
     }
 }

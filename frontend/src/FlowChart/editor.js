@@ -505,6 +505,16 @@ function renameNode(nodeId, value) {
   const cComp = nodeEl.vNode.$children[0];
   cComp.text = value;
   model.changeNodeValue(nodeId, value);
+  // 同步更新 node.data.text 和 ruleForm.stepName，保证后端和配置面板拿到最新名称
+  const node = model.getData().nodes.find(n => n.id === nodeId);
+  if (node) {
+    if (node.data) {
+      node.data.text = value;
+    }
+    if (node.properties && node.properties.ruleForm) {
+      node.properties.ruleForm.stepName = value;
+    }
+  }
 }
 
 /**

@@ -27,6 +27,11 @@ module.exports = {
       '/page': {
         target: `http://${apiUrl}:9056`,
         changeOrigin: true
+      },
+      '/ws': {
+        target: `ws://${apiUrl}:9056`,
+        ws: true,
+        changeOrigin: true
       }
     },
     port: 8689,

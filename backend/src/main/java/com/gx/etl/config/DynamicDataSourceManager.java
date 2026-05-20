@@ -29,24 +29,50 @@ public class DynamicDataSourceManager {
     public DataSource getDataSource(Long id, String dbType, String host, int port,
                                      String databaseName, String username, String password,
                                      String sid) {
-        return dataSourceMap.computeIfAbsent(id, k -> {
-            // 对于 DM 数据库，如果 databaseName 不是有效的 schema 名称，则不使用
-            String actualDbName = databaseName;
-            if ("DM".equalsIgnoreCase(dbType) && !isValidSchemaName(databaseName)) {
-                actualDbName = null;
-            }
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(buildJdbcUrl(dbType, host, port, actualDbName, sid));
-            config.setUsername(username);
-            config.setPassword(password);
-            config.setMaximumPoolSize(5);
-            config.setMinimumIdle(1);
-            config.setIdleTimeout(60000);
-            config.setMaxLifetime(300000);
-            config.setConnectionTimeout(10000);
-            config.setDriverClassName(getDriverClass(dbType));
-            return new HikariDataSource(config);
-        });
+        return dataSourceMap.computeIfAbsent(id, k -> createDataSource(dbType, host, port, databaseName, username, password, sid));
+    }
+
+    /**
+     * 获取或创建 DataSource，支持 MySQL 用 schema 覆盖 databaseName
+     */
+    public DataSource getDataSource(Long id, String dbType, String host, int port,
+                                     String databaseName, String username, String password,
+                                     String sid, String schema) {
+        // MySQL: 如果 databaseName 为空且有 schema，用 schema 作为库名
+        final String actualDbName;
+        if ("MYSQL".equalsIgnoreCase(dbType) && (databaseName == null || databaseName.isEmpty()) && schema != null && !schema.isEmpty()) {
+            actualDbName = schema;
+        } else {
+            actualDbName = databaseName;
+        }
+        // 如果需要的库名和缓存的不同，清除旧缓存
+        HikariDataSource cached = dataSourceMap.get(id);
+        if (cached != null) {
+            cached.close();
+            dataSourceMap.remove(id);
+        }
+        return dataSourceMap.computeIfAbsent(id, k -> createDataSource(dbType, host, port, actualDbName, username, password, sid));
+    }
+
+    private HikariDataSource createDataSource(String dbType, String host, int port,
+                                               String databaseName, String username, String password,
+                                               String sid) {
+        // 对于 DM 数据库，如果 databaseName 不是有效的 schema 名称，则不使用
+        String actualDbName = databaseName;
+        if ("DM".equalsIgnoreCase(dbType) && !isValidSchemaName(databaseName)) {
+            actualDbName = null;
+        }
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(buildJdbcUrl(dbType, host, port, actualDbName, sid));
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setMaximumPoolSize(5);
+        config.setMinimumIdle(1);
+        config.setIdleTimeout(60000);
+        config.setMaxLifetime(300000);
+        config.setConnectionTimeout(10000);
+        config.setDriverClassName(getDriverClass(dbType));
+        return new HikariDataSource(config);
     }
 
     public void removeDataSource(Long id) {
@@ -81,14 +107,24 @@ public class DynamicDataSourceManager {
     public List<String> getTables(Long id, String dbType, String host, int port,
                                    String databaseName, String username, String password,
                                    String sid, String schema) throws SQLException {
-        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid);
+        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid, schema);
         List<String> tables = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
-            String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
-            try (ResultSet rs = meta.getTables(null, actualSchema, "%", new String[]{"TABLE", "VIEW"})) {
-                while (rs.next()) {
-                    tables.add(rs.getString("TABLE_NAME"));
+            // MySQL: catalog 参数才是数据库名，schema 参数在 MySQL 中不用
+            if ("MYSQL".equalsIgnoreCase(dbType)) {
+                String catalog = conn.getCatalog();
+                try (ResultSet rs = meta.getTables(catalog, null, "%", new String[]{"TABLE", "VIEW"})) {
+                    while (rs.next()) {
+                        tables.add(rs.getString("TABLE_NAME"));
+                    }
+                }
+            } else {
+                String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
+                try (ResultSet rs = meta.getTables(null, actualSchema, "%", new String[]{"TABLE", "VIEW"})) {
+                    while (rs.next()) {
+                        tables.add(rs.getString("TABLE_NAME"));
+                    }
                 }
             }
         }
@@ -104,12 +140,20 @@ public class DynamicDataSourceManager {
     public List<Map<String, Object>> getColumns(Long id, String dbType, String host, int port,
                                                   String databaseName, String username, String password,
                                                   String sid, String tableName, String schema) throws SQLException {
-        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid);
+        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid, schema);
         List<Map<String, Object>> columns = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
-            String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
-            try (ResultSet rs = meta.getColumns(null, actualSchema, tableName, "%")) {
+            ResultSet rs = null;
+            try {
+                // MySQL: catalog 参数才是数据库名
+                if ("MYSQL".equalsIgnoreCase(dbType)) {
+                    String catalog = conn.getCatalog();
+                    rs = meta.getColumns(catalog, null, tableName, "%");
+                } else {
+                    String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
+                    rs = meta.getColumns(null, actualSchema, tableName, "%");
+                }
                 while (rs.next()) {
                     Map<String, Object> col = new LinkedHashMap<>();
                     col.put("name", rs.getString("COLUMN_NAME"));
@@ -118,6 +162,8 @@ public class DynamicDataSourceManager {
                     col.put("lenght", rs.getInt("COLUMN_SIZE"));
                     columns.add(col);
                 }
+            } finally {
+                if (rs != null) rs.close();
             }
         }
         return columns;
@@ -137,6 +183,10 @@ public class DynamicDataSourceManager {
                 }
                 return String.format("jdbc:oracle:thin:@//%s:%s/%s", host, port, dbName);
             case "MYSQL":
+                if (dbName == null || dbName.isEmpty()) {
+                    // 允许不指定库名，连接后探测默认库
+                    return String.format("jdbc:mysql://%s:%s/?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true", host, port);
+                }
                 return String.format("jdbc:mysql://%s:%s/%s?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true", host, port, dbName);
             case "POSTGRESQL":
                 return String.format("jdbc:postgresql://%s:%s/%s", host, port, dbName);
@@ -190,6 +240,21 @@ public class DynamicDataSourceManager {
                                     String databaseName, String username, String password,
                                     String sid) throws SQLException {
         List<String> schemas = new ArrayList<>();
+
+        // MySQL: databaseName 为空时，用无 database 的 URL 连接获取所有库列表
+        if ("MYSQL".equalsIgnoreCase(dbType) && (databaseName == null || databaseName.isEmpty())) {
+            String url = String.format("jdbc:mysql://%s:%s/?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true", host, port);
+            try (Connection conn = java.sql.DriverManager.getConnection(url, username, password)) {
+                DatabaseMetaData meta = conn.getMetaData();
+                try (ResultSet rs = meta.getCatalogs()) {
+                    while (rs.next()) {
+                        schemas.add(rs.getString("TABLE_CAT"));
+                    }
+                }
+            }
+            return schemas;
+        }
+
         String url = buildJdbcUrl(dbType, host, port, databaseName, sid);
 
         try (Connection conn = java.sql.DriverManager.getConnection(url, username, password)) {
@@ -254,24 +319,41 @@ public class DynamicDataSourceManager {
     public Map<String, Object> getTableData(Long id, String dbType, String host, int port,
                                               String databaseName, String username, String password,
                                               String sid, String tableName, int pageIndex, int pageSize, String schema) throws SQLException {
-        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid);
+        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid, schema);
         List<Map<String, Object>> rows = new ArrayList<>();
         List<Map<String, Object>> columnList = new ArrayList<>();
         List<String> columnNames = new ArrayList<>();
 
         String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
-        String fullTableName = actualSchema + "." + tableName;
+        // MySQL: 连接已指定库名，表名不加 schema 前缀
+        String fullTableName;
+        if ("MYSQL".equalsIgnoreCase(dbType)) {
+            fullTableName = tableName;
+        } else {
+            fullTableName = actualSchema + "." + tableName;
+        }
 
+        System.out.println("[getTableData] dbType=" + dbType + ", databaseName=" + databaseName + ", schema=" + schema + ", fullTableName=" + fullTableName);
         // 先获取列信息（含注释）
         try (Connection conn = ds.getConnection()) {
+            System.out.println("[getTableData] 连接URL: " + conn.getMetaData().getURL());
             DatabaseMetaData meta = conn.getMetaData();
-            try (ResultSet colRs = meta.getColumns(null, actualSchema, tableName, "%")) {
+            // MySQL: catalog 参数才是数据库名
+            ResultSet colRs = null;
+            try {
+                if ("MYSQL".equalsIgnoreCase(dbType)) {
+                    colRs = meta.getColumns(conn.getCatalog(), null, tableName, "%");
+                } else {
+                    colRs = meta.getColumns(null, actualSchema, tableName, "%");
+                }
                 while (colRs.next()) {
                     Map<String, Object> col = new LinkedHashMap<>();
                     col.put("columnName", colRs.getString("COLUMN_NAME"));
                     col.put("comments", colRs.getString("REMARKS"));
                     columnList.add(col);
                 }
+            } finally {
+                if (colRs != null) colRs.close();
             }
 
             // 如果 meta.getColumns 没返回（DM 对非默认 schema 的兼容问题），用查询获取
@@ -343,7 +425,7 @@ public class DynamicDataSourceManager {
     public List<Object> getColumnValues(Long id, String dbType, String host, int port,
                                           String databaseName, String username, String password,
                                           String sid, String tableName, String columnName) throws SQLException {
-        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid);
+        DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid, null);
         List<Object> values = new ArrayList<>();
 
         try (Connection conn = ds.getConnection()) {

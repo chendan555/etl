@@ -155,12 +155,49 @@
 
 // 下拉菜单
 .el-dropdown-menu {
+  @include bc($dialogContBgClr);
+  border-color: $tableBorderClr;
   .el-dropdown-menu__item {
+    @include color($normalWordsClr);
     &:hover {
       @include color($normalWordsClr);
       @include bc($currentRow);
     }
   }
+}
+// 下拉选择框
+.el-select-dropdown {
+  @include bc($dialogContBgClr);
+  border-color: $tableBorderClr;
+  .el-select-dropdown__item {
+    @include color($normalWordsClr);
+    &:hover, &.hover {
+      @include bc($currentRow);
+    }
+    &.selected {
+      @include color($primaryBtnBg);
+    }
+  }
+}
+// 日期选择器
+.el-picker-panel {
+  @include bc($dialogContBgClr);
+  border-color: $tableBorderClr;
+  .el-picker-panel__body {
+    @include color($normalWordsClr);
+  }
+}
+// 输入框
+.el-input__inner {
+  @include bc($inputBgClr);
+  @include color($normalWordsClr);
+  border-color: $tableBorderClr;
+}
+// 文本域
+.el-textarea__inner {
+  @include bc($inputBgClr);
+  @include color($normalWordsClr);
+  border-color: $tableBorderClr;
 }
 // 树状图
 .el-tree {
@@ -255,7 +292,7 @@
   }
   // 内部的Table
   &__expanded-cell:hover {
-    @include bc(#ebeef5 !important);
+    @include bc($tableEvenBg !important);
   }
   &__fixed-right::before,
   .el-table__fixed::before {
@@ -266,7 +303,7 @@
   @include bc(#2559b9 !important);
 }
 .el-table--enable-row-transition .el-table__body td {
-  @include bc(#ebeef5);
+  @include bc($tableEvenBg);
 }
 // tab页面
 .el-tabs {
@@ -292,17 +329,17 @@
 }
 // 弹窗
 .el-dialog {
-  // @include bc($dialogContBgClr);
+  @include bc($dialogContBgClr);
   &__header {
     height: $dialogHeaderHei;
-    background: linear-gradient(#fff, #deebf5);
+    background: linear-gradient($dialogTtlBgClr, $dialogTtlBgClr);
     // background-size: 100% 100%;
     padding: 0 !important;
   }
   &__title {
     background: url('~@/assets/mainPage/dialog_header_title_bg.png') left no-repeat;
     height: 100%;
-    @include color(#366a94);
+    color: #fff;
     font-size: 16px;
     font-weight: bold;
     display: inline-block;
@@ -310,10 +347,14 @@
     line-height: $dialogHeaderHei;
     text-indent: 45px;
   }
+  &__headerbtn .el-dialog__close {
+    color: #fff;
+  }
 
   &__body {
+    @include color($normalWordsClr);
     .el-table tbody tr:nth-child(even) td {
-      // @include bc($dialogContBgClr, 1);
+      @include bc($dialogContBgClr, 1);
     }
   }
 }

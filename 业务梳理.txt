@@ -1,0 +1,25 @@
+仿真方案模块
+主表 （主要业务 新增方案除了是有三个下拉框除了这个scheme_name （方案名） scheme_desc（方案描述）cj_list_id（数据采集配置id）几个字段外，还有三个下拉框联动的，）
+id  scheme_name （方案名） scheme_desc（方案描述）cj_list_id（数据采集配置id）  create_time  status(0 1 状态 完成 未完成) 
+
+示例数据
+1  方案名 方案描述  1 2026-05-18 12:12:12   0
+
+
+子表   （这个表存的就是选的下拉框第二个   yb_id 这个字段是选中第二个，yb_list 这个字段是二级的的子集数据逗号隔开的） 
+id  scheme_id  yb_id  yb_list(逗号隔开的)
+
+示例数据
+1   1     1     1,2,3
+2   1     2     4,5,6
+
+数据采集配置
+
+id  yb_name（采集名称）  yb_list （这个数据是主题配置模块的id逗号拼接的）
+
+示例数据 
+1    采集数据集  1,2,3
+
+主题配置模块
+id   topic_name(主题名)  topic_code（主题别名）  table_name（数据库表名）  
+

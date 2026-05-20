@@ -6,6 +6,7 @@
         @showPlanData="showPlanData"
         :data="nodeData"
         :procType="procType"
+        :bindTableNames="bindTableNames"
       />
     </el-aside>
     <el-main class="main-container" style="padding:0">
@@ -25,6 +26,12 @@
                   <i class="el-icon-back" title="返回"></i>
                 </router-link>
                 <p class="transName">{{transName}}</p>
+                <el-button
+                  size="mini"
+                  icon="el-icon-s-grid"
+                  style="margin-left: 10px; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3);"
+                  @click="showBindTableDialog"
+                >绑定表</el-button>
               </div>
               <div class="tool-right">
                 <div class="funcIcon">
@@ -75,7 +82,12 @@
               <p class="setHeight" @click="setHeight" v-else>
                 <i class="el-icon-caret-top"></i>
               </p>
-              <Terminal :runLog="runLog" :stepTableData="stepTableData"/>
+              <Terminal
+                :runLog="runLog"
+                :stepTableData="stepTableData"
+                :batchProgress="batchProgress"
+                @cancel-batch="cancelBatch"
+              />
             </div>
           </el-main>
           <el-aside class="right" :class="allWidth?'showAttrSide':'hideAttrSide'">
@@ -84,6 +96,7 @@
               :projectDesc="projectDesc"
               :toolBarShow="toolBarShow"
               :isShowNode="isShowNode"
+              :bindTableNames="bindTableNames"
             />
             <div class="chgWidth">
               <p @click="allWidth = !allWidth">
@@ -264,6 +277,37 @@
         </el-form-item>
       </el-form>
     </el-dialog>
+
+    <!-- 绑定表编辑弹框 -->
+    <el-dialog
+      title="绑定目标表"
+      :visible.sync="bindTableDialog.visible"
+      width="500px"
+      append-to-body
+    >
+      <el-form label-width="80px" size="small">
+        <el-form-item label="选择表">
+          <el-select
+            v-model="bindTableDialog.selectedTables"
+            multiple
+            filterable
+            placeholder="请选择绑定的表（可多选）"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in bindTableDialog.tableOptions"
+              :key="item"
+              :label="item"
+              :value="item"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="bindTableDialog.visible = false" size="small">取 消</el-button>
+        <el-button type="primary" @click="saveBindTables" size="small">确 定</el-button>
+      </span>
+    </el-dialog>
   </el-container>
 </template>
 <script lang="ts">
@@ -321,8 +365,8 @@ export default Vue.extend({
         visible: false,
         title: '数据预览'
       },
-      previewDataTableColumnConfig: <any>[],
-      previewData: <any>[],
+      previewDataTableColumnConfig: [],
+      previewData: [],
       newForm: {},
       copyNodeData: {},
       activeName: 'first',
@@ -359,7 +403,7 @@ export default Vue.extend({
       },
       isUndoDisable: true,
       isExecDisable: false,
-      nodeData: [] as any[],
+      nodeData: [],
       filterText: '',
       toolBarShow: 'component',
       projectDesc: {
@@ -423,6 +467,21 @@ export default Vue.extend({
       dialogNodeId: '',
       runLog: '',
       stepTableData: [],
+      // 批量执行进度
+      batchProgress: {
+        taskId: '',
+        current: 0,
+        total: 0,
+        successCount: 0,
+        failCount: 0,
+        elapsedTime: 0,
+        estimatedRemaining: 0,
+        totalRows: 0,
+        status: 'idle', // idle, running, completed, cancelled, error
+        batchDetails: []
+      },
+      // WebSocket 连接
+      websocket: null,
       // 多tab弹框配置
       isShowTab: false,
       tabList: [],
@@ -432,6 +491,12 @@ export default Vue.extend({
       showBottom: false,
       handleExtensionVisible: false,
       transformationId: '', //当前组件transformationId
+      bindTableNames: '', //绑定的目标表名
+      bindTableDialog: {
+        visible: false,
+        tableOptions: [],
+        selectedTables: []
+      },
       crtNodeData: {
         nodeId: ''
       },
@@ -440,11 +505,11 @@ export default Vue.extend({
         visible: false,
         title: '',
         stepId: '',
-        ruleForm: <any>{
+        ruleForm: {
           stepName: ''
         }
       },
-      procType: <any>'',
+      procType: '',
       page: {
         pageSize: 20,
         pageNum: 1,
@@ -455,7 +520,7 @@ export default Vue.extend({
   },
   watch: {
     filterText(val: string) {
-      (this.$refs.filterTree as any).filter(val);
+      this.$refs.filterTree.filter(val);
     },
     eleList(val: object) {
     }
@@ -477,7 +542,7 @@ export default Vue.extend({
     });
 
     this.$eventBus.$on('showExcelBtn', (data: any) => {
-      if (this.ruleForm.hasOwnProperty('ExcelInput') && (this.ruleForm as any).ExcelInput) {
+      if (this.ruleForm.hasOwnProperty('ExcelInput') && this.ruleForm.ExcelInput) {
         this.isHasGetFieldBtn = data === 'N';
       }
     });
@@ -589,7 +654,7 @@ export default Vue.extend({
     },
     submitForm(view?: boolean) {
       let currentNodeMsg = FlowChart.getNodeDataByNodeId(this.$store.state.nodeId);
-      currentNodeMsg.properties.ruleForm = this.$utils.deepClone((this.$refs.ComponentsPreview as any).submit());
+      currentNodeMsg.properties.ruleForm = this.$utils.deepClone(this.$refs.ComponentsPreview.submit());
       let stepName = currentNodeMsg.properties.ruleForm.stepName;
       FlowChart.setData(FlowChart.getData());
 
@@ -692,7 +757,7 @@ export default Vue.extend({
         .then((res: any) => {
           let data = res.data;
           if (data.columnsList && data.columnsList.length) {
-            data.columns = <any>[];
+            data.columns = [];
             data.columnsList.forEach((column: any) => {
               // data.columns.push({
               //   label: column,
@@ -718,7 +783,7 @@ export default Vue.extend({
     previewExcelOutput() {
       const loading = this.$utils.setLoading('查询中...');
       this.$emit('formSubmit', true, false);
-      (API as any)
+      API
         .getExcelDataOut({
           nodeId: this.$store.state.nodeId,
           rowLimit: 1000,
@@ -745,8 +810,8 @@ export default Vue.extend({
       exec(
         PasteNodeCommand,
         {
-          pageX: (this.copyNodeData as any).position.left + 268,
-          pageY: (this.copyNodeData as any).position.top + 180
+          pageX: this.copyNodeData.position.left + 268,
+          pageY: this.copyNodeData.position.top + 180
         },
         this.copyNodeData
       );
@@ -812,8 +877,8 @@ export default Vue.extend({
       this.getData(path.split('/')[1]);
       // sessionStorage.setItem('transformationId', this.$route.query.transformationId as any);
       this.$store.dispatch('setTransId', this.$route.query.transformationId);
-      this.transformationId = this.$route.query.transformationId as string;
-      this.transName = this.$route.query.transName as string;
+      this.transformationId = this.$route.query.transformationId;
+      this.transName = this.$route.query.transName;
       FlowChart.setContainer('mainContainer');
       FlowChart.on('commandListEmpty', () => {
         this.isUndoDisable = true;
@@ -841,6 +906,10 @@ export default Vue.extend({
         } else {
           this.currentNodeMsg = nodeData;
         }
+        // 选中目标表输出节点时自动展开右侧属性面板
+        if (this.currentNodeMsg.pluginId === 'BoundTableOutput') {
+          this.allWidth = true;
+        }
       });
       // debugger
       this.$store.dispatch('setPath', this.$route.query.path);
@@ -850,6 +919,10 @@ export default Vue.extend({
       }).then((data: any) => {
         let content = data.data && data.data.data && data.data.data.content ? data.data.data.content : (data.data && data.data.content ? data.data.content : null);
         if (content) {
+          // 加载绑定表名
+          if (content.bindTableNames) {
+            this.bindTableNames = content.bindTableNames;
+          }
           // -start 处理后端返回的数据中tabList为字符串，数据在画布中加载报错的问题  --20210514
           if (content.nodes && Array.isArray(content.nodes)) {
             content.nodes.forEach((elem: any) => {
@@ -886,7 +959,7 @@ export default Vue.extend({
       this.getData(item.name);
       // sessionStorage.setItem('transformationId', item.id as any);
       this.$store.dispatch('setTransId', item.id);
-      this.transformationId = item.id as string;
+      this.transformationId = item.id;
       this.transName = item.name;
       FlowChart.setContainer('mainContainer');
       // FlowChart.clearContainer("mainContainer");
@@ -908,6 +981,10 @@ export default Vue.extend({
           this.currentNodeMsg = nodeData.data;
         } else {
           this.currentNodeMsg = nodeData;
+        }
+        // 选中目标表输出节点时自动展开右侧属性面板
+        if (this.currentNodeMsg.pluginId === 'BoundTableOutput') {
+          this.allWidth = true;
         }
       });
       API.getPlanData({
@@ -947,7 +1024,7 @@ export default Vue.extend({
         if (currentNodeMsg && currentNodeMsg.properties.ruleForm) {
           this.previewDialog.ruleForm = currentNodeMsg.properties.ruleForm;
         } else {
-          this.previewDialog.ruleForm = { stepName: this.previewDialog.title } as any;
+          this.previewDialog.ruleForm = { stepName: this.previewDialog.title };
         }
       });
     },
@@ -958,12 +1035,12 @@ export default Vue.extend({
     generateTabList(text: string) {
       if (this.tabList && this.tabList.length) {
         this.tabList.forEach((tab: any) => {
-          (tab.ruleForm as any).stepName = text;
+          tab.ruleForm.stepName = text;
         });
       }
     },
     refreshConfig(key: string, config: any) {
-      (this as any)[key] = config;
+      this[key] = config;
     },
     resetOptions() {
       this.isHasExec = false;
@@ -1033,11 +1110,11 @@ export default Vue.extend({
     addRow() {
       if (this.tableColumnConfigList && this.tableColumnConfigList.length) {
         this.tableColumnConfigList.forEach((config: any) => {
-          (this.ruleForm as any)[config.key].push(this.initRowData(config.tableColumnConfig));
+          this.ruleForm[config.key].push(this.initRowData(config.tableColumnConfig));
         });
       } else {
         // 单个表格
-        (this.tableData as any).push(this.initRowData(this.tableColumnConfig));
+        this.tableData.push(this.initRowData(this.tableColumnConfig));
       }
     },
     getField() {
@@ -1051,7 +1128,7 @@ export default Vue.extend({
       // 获取字段前清除所有已有数据
       if (this.tableColumnConfigList && this.tableColumnConfigList.length) {
         this.tableColumnConfigList.forEach((config: any) => {
-          (this.ruleForm as any)[config.key] = [];
+          this.ruleForm[config.key] = [];
         });
       }
       // 此处将tableData设置为[]组件将出错，无法保存该项表格的数据，因为改变了tableData的引用地址，断开了与组件配置项的联系。  --20210517
@@ -1061,16 +1138,16 @@ export default Vue.extend({
       }
 
       let interfaceName =
-        this.otherConfig && this.otherConfig.hasOwnProperty('getFieldsInterface') ? (this.otherConfig as any).getFieldsInterface : 'getInputOutputFields';
+        this.otherConfig && this.otherConfig.hasOwnProperty('getFieldsInterface') ? this.otherConfig.getFieldsInterface : 'getInputOutputFields';
       switch (interfaceName) {
         case 'getExcelFields':
-          (params as any).index = (this.ruleForm as any).sheetName;
-          (params as any).fileName = this.ruleForm.filefield;
-          (params as any).spreadsheet_type = this.ruleForm.spreadsheet_type;
+          params.index = this.ruleForm.sheetName;
+          params.fileName = this.ruleForm.filefield;
+          params.spreadsheet_type = this.ruleForm.spreadsheet_type;
         default:
           break;
       }
-      (API as any)
+      API
         [interfaceName](params)
         .then((data: any) => {
           // let tableData: any = [];
@@ -1079,12 +1156,12 @@ export default Vue.extend({
               // 多个表格
               if (this.tableColumnConfigList && this.tableColumnConfigList.length) {
                 this.tableColumnConfigList.forEach((config: any) => {
-                  (this.ruleForm as any)[config.key].push(this.initRowData(config.tableColumnConfig, dataItem));
+                  this.ruleForm[config.key].push(this.initRowData(config.tableColumnConfig, dataItem));
                 });
               } else {
                 // 单个表格
 
-                (this.tableData as any).push(this.initRowData(this.tableColumnConfig, dataItem));
+                this.tableData.push(this.initRowData(this.tableColumnConfig, dataItem));
               }
             });
           }
@@ -1123,7 +1200,7 @@ export default Vue.extend({
       return addRowData;
     },
     runCode() {
-      this.ruleForm.sql = (this.$refs.baseDialog as any).monacoInstance.getValue();
+      this.ruleForm.sql = this.$refs.baseDialog.monacoInstance.getValue();
       this.ruleForm.scriptName = 'Script 1';
       this.tableData = [];
       let params = {
@@ -1310,8 +1387,8 @@ export default Vue.extend({
     },
     clickBgHandle() {
       this.isShowNode = false;
-      (document.getElementById('mainContainer') as any).setAttribute('tabindex', '0');
-      (document.getElementById('mainContainer') as any).focus();
+      document.getElementById('mainContainer').setAttribute('tabindex', '0');
+      document.getElementById('mainContainer').focus();
     },
     zoomOut() {
       FlowChart.zoomOut();
@@ -1360,6 +1437,11 @@ export default Vue.extend({
         //   background: 'rgba(0, 0, 0, 0.7)'
         // });
         this.prog.isShow = true;
+
+        // 清空日志
+        this.runLog = '';
+        this.stepTableData = [];
+
         API.execModel({ noFresh: true })
           .then((data: any) => {
             if (data.data.success) {
@@ -1382,55 +1464,210 @@ export default Vue.extend({
       // this.prog.isShow = false;
     },
     execModelOptions() {
+      // 从流程数据中提取 ${xxx} 变量，生成动态列
+      const flowData = FlowChart.getData();
+      const vars: string[] = [];
+      const varsSet = new Set();
+      const jsonStr = JSON.stringify(flowData);
+      const regex = /\$\{([^}]+)}/g;
+      let match;
+      while ((match = regex.exec(jsonStr)) !== null) {
+        if (!varsSet.has(match[1])) {
+          varsSet.add(match[1]);
+          vars.push(match[1]);
+        }
+      }
+      if (vars.length === 0) {
+        this.$message.warning('当前流程没有参数变量（${xxx}），请先在算子配置中使用参数');
+        return;
+      }
+      // 动态生成表格列，每列对应一个变量
+      const columns: any = vars.map((v: string) => ({
+        label: v,
+        prop: v,
+        showOverflowTooltip: true,
+        align: 'left',
+        headerAlign: 'left',
+        isEdit: true,
+        editConfig: { type: 'input' }
+      }));
       this.dialog = execModelConfig.dialog;
-      // this.formItemRuleConfig = execModelConfig.formItemRuleConfig;
+      this.dialog.title = '参数执行（可添加多行批量执行）';
       this.formItemConfig = execModelConfig.formItemConfig;
-      this.formItemConfigDown = execModelConfig.formItemConfigDown;
-      this.tableColumnConfig = execModelConfig.tableColumnConfig;
-      this.tableData = execModelConfig.tableData;
-      this.isHasTable = execModelConfig.isHasTable;
-      this.isHasExec = execModelConfig.isHasExec;
-      // this.formPreview = execModelConfig.formPreview;
+      this.tableColumnConfig = columns;
+      this.tableData = [];
+      // 检查是否有从仿真方案管理预填的批量参数
+      const preseed = sessionStorage.getItem('batchParams');
+      if (preseed) {
+        try {
+          const rows = JSON.parse(preseed);
+          // 只填充当前流程中存在的变量
+          rows.forEach((row: any) => {
+            const filtered: any = {};
+            vars.forEach((v: string) => {
+              if (row.hasOwnProperty(v)) filtered[v] = row[v];
+            });
+            if (Object.keys(filtered).length > 0) this.tableData.push(filtered);
+          });
+        } catch (e) { /* ignore */ }
+        sessionStorage.removeItem('batchParams');
+      }
+      this.isHasTable = true;
+      this.isHasExec = true;
       this.dialog.visible = true;
     },
     startExec() {
-      // 收集表格中的变量/值对，转为 {key: value} 对象
-      const execParams: any = {};
-      if (this.tableData && this.tableData.length) {
-        this.tableData.forEach((row: any) => {
-          if (row.variable) {
-            execParams[row.variable] = row.value;
-          }
-        });
+      const rows = this.tableData;
+      if (!rows || rows.length === 0) {
+        this.$message.warning('请添加至少一行参数');
+        return;
       }
       this.dialog.visible = false;
       this.save(() => {
-        this.prog.isShow = true;
-        API.execModel({ noFresh: true }, execParams)
-          .then((data: any) => {
-            if (data.data.success) {
-              this.getLog({ transformationId: this.transformationId });
+        // 重置批量进度
+        this.batchProgress = {
+          taskId: '',
+          current: 0,
+          total: rows.length,
+          successCount: 0,
+          failCount: 0,
+          elapsedTime: 0,
+          estimatedRemaining: 0,
+          totalRows: 0,
+          status: 'running',
+          batchDetails: []
+        };
+
+        // 清空日志
+        this.runLog = '';
+        this.stepTableData = [];
+
+        API.execBatchRun(Number(this.transformationId), rows)
+          .then((response: any) => {
+            console.log('[batchRun] 返回数据:', response);
+            // axios 响应拦截器返回的是完整的 response 对象
+            // 数据结构: response.data.data.taskId
+            const res = response.data?.data || response.data;
+            console.log('[batchRun] res:', res);
+            if (res && res.taskId) {
+              // 建立 WebSocket 连接
+              this.connectWebSocket(res.taskId);
+              this.$message.info('批量任务已启动，正在接收进度...');
+            } else {
+              console.error('[batchRun] 未获取到taskId, res:', res);
+              this.$message.error('未获取到任务ID');
             }
-            this.prog.percent = 100;
-            return data;
-          })
-          .then((data: any) => {
-            this.prog.isShow = false;
-            this.$message({
-              type: data.data.success ? 'success' : 'error',
-              message: data.data.success ? '执行完成' : (data.data.message || data.data.msg || '执行失败')
-            });
           })
           .catch((err: any) => {
-            this.prog.isShow = false;
-            this.$message.error('执行异常: ' + (err.message || err));
+            this.$message.error('批量执行请求失败：' + (err.message || '未知错误'));
+            this.batchProgress.status = 'error';
           });
       });
+    },
+    connectWebSocket(taskId: string) {
+      // 关闭现有连接
+      if (this.websocket) {
+        this.websocket.close();
+      }
+
+      // 建立新连接
+      // 使用相对路径，让 devServer 代理处理 WebSocket
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/batchProgress/${taskId}`;
+      this.websocket = new WebSocket(wsUrl);
+
+      this.websocket.onopen = () => {
+        console.log('[WebSocket] 连接建立:', taskId);
+      };
+
+      this.websocket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          this.updateBatchProgress(message);
+        } catch (e) {
+          console.error('[WebSocket] 解析消息失败:', e);
+        }
+      };
+
+      this.websocket.onclose = () => {
+        console.log('[WebSocket] 连接关闭:', taskId);
+      };
+
+      this.websocket.onerror = (error) => {
+        console.error('[WebSocket] 连接错误:', error);
+        this.$message.error('WebSocket 连接失败，请刷新页面重试');
+      };
+    },
+    updateBatchProgress(message: any) {
+      this.batchProgress = {
+        taskId: message.taskId,
+        current: message.current,
+        total: message.total,
+        successCount: message.successCount,
+        failCount: message.failCount,
+        elapsedTime: message.elapsedTime,
+        estimatedRemaining: message.estimatedRemaining,
+        totalRows: message.totalRows,
+        status: message.status,
+        batchDetails: message.batchDetails || []
+      };
+
+      // 执行完成或取消时关闭 WebSocket
+      if (message.status === 'completed' || message.status === 'cancelled' || message.status === 'error') {
+        if (this.websocket) {
+          this.websocket.close();
+          this.websocket = null;
+        }
+
+        // 显示消息
+        if (message.status === 'completed') {
+          this.$message.success(`批量执行完成：成功 ${message.successCount}，失败 ${message.failCount}，共 ${message.total} 批`);
+        } else if (message.status === 'cancelled') {
+          this.$message.warning('批量执行已取消');
+        }
+
+        // 刷新日志
+        this.getLog({ transformationId: this.transformationId });
+      }
+    },
+    cancelBatch(taskId: string) {
+      if (!taskId) return;
+
+      API.cancelBatch(taskId)
+        .then(() => {
+          this.$message.info('取消请求已发送');
+        })
+        .catch((err: any) => {
+          this.$message.error('取消请求失败：' + (err.message || '未知错误'));
+        });
     },
     createModel() {
       this.createModelDialog.formList.procName = this.transName;
       this.getPlanGroupList();
       this.createModelDialog.visible = true;
+    },
+    showBindTableDialog() {
+      this.bindTableDialog.selectedTables = this.bindTableNames ? this.bindTableNames.split(',').filter(Boolean) : [];
+      API.getBindTables().then(res => {
+        const data = res.data.data || res.data;
+        if (Array.isArray(data)) {
+          this.bindTableDialog.tableOptions = data;
+        }
+      });
+      this.bindTableDialog.visible = true;
+    },
+    saveBindTables() {
+      const bindTableNames = this.bindTableDialog.selectedTables.join(',');
+      API.updateBindTables({
+        transformationId: Number(this.transformationId),
+        bindTableNames: bindTableNames
+      }).then(res => {
+        if (res.data.success || res.data.code === 200) {
+          this.bindTableNames = bindTableNames;
+          this.bindTableDialog.visible = false;
+          this.$message.success('绑定表更新成功');
+        }
+      });
     }
   }
 });
@@ -1444,9 +1681,14 @@ export default Vue.extend({
 // }
 .bottom-container /deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active {
   border: none;
+  color: #409eff;
+  background-color: $contBg;
 }
 /deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item {
-  color: #fff;
+  color: #606266;
+}
+/deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item:hover {
+  color: #409eff;
 }
 .flowChartWrap {
   height: 100%;
@@ -1461,7 +1703,7 @@ export default Vue.extend({
   .right {
     border-left: 1px solid $currentRow;
     position: relative;
-    display: none;
+    overflow: hidden;
     .chgWidth {
       position: absolute;
       top: calc(50% - 30px);
@@ -1698,6 +1940,101 @@ export default Vue.extend({
       overflow: hidden;
       overflow-y: auto;
     }
+    .el-dialog__header {
+      .el-dialog__title {
+        color: #fff;
+      }
+      .el-dialog__headerbtn .el-dialog__close {
+        color: #fff;
+      }
+    }
   }
+}
+/* 算子弹窗标题栏样式 - 深蓝渐变 */
+#previewDialog {
+  /deep/ .el-dialog {
+    background-color: #fff;
+    .el-dialog__header {
+      padding: 0 15px !important;
+      margin: 0;
+      border-bottom: none !important;
+      background: linear-gradient(90deg, #0d47a1, #1565c0);
+      height: 48px;
+      line-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .el-dialog__title {
+        color: #fff;
+        font-size: 15px;
+        font-weight: bold;
+      }
+      .el-dialog__headerbtn {
+        position: static;
+        .el-dialog__close {
+          color: #fff;
+          font-size: 18px;
+        }
+      }
+    }
+  }
+}
+/* 参数执行/批量处理弹窗标题栏样式 */
+/deep/ .dialogModel1 .el-dialog {
+  background-color: #fff;
+}
+/deep/ .dialogModel1 .el-dialog__header {
+  padding: 0 15px !important;
+  margin: 0;
+  border-bottom: none !important;
+  background: linear-gradient(90deg, #0d47a1, #1565c0);
+  height: 48px;
+  line-height: 48px;
+  .title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    span:first-child {
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    span:last-child {
+      color: #fff;
+      i {
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px;
+      }
+      i.el-icon-close:hover {
+        opacity: 0.7;
+      }
+    }
+  }
+}
+/* 修复白色弹窗内表格悬浮文字颜色 */
+/deep/ .dialogModel1 .el-table__body tr.hover-row > td,
+/deep/ .dialogModel1 .el-table__body tr.el-table__row--striped.hover-row > td {
+  color: #333 !important;
+  background-color: #ecf5ff !important;
+}
+/deep/ .dialogModel1 .el-table__body tr:hover > td {
+  color: #333 !important;
+  background-color: #ecf5ff !important;
+}
+/deep/ .dialogModel1 .el-table .cell {
+  color: #333;
+}
+/deep/ .dialogModel1 .el-table th .cell {
+  color: #333;
+}
+/deep/ .dialogModel1 .el-table td,
+/deep/ .dialogModel1 .el-table th {
+  border-color: #ebeef5;
+}
+/deep/ .dialogModel1 .el-table td .el-input__inner {
+  color: #333;
 }
 </style>

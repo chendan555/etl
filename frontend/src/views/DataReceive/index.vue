@@ -24,7 +24,8 @@ export default {
     pageIndex: 20,
     title: '批量数据引接',
     pageType: 'mainNav',
-    belongTo: 'receive'
+    belongTo: 'receive',
+    hidden: true
   },
   components: { wjTable, sjkTable },
   data() {

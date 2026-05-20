@@ -32,8 +32,9 @@ public class RepositoryController {
             }
         }
         String describe = (String) params.get("describe");
+        String bindTableNames = (String) params.get("bindTableNames");
 
-        Long transId = transformationService.saveTransformation(name, taskGroupId, null, null);
+        Long transId = transformationService.saveTransformation(name, taskGroupId, null, null, describe, bindTableNames);
         return Result.ok(transId);
     }
 
@@ -51,9 +52,11 @@ public class RepositoryController {
             }
         }
         String name = (String) params.get("name");
+        String describe = (String) params.get("describe");
+        String bindTableNames = (String) params.get("bindTableNames");
 
         if (id != null) {
-            transformationService.updateTransformation(id, name, null, null);
+            transformationService.updateTransformation(id, name, null, null, describe, bindTableNames);
         }
         return Result.ok();
     }
@@ -62,7 +65,7 @@ public class RepositoryController {
     public Result<?> createYJTrans(@RequestBody Map<String, Object> params) {
         // 创建引接转换
         String name = (String) params.get("name");
-        Long transId = transformationService.saveTransformation(name, null, null, null);
+        Long transId = transformationService.saveTransformation(name, null, null, null, null);
         return Result.ok(transId);
     }
 
@@ -82,7 +85,7 @@ public class RepositoryController {
         String name = (String) params.get("name");
 
         if (id != null) {
-            transformationService.updateTransformation(id, name, null, null);
+            transformationService.updateTransformation(id, name, null, null, null);
         }
         return Result.ok();
     }

@@ -204,7 +204,7 @@ enum fileType {
 }
 
 export default {
-  defaultNavTreeData: [{ id: '1', name: '源数据库', children: [] }, { id: '2', name: '引接库', children: [] }, { id: '3', name: '处理库', children: [] }],
+  defaultNavTreeData: [{ id: '1', name: '源数据库', children: [] }],
   tableConfig,
   fileDataTableConfig,
   lmTableConfig,

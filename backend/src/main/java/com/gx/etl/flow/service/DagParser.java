@@ -42,18 +42,25 @@ public class DagParser {
                         try {
                             Map<String, Object> config = JSON.parseObject(ruleFormStr, Map.class);
                             node.setConfig(config);
+                            // 从 ruleForm.table 提取表格数据（多表格连接等算子用）
+                            Object tableObj = config.get("table");
+                            if (tableObj instanceof List && !((List<?>) tableObj).isEmpty()) {
+                                node.setTableData((List<Map<String, Object>>) tableObj);
+                            }
                         } catch (Exception e) {
                             node.setConfig(new HashMap<>());
                         }
                     }
-                    // Parse tableData (column mapping for TableOutput)
-                    String tableDataStr = props.getString("tableData");
-                    if (tableDataStr != null && !tableDataStr.isEmpty()) {
-                        try {
-                            List<Map<String, Object>> tableData = JSON.parseObject(tableDataStr, List.class);
-                            node.setTableData(tableData);
-                        } catch (Exception e) {
-                            // ignore
+                    // Parse tableData (column mapping for TableOutput) - 兼容旧格式
+                    if (node.getTableData() == null) {
+                        String tableDataStr = props.getString("tableData");
+                        if (tableDataStr != null && !tableDataStr.isEmpty()) {
+                            try {
+                                List<Map<String, Object>> tableData = JSON.parseObject(tableDataStr, List.class);
+                                node.setTableData(tableData);
+                            } catch (Exception e) {
+                                // ignore
+                            }
                         }
                     }
                 }

@@ -22,7 +22,8 @@ export default {
     pageIndex: 60,
     title: '处理方案管理',
     pageType: 'mainNav',
-    belongTo: 'process'
+    belongTo: 'process',
+    hidden: true
   },
   components: {
     BaseFrameTwo,

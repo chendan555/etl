@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,17 +32,20 @@ public class TaskGroupService extends ServiceImpl<TaskGroupMapper, TaskGroup> {
             }
         }
 
-        // 构建树形结构
-        return buildTree(allGroups, -1L);
+        // 构建树形结构（检测循环引用）
+        Set<Long> visited = new HashSet<>();
+        visited.add(-1L);
+        return buildTree(allGroups, -1L, visited);
     }
 
     /**
      * 构建树形结构
      */
-    private List<TaskGroup> buildTree(List<TaskGroup> allGroups, Long parentId) {
+    private List<TaskGroup> buildTree(List<TaskGroup> allGroups, Long parentId, Set<Long> visited) {
         return allGroups.stream()
                 .filter(g -> parentId.equals(g.getParentId()))
-                .peek(g -> g.setChildren(buildTree(allGroups, g.getIdTaskGroup())))
+                .filter(g -> visited.add(g.getIdTaskGroup()))
+                .peek(g -> g.setChildren(buildTree(allGroups, g.getIdTaskGroup(), visited)))
                 .collect(Collectors.toList());
     }
 

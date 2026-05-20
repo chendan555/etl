@@ -1,13 +1,9 @@
 <template>
   <div class="tabdiv">
-    <!-- <div class="adddiv">
-      <img src="~@/assets/indexPage/tab_add.png" alt="">
-    </div>-->
     <el-tabs type="border-card">
       <el-tab-pane>
         <span slot="label">
           <img src="~@/assets/indexPage/tab_cz.png" alt>
-          <!-- <i class="el-icon-s-operation"></i> -->
           操作
         </span>
         <div class="tab_cz_div">
@@ -16,7 +12,7 @@
               <i slot="prefix" class="el-input__icon el-icon-search"></i>
             </el-input>
           </div>
-          <div class="navdiv">
+          <div class="navdiv" :style="{ height: bindTableNames ? 'calc(50% - 20px)' : 'calc(100% - 36px)' }">
             <el-tree
               class="components-tree"
               :data="data"
@@ -29,7 +25,6 @@
               ref="filterTree"
               :props="defaultProps"
             >
-              <!-- :render-content="renderContentFunction" 修改为使用如下树组件模板结构，以控制组件图标存储在前端进行展示，并使节点代码结构化，便于阅读 20210118 -->
               <span class="custom-tree-node" slot-scope="{ node, data }">
                 <span
                   :draggable="!(data.children && data.children.length)"
@@ -37,29 +32,45 @@
                   class="dragNode"
                 >
                   <SvgIcon :iconClass="data.icon | getSvgName" style="marginTop: 3px;"></SvgIcon>
-                  <!-- <img class="icon" :src="data.icon" alt /> -->
                   <span style="marginLeft: 5px;">{{ node.label }}</span>
                 </span>
               </span>
             </el-tree>
           </div>
+          <!-- 绑定表字段列表 -->
+          <div class="bind-fields-section" v-if="bindTableNames">
+            <div class="bind-fields-title">
+              <i class="el-icon-s-grid"></i> 目标表字段
+            </div>
+            <div class="bind-fields-content">
+              <div
+                class="bind-table-group"
+                v-for="(columns, tableName) in bindTableColumns"
+                :key="tableName"
+              >
+                <div class="bind-table-name" @click="toggleTableExpand(tableName)">
+                  <i :class="expandedTables[tableName] ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"></i>
+                  {{ tableName }}
+                </div>
+                <div class="bind-fields-grid" v-show="expandedTables[tableName]">
+                  <div
+                    class="bind-field-item"
+                    v-for="col in columns"
+                    :key="col.name"
+                    :title="col.comment || col.name"
+                  >
+                    <span class="bind-field-name">{{ col.name }}</span>
+                    <span class="bind-field-comment" v-if="col.comment">{{ col.comment }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-if="Object.keys(bindTableColumns).length === 0 && loading" class="bind-fields-loading">
+                加载中...
+              </div>
+            </div>
+          </div>
         </div>
       </el-tab-pane>
-      <!-- <el-tab-pane v-if="procType !== 'sjyj'">
-        <span slot="label">
-          <img src="~@/assets/indexPage/tab_fa.png" alt>
-          方案
-        </span>
-        <div
-          class="plan__List"
-          v-for="(item,index) in planList"
-          :key="index"
-          @click="showPlanData(item)"
-        >
-          <i class="el-icon-document"></i>
-          {{item.name}}
-        </div>
-      </el-tab-pane>-->
     </el-tabs>
   </div>
 </template>
@@ -88,12 +99,19 @@ export default Vue.extend({
     procType: {
       type: String,
       default: ''
+    },
+    bindTableNames: {
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
       filterText: "",
-      planList:[]
+      planList: [],
+      bindTableColumns: {},
+      expandedTables: {},
+      loading: false
     };
   },
   filters: {
@@ -115,6 +133,17 @@ export default Vue.extend({
   watch: {
     filterText(val) {
       this.$refs.filterTree.filter(val);
+    },
+    bindTableNames: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          this.loadBindTableColumns();
+        } else {
+          this.bindTableColumns = {};
+          this.expandedTables = {};
+        }
+      }
     }
   },
   methods: {
@@ -133,86 +162,31 @@ export default Vue.extend({
     dragHandle(ev,data) {
       this.$emit("dragHandle", ev, data);
     },
-    renderContentFunction(
-      h,
-      { node, data }
-    ) {
-      const className = node.expanded
-        ? "el-icon-folder-opened"
-        : "el-icon-folder";
-      const classNameChild = !data.children && data.icon ? data.icon : "";
-      return h(
-        "div",
-        {
-          class: { leafNode: !data.children },
-          style: {
-            height: "38px",
-            lineHeight: "38px",
-            fontSize: "12px",
-            color: "#1b1c23"
-          }
-        },
-        [
-          h("div", [
-            h(
-              "span",
-              {
-                attrs: {
-                  draggable: !data.children,
-                  id: data.id
-                },
-                on: {
-                  dragstart: (e) => {
-                    if (!data.children) this.dragHandle(e, data);
-                  }
-                },
-                class: "node",
-                style: {
-                  display: "flex",
-                  alignItems: "center",
-                  marginTop: "4px",
-                  height: "30px",
-                  lineHeight: "30px",
-                  width: "140px",
-                  borderRadius: "4px",
-                  position: "relative",
-                  outline: "none",
-                  border: !data.children ? "1px solid transparent" : "none"
-                }
-              },
-              [
-                h("img", {
-                  attrs: {
-                    src: data.icon
-                  },
-                  class: {
-                    [className]: !!data.children,
-                    [classNameChild]: !data.children
-                  },
-                  style: {
-                    color: "#00cdea",
-                    marginLeft: data.children ? "10px" : "15px"
-                  }
-                }),
-                h(
-                  "span",
-                  {
-                    style: {
-                      fontSize: "13px",
-                      marginLeft: "10px"
-                    }
-                  },
-                  data.text
-                )
-              ]
-            )
-          ])
-        ]
-      );
-    },
     filterNode(value, data) {
       if (!value) return true;
       return data.text.toLocaleLowerCase().indexOf(value.toLocaleLowerCase()) !== -1;
+    },
+    loadBindTableColumns() {
+      const tables = this.bindTableNames.split(',').filter(Boolean);
+      if (tables.length === 0) return;
+      this.loading = true;
+      this.bindTableColumns = {};
+      this.expandedTables = {};
+      const promises = tables.map(tableName => {
+        return API.getBindTableColumns({ tableName }).then(res => {
+          const data = res.data.data || res.data;
+          if (Array.isArray(data)) {
+            this.$set(this.bindTableColumns, tableName, data);
+            this.$set(this.expandedTables, tableName, true);
+          }
+        }).catch(() => {});
+      });
+      Promise.all(promises).finally(() => {
+        this.loading = false;
+      });
+    },
+    toggleTableExpand(tableName) {
+      this.$set(this.expandedTables, tableName, !this.expandedTables[tableName]);
     }
   }
 });
@@ -239,13 +213,10 @@ export default Vue.extend({
 }
 .search {
   background: #314a40;
-  // & /deep/ .el-input__inner {
-  //   color: #000;
-  // }
 }
 .components-tree {
   background: transparent;
-  color: $normalWordsClr !important;
+  color: #eddbdb !important;
   .el-tree-node__content > div {
     color: $normalWordsClr;
   }
@@ -255,9 +226,6 @@ export default Vue.extend({
     align-items: center;
   }
 }
-// /deep/ .el-tabs--border-card, /deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active{
-//   background: $conterBg;
-// }
 </style>
 <style lang="scss">
 @import '@/styles/theme.scss';
@@ -302,7 +270,6 @@ export default Vue.extend({
   margin-bottom: 4px;
 }
 .tabdiv .el-tabs .el-tabs__content .navdiv {
-  height: calc(100% - 36px);
   overflow: hidden;
   overflow-y: auto;
 }
@@ -342,6 +309,83 @@ export default Vue.extend({
   text-overflow: ellipsis;
   cursor: pointer;
 }
+
+/* 绑定表字段区域样式 */
+.bind-fields-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  height: calc(50% - 20px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.bind-fields-title {
+  padding: 6px 10px;
+  font-size: 16px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  i {
+    margin-right: 4px;
+  }
+}
+.bind-fields-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.bind-table-group {
+  margin-bottom: 2px;
+}
+.bind-table-name {
+  padding: 4px 10px;
+  font-size: 15px;
+  color: #67c23a;
+  cursor: pointer;
+  user-select: none;
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  i {
+    margin-right: 4px;
+    font-size: 10px;
+  }
+}
+.bind-fields-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 2px 8px;
+  align-items: flex-start;
+}
+.bind-field-item {
+  width: calc(50% - 4px);
+  padding: 4px 6px;
+  margin: 2px;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.bind-field-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
+}
+.bind-field-comment {
+  display: block;
+  font-size: 12px;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bind-fields-loading {
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+}
 </style>
-
-

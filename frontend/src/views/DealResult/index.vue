@@ -131,10 +131,21 @@ export default {
         .then(({ data }) => {
           if (data.code === 200) {
             this.page.total = data.data.total;
-            this.tableData = data.data.records;
-            // this.tableData.forEach(item => {
-            //   item.runBatch = 'A流程_20211115_第1次执行';
-            // });
+            let statusMap = { 0: '运行中', 1: '成功', 2: '失败' };
+            let pad = n => String(n).padStart(2, '0');
+            let fmtTime = val => {
+              if (!val) return '';
+              let d = new Date(val);
+              if (isNaN(d.getTime())) return val;
+              return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            };
+            this.tableData = (data.data.records || []).map(item => ({
+              ...item,
+              status: statusMap[item.status] || item.status,
+              startTime: fmtTime(item.startTime),
+              endTime: fmtTime(item.endTime),
+              createTime: fmtTime(item.createTime)
+            }));
           }
         })
         .catch((this.tableData = []))

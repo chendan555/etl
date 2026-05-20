@@ -21,7 +21,8 @@ export default {
     pageIndex: 10,
     title: '文件引接配置',
     pageType: 'mainNav',
-    belongTo: 'receive'
+    belongTo: 'receive',
+    hidden: true
   },
   data() {
     return {

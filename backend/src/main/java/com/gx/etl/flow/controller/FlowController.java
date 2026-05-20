@@ -2,6 +2,7 @@ package com.gx.etl.flow.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gx.etl.common.Result;
 import com.gx.etl.flow.entity.ExecutionLog;
 import com.gx.etl.flow.entity.OperatorCategory;
@@ -13,12 +14,15 @@ import com.gx.etl.flow.service.FlowExecutionEngine;
 import com.gx.etl.flow.service.DagParser;
 import com.gx.etl.flow.service.FlowChartNode;
 import com.gx.etl.flow.service.TransformationService;
+import com.gx.etl.flow.service.BatchExecutionService;
 import com.gx.etl.operator.core.DataRow;
 import com.gx.etl.operator.core.DataSet;
 import com.gx.etl.operator.core.OperatorRegistry;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.sql.DataSource;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,6 +32,9 @@ public class FlowController {
 
     @Resource
     private TransformationService transformationService;
+
+    @Resource
+    private DataSource dataSource;
 
     @Resource
     private FlowExecutionEngine executionEngine;
@@ -40,6 +47,9 @@ public class FlowController {
 
     @Resource
     private OperatorTypeMapper operatorTypeMapper;
+
+    @Resource
+    private BatchExecutionService batchExecutionService;
 
     /**
      * Get operator list grouped by category (for sidebar)
@@ -136,13 +146,17 @@ public class FlowController {
         String flowJsonStr = JSON.toJSONString(flowJson);
 
         Long id;
-        String name = extractFlowName(nodes);
 
         if (transformationId != null && transformationId > 0) {
-            transformationService.updateTransformation(transformationId.longValue(), name, flowJsonStr, imgUrl);
+            // 更新时保留原有的名称，不从 nodes 中提取
+            Transformation existing = transformationService.getById(transformationId.longValue());
+            String name = existing != null ? existing.getName() : extractFlowName(nodes);
+            transformationService.updateTransformation(transformationId.longValue(), name, flowJsonStr, imgUrl, null);
             id = transformationId.longValue();
         } else {
-            id = transformationService.saveTransformation(name, null, flowJsonStr, imgUrl);
+            // 新建时从 nodes 中提取名称
+            String name = extractFlowName(nodes);
+            id = transformationService.saveTransformation(name, null, flowJsonStr, imgUrl, null);
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -181,6 +195,7 @@ public class FlowController {
         if (!content.containsKey("head")) content.put("head", "");
         content.put("transformationId", trans.getId());
         content.put("name", trans.getName());
+        content.put("bindTableNames", trans.getBindTableNames() != null ? trans.getBindTableNames() : "");
 
         // Wrap in the format frontend expects
         Map<String, Object> result = new HashMap<>();
@@ -240,6 +255,53 @@ public class FlowController {
     }
 
     /**
+     * 批量执行 - 一次传入多组参数，后端循环执行
+     * 只需传 transformationId + params（List<Map>）
+     */
+    @PostMapping("/batchRun")
+    public Result<?> batchRun(@RequestParam Long transformationId,
+                              @RequestParam String params) {
+        // 1. 从数据库加载流程 JSON
+        Transformation trans = transformationService.getById(transformationId);
+        if (trans == null || trans.getFlowJson() == null || trans.getFlowJson().isEmpty()) {
+            return Result.fail("流程不存在或未保存: " + transformationId);
+        }
+
+        // 2. 解析参数列表
+        List<Map<String, String>> paramList = JSON.parseObject(params, new com.alibaba.fastjson.TypeReference<List<Map<String, String>>>(){});
+
+        if (paramList == null || paramList.isEmpty()) {
+            return Result.fail("参数列表为空");
+        }
+
+        // 3. 生成 taskId 并启动异步执行
+        String taskId = UUID.randomUUID().toString();
+        System.out.println("[batchRun] transformationId=" + transformationId + ", 批次数=" + paramList.size() + ", taskId=" + taskId);
+
+        // 4. 启动异步执行
+        batchExecutionService.executeBatchAsync(taskId, transformationId, paramList);
+
+        // 5. 立即返回 taskId
+        Map<String, Object> data = new HashMap<>();
+        data.put("taskId", taskId);
+        data.put("totalCount", paramList.size());
+        data.put("message", "批量任务已启动，请通过 WebSocket 接收进度");
+        return Result.ok(data);
+    }
+
+    /**
+     * 取消批量执行任务
+     */
+    @PostMapping("/cancelBatch")
+    public Result<?> cancelBatch(@RequestParam String taskId) {
+        batchExecutionService.cancelTask(taskId);
+        Map<String, Object> data = new HashMap<>();
+        data.put("taskId", taskId);
+        data.put("message", "取消请求已发送");
+        return Result.ok(data);
+    }
+
+    /**
      * Preview data at a specific node
      */
     @PostMapping("/previewData")
@@ -291,13 +353,19 @@ public class FlowController {
      * Get execution logs for a transformation
      */
     @PostMapping("/log/page")
-    public Result<?> logPage(@RequestParam Long transformationId,
+    public Result<?> logPage(@RequestParam(required = false) String keyword,
                               @RequestParam(defaultValue = "1") int pageIndex,
                               @RequestParam(defaultValue = "10") int pageSize) {
-        List<ExecutionLog> logs = transformationService.getExecutionLogs(transformationId);
+        Page<ExecutionLog> page = new Page<>(pageIndex, pageSize);
+        LambdaQueryWrapper<ExecutionLog> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            wrapper.like(ExecutionLog::getTransName, keyword);
+        }
+        wrapper.orderByDesc(ExecutionLog::getCreateTime);
+        Page<ExecutionLog> result = transformationService.getExecutionLogPage(page, wrapper);
         Map<String, Object> data = new HashMap<>();
-        data.put("data", logs);
-        data.put("total", logs.size());
+        data.put("records", result.getRecords());
+        data.put("total", result.getTotal());
         return Result.ok(data);
     }
 
@@ -317,7 +385,34 @@ public class FlowController {
     public Result<?> prevSteps(@RequestParam String nodes,
                                 @RequestParam String edges,
                                 @RequestParam(required = false) String currentNodeId,
-                                @RequestParam(required = false) String nodeId) {
+                                @RequestParam(required = false) String nodeId,
+                                @RequestParam(required = false) String endpoints,
+                                @RequestParam(required = false) String head) {
+        String targetNodeId = (nodeId != null && !nodeId.isEmpty()) ? nodeId : currentNodeId;
+        if (targetNodeId == null || targetNodeId.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+        try {
+            String flowJson = buildFlowJson(nodes, endpoints != null ? endpoints : "[]", edges, head);
+            Map<String, FlowChartNode> nodeMap = DagParser.parse(flowJson);
+            FlowChartNode targetNode = nodeMap.get(targetNodeId);
+            if (targetNode == null || targetNode.getUpstreamIds().isEmpty()) {
+                return Result.ok(new ArrayList<>());
+            }
+            List<Map<String, Object>> steps = new ArrayList<>();
+            for (String upstreamId : targetNode.getUpstreamIds()) {
+                FlowChartNode upstreamNode = nodeMap.get(upstreamId);
+                if (upstreamNode != null) {
+                    Map<String, Object> step = new LinkedHashMap<>();
+                    step.put("name", upstreamNode.getName());
+                    step.put("value", upstreamNode.getName());
+                    steps.add(step);
+                }
+            }
+            return Result.ok(steps);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Result.ok(new ArrayList<>());
     }
 
@@ -375,6 +470,52 @@ public class FlowController {
             System.out.println("[prevStepsFileds] error: " + e.getMessage());
             e.printStackTrace();
             // 执行失败时返回空列表
+        }
+        return Result.ok(new ArrayList<>());
+    }
+
+    @PostMapping("/getStepFieldsByName")
+    public Result<?> getStepFieldsByName(@RequestParam String nodes,
+                                         @RequestParam String edges,
+                                         @RequestParam(required = false) String name,
+                                         @RequestParam(required = false) String endpoints,
+                                         @RequestParam(required = false) String head,
+                                         @RequestParam(required = false) Integer transformationId,
+                                         @RequestParam(required = false) String path,
+                                         @RequestParam(required = false, defaultValue = "transformation") String type) {
+        if (name == null || name.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+        try {
+            String flowJson = buildFlowJson(nodes, endpoints != null ? endpoints : "[]", edges, head);
+            flowJson = flowJson.replaceAll("=\\s*'?\\$\\{[^}]+}'?", " IS NOT NULL");
+            Map<String, FlowChartNode> nodeMap = DagParser.parse(flowJson);
+            // 按名称查找节点
+            String targetId = null;
+            for (Map.Entry<String, FlowChartNode> entry : nodeMap.entrySet()) {
+                if (name.equals(entry.getValue().getName())) {
+                    targetId = entry.getKey();
+                    break;
+                }
+            }
+            if (targetId == null) {
+                return Result.ok(new ArrayList<>());
+            }
+            FlowExecutionEngine.ExecutionResult result = executionEngine.execute(flowJson, targetId);
+            if (result != null && result.getDataSet() != null) {
+                List<String> columns = result.getDataSet().getColumnNames();
+                List<Map<String, Object>> fields = new ArrayList<>();
+                for (String col : columns) {
+                    Map<String, Object> field = new LinkedHashMap<>();
+                    field.put("name", col);
+                    field.put("field", col);
+                    field.put("value", col);
+                    fields.add(field);
+                }
+                return Result.ok(fields);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return Result.ok(new ArrayList<>());
     }
@@ -456,10 +597,17 @@ public class FlowController {
     @PostMapping("/getDataView")
     public Result<?> getDataView(@RequestParam(required = false) String key) {
         Map<String, Object> data = new HashMap<>();
-        // 从最近执行结果中获取数据
+        // 从执行结果中获取数据
         if (executionEngine != null) {
-            // 遍历查找最近的执行结果
-            FlowExecutionEngine.ExecutionResult execResult = executionEngine.getLatestResult();
+            FlowExecutionEngine.ExecutionResult execResult = null;
+            if (key != null && !key.isEmpty()) {
+                try {
+                    execResult = executionEngine.getLastResult(Long.parseLong(key));
+                } catch (NumberFormatException ignored) {}
+            }
+            if (execResult == null) {
+                execResult = executionEngine.getLatestResult();
+            }
             if (execResult != null && execResult.getDataSet() != null) {
                 List<String> colNames = execResult.getDataSet().getColumnNames();
                 // 构建columns（前端期望 {lable, header} 格式）
@@ -726,6 +874,62 @@ public class FlowController {
     @GetMapping("/get/transformationByTask")
     public Result<?> getTransByTask() {
         return Result.ok(new ArrayList<>());
+    }
+
+    // ==================== 绑定表相关 ====================
+
+    /**
+     * 获取ETL数据库中的所有表名
+     */
+    @GetMapping("/bindTables")
+    public Result<?> getBindTables() {
+        List<String> tables = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")) {
+            while (rs.next()) {
+                tables.add(rs.getString("TABLE_NAME"));
+            }
+        } catch (SQLException e) {
+            return Result.fail("获取表列表失败: " + e.getMessage());
+        }
+        return Result.ok(tables);
+    }
+
+    /**
+     * 获取指定表的字段列表
+     */
+    @GetMapping("/bindTableColumns")
+    public Result<?> getBindTableColumns(@RequestParam String tableName) {
+        List<Map<String, String>> columns = new ArrayList<>();
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT c.COLUMN_NAME, c.DATA_TYPE, m.COMMENTS FROM USER_TAB_COLUMNS c LEFT JOIN USER_COL_COMMENTS m ON c.TABLE_NAME = m.TABLE_NAME AND c.COLUMN_NAME = m.COLUMN_NAME WHERE c.TABLE_NAME = ? ORDER BY c.COLUMN_ID")) {
+            stmt.setString(1, tableName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, String> col = new LinkedHashMap<>();
+                    col.put("name", rs.getString("COLUMN_NAME"));
+                    col.put("type", rs.getString("DATA_TYPE"));
+                    String comment = rs.getString("COMMENTS");
+                    col.put("comment", comment != null ? comment : "");
+                    columns.add(col);
+                }
+            }
+        } catch (SQLException e) {
+            return Result.fail("获取字段列表失败: " + e.getMessage());
+        }
+        return Result.ok(columns);
+    }
+
+    /**
+     * 更新流程绑定的表名
+     */
+    @PostMapping("/updateBindTables")
+    public Result<?> updateBindTables(@RequestParam Long transformationId,
+                                       @RequestParam String bindTableNames) {
+        transformationService.updateTransformation(transformationId.longValue(), null, null, null, null, bindTableNames);
+        return Result.ok();
     }
 
     // Helper methods

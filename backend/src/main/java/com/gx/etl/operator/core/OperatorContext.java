@@ -14,10 +14,23 @@ public class OperatorContext {
 
     private final Map<String, Object> config;
     private final Map<Long, DatabaseSource> dataSources;
+    private Map<String, DataSet> upstreamOutputs;
 
     public OperatorContext(Map<String, Object> config, Map<Long, DatabaseSource> dataSources) {
         this.config = config;
         this.dataSources = dataSources;
+    }
+
+    public void setUpstreamOutputs(Map<String, DataSet> upstreamOutputs) {
+        this.upstreamOutputs = upstreamOutputs;
+    }
+
+    public Map<String, DataSet> getUpstreamOutputs() {
+        return upstreamOutputs;
+    }
+
+    public DataSet getUpstreamOutput(String name) {
+        return upstreamOutputs != null ? upstreamOutputs.get(name) : null;
     }
 
     public Object get(String key) {
@@ -57,13 +70,25 @@ public class OperatorContext {
     public DataSource getDataSource(Long id) {
         DatabaseSource ds = dataSources.get(id);
         if (ds == null) throw new RuntimeException("数据源不存在: " + id);
+        // MySQL: databaseName 可能为空，尝试从 schemaFilter 获取库名
+        String schema = null;
+        if ("MYSQL".equalsIgnoreCase(ds.getDbType())
+                && (ds.getDatabaseName() == null || ds.getDatabaseName().isEmpty())
+                && ds.getSchemaFilter() != null && !ds.getSchemaFilter().isEmpty()) {
+            schema = ds.getSchemaFilter().split(",")[0].trim();
+        }
         return DynamicDataSourceManager.getInstance().getDataSource(
                 ds.getId(), ds.getDbType(), ds.getHost(), ds.getPort(),
-                ds.getDatabaseName(), ds.getUsername(), ds.getPassword(), ds.getSid());
+                ds.getDatabaseName(), ds.getUsername(), ds.getPassword(), ds.getSid(), schema);
     }
 
     public DatabaseSource getDatabaseSource(Long id) {
         return dataSources.get(id);
+    }
+
+    public String getDataSourceDbType(Long id) {
+        DatabaseSource ds = dataSources.get(id);
+        return ds != null ? ds.getDbType() : null;
     }
 
     /**

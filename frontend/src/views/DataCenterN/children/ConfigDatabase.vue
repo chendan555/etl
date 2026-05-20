@@ -149,14 +149,6 @@ export default Vue.extend({
         {
           label: '源数据库',
           value: '1'
-        },
-        {
-          label: '引接库',
-          value: '2'
-        },
-        {
-          label: '处理库',
-          value: '3'
         }
       ],
       dbTypeList: <any>[],

@@ -72,7 +72,12 @@ export const funcIcon = [
     name: '参数执行',
     imgUrl: require('@/assets/indexPage/func_zx.png'),
     function: 'execModelOptions'
-  }
+  },
+  // {
+  //   name: '批量执行',
+  //   imgUrl: require('@/assets/indexPage/func_zx.png'),
+  //   function: 'batchExec'
+  // }
 ];
 
 export const execModelConfig = {
@@ -106,6 +111,21 @@ export const execModelConfig = {
       type: "input",
     }
   }],
+  tableData: [],
+  formPreview: true,
+  isHasTable: true,
+  isHasExec: true
+}
+
+export const batchExecConfig = {
+  type: "batchExec",
+  dialog: {
+    title: "批量执行",
+    visible: false
+  },
+  formItemConfig: [],
+  ruleForm: {},
+  tableColumnConfig: [],
   tableData: [],
   formPreview: true,
   isHasTable: true,

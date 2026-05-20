@@ -353,7 +353,7 @@ export default {
 
 #list >>> .el-table td,
 #list >>> .el-table th.is-leaf {
-  /* border-color: #435b44; */
+  /* border-color: $tableBorderClr; */
   border-color: rgba(67, 91, 68, 0.9);
 
   cursor: pointer;
@@ -364,7 +364,7 @@ export default {
 #list >>> .el-table::before,
 #list >>> .el-table__fixed-right::before,
 #list >>> .el-table__fixed::before {
-  background-color: #435b44;
+  background-color: $tableBorderClr;
 }
 
 #list >>> .el-table__body tr.current-row > td {
@@ -399,13 +399,13 @@ export default {
 }
 
 .el-table--border {
-  border-right: 1px solid #435b44;
-  border-bottom: 1px solid #435b44;
+  border-right: 1px solid $tableBorderClr;
+  border-bottom: 1px solid $tableBorderClr;
 }
 #list >>> .el-table--border th,
 #list >>> .el-table--border th,
 #list >>> .el-table--border {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 #list >>> .el-table__fixed-right::before,
@@ -446,13 +446,13 @@ export default {
 }
 
 .zg-content-input >>> .el-input__inner {
-  background: #233129 !important;
-  border-color: #435b44;
-  color: #fff;
+  background: $inputBgClr !important;
+  border-color: $tableBorderClr;
+  color: $normalWordsClr;
 }
 
 .zg-content-input >>> .el-form-item__label {
-  color: #fff;
+  color: $normalWordsClr;
 }
 
 .zg-content-input >>> .el-input__inner {
@@ -475,7 +475,7 @@ export default {
   /* border-color: #1E9FFF; */
   width: 240px;
   font-size: 13px;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .zg-content-input >>> .el-input-group .el-input__inner {
@@ -492,8 +492,8 @@ export default {
 }
 
 .zg-content-input >>> .el-input-group__append .el-button {
-  background-color: #435b44;
-  border-color: #435b44;
+  background-color: $tableBorderClr;
+  border-color: $tableBorderClr;
   border-radius: 0;
   color: #fff;
   padding: 13px 8px;
@@ -503,7 +503,7 @@ export default {
 .zg-content-input >>> .el-input-group__append {
   background: none;
   overflow: hidden;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .zg-content-input >>> .el-radio {
@@ -516,16 +516,16 @@ export default {
 
 .zg-content-input >>> .el-textarea .el-textarea__inner {
   background: none;
-  color: #fff;
-  border-color: #435b44;
+  color: $normalWordsClr;
+  border-color: $tableBorderClr;
 }
 
 .zg-content-input >>> .el-select .el-input.is-focus .el-input__inner {
-  border-color: #233129;
+  border-color: $inputBgClr;
 }
 
 .zg-content-input >>> .el-input.is-disabled .el-input__inner {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .el-dialog__body >>> .el-dialog__body {
@@ -551,7 +551,7 @@ export default {
 
 .zg-content-input >>> .couromTextarea .el-textarea__inner {
   width: 100%;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
   max-height: 100px;
 }
 
@@ -591,7 +591,7 @@ export default {
 
 .zg-content-input >>> .form-line a {
   padding: 5px 15px;
-  background-color: #435b44;
+  background-color: $tableBorderClr;
   font-size: 12px;
   color: #fff;
 }
@@ -599,14 +599,14 @@ export default {
 .zg-content-input >>> .form-line {
   width: 100%;
   height: auto;
-  background-color: #435b44;
+  background-color: $tableBorderClr;
   padding: 5px 10px;
   font-size: 12px;
-  border-bottom: 1px solid #435b44;
+  border-bottom: 1px solid $tableBorderClr;
 }
 
 .zg-content-input >>> .el-collapse {
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .zg-content-input >>> .el-carousel__mask,
@@ -615,7 +615,7 @@ export default {
 .zg-content-input >>> .el-collapse-item__header,
 .zg-content-input >>> .el-collapse-item__wrap {
   background: none;
-  border-color: #435b44;
+  border-color: $tableBorderClr;
 }
 
 .zg-content-input >>> .el-collapse-item__header {
@@ -649,7 +649,7 @@ export default {
   width: 20%;
   height: 100%;
   box-sizing: border-box;
-  border-right: 1px solid #435b44;
+  border-right: 1px solid $tableBorderClr;
   overflow: hidden;
 }
 
@@ -696,14 +696,14 @@ export default {
   line-height: 30px;
   display: flex;
   justify-content: space-between;
-  background-color: #435b44;
+  background-color: $tableBorderClr;
   cursor: pointer;
   color: #fff;
 }
 
 .screen-border-color {
   /*border: 1px solid #1E9FFF;*/
-  border: 1px solid #435b44;
+  border: 1px solid $tableBorderClr;
   /*margin-bottom: 10px;*/
   /*margin: 15px 0;*/
 }
@@ -722,7 +722,7 @@ export default {
 
 .screen-border-color {
   /*border: 1px solid #1E9FFF;*/
-  border: 1px solid #435b44;
+  border: 1px solid $tableBorderClr;
   /*margin-bottom: 10px;*/
 }
 
@@ -776,6 +776,7 @@ export default {
 }
 </style>
 <style lang="scss">
+@import '@/styles/theme.scss';
 .slot-form-list {
   height: 100%;
   flex: 1 1 0%;
@@ -797,7 +798,7 @@ export default {
   position: absolute;
   top: calc(50% - 150px);
   font-size: 20px;
-  color: #435b44;
+  color: $tableBorderClr;
   text-align: center;
   cursor: pointer;
   background: rgba(26, 39, 26, 0);

@@ -112,10 +112,6 @@
     <div class="contentdiv">
       <div class="navdiv">
         <!-- <div class="sconedDiv">{{setSystemName}}</div> -->
-        <div class="theme-toggle" @click="toggleTheme">
-          <i :class="crtSkinType === 1 ? 'el-icon-moon' : 'el-icon-sunny'"></i>
-          <span>{{ crtSkinType === 1 ? '暗色主题' : '亮色主题' }}</span>
-        </div>
         <div class="centerdiv">
           <p
             v-for="nav in getCrtNavList"
@@ -131,8 +127,13 @@
 
       <div class="rightContent">
         <div class="address">
-          <i class="circle"></i>
-          <span class="crtNavName">{{crtNavName}}</span>
+          <div class="address-left">
+            <i class="circle"></i>
+            <span class="crtNavName">{{crtNavName}}</span>
+          </div>
+          <div class="theme-toggle" @click="toggleTheme">
+            <i :class="crtSkinType === 1 ? 'el-icon-moon' : 'el-icon-sunny'"></i>
+          </div>
         </div>
         <div class="rightContentDiv" @click="globalEvent">
           <router-view></router-view>
@@ -253,7 +254,7 @@ export default {
       userDetail: null,
       aboutWindow: false,
       changeSkin: false,
-      crtSkinType: 1,
+      crtSkinType: 2,
       crtArmyType: 4, //军种，默认为1火箭军
       dropMeunVisible: false,
       colorConfig,
@@ -802,27 +803,6 @@ html {
         // border: 1px solid $currentRow;
         margin-right: 10px;
         position: relative;
-        .theme-toggle {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 12px 15px;
-          cursor: pointer;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.3s;
-          &:hover {
-            background: rgba(255, 255, 255, 0.1);
-          }
-          i {
-            font-size: 18px;
-            color: $mainNavClr;
-            margin-right: 8px;
-          }
-          span {
-            font-size: 14px;
-            color: $mainNavClr;
-          }
-        }
         .sconedDiv {
           width: 100%;
           height: 40px;
@@ -868,8 +848,13 @@ html {
           height: 32px;
           display: flex;
           align-items: center;
+          justify-content: space-between;
           margin-bottom: 10px;
           padding-left: 5px;
+          .address-left {
+            display: flex;
+            align-items: center;
+          }
           .circle {
             width: 4px;
             height: 18px;
@@ -883,6 +868,20 @@ html {
           span {
             color: $tableHeaderClr;
           }
+          .theme-toggle {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            &:hover {
+              background: rgba(0, 0, 0, 0.15);
+            }
+            i {
+              font-size: 20px;
+              color: $normalWordsClr;
+            }
+          }
         }
         .rightContentDiv {
           position: relative;
@@ -895,7 +894,7 @@ html {
 }
 
 .el-table ::-webkit-scrollbar-thumb {
-  background: #fff;
+  background: #585858;
 }
 .about-window {
   .logo {

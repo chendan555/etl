@@ -41,4 +41,12 @@ public abstract class AbstractOperator {
     public boolean requiresMaterializedInput() {
         return false;
     }
+
+    /**
+     * Whether this operator needs separate upstream DataSets (not pre-merged).
+     * Override to return true for multi-input operators like Join.
+     */
+    public boolean requiresSeparateInputs() {
+        return false;
+    }
 }

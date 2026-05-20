@@ -91,17 +91,15 @@ export default Vue.extend({
     .navdiv {
       width: 280px;
       height: 100%;
-      background: #fff;
+      background: $contBg;
       border-radius: 6px;
-
-      // background:$conterBg;
     }
     .contentdiv {
       width: calc(100% - 290px);
       height: 100%;
       padding: 0px;
       margin-left: 10px;
-      background: #fff;
+      background: $contBg;
       border-radius: 6px;
     }
   }

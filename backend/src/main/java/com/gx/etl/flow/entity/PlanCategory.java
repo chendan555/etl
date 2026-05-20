@@ -1,6 +1,8 @@
 package com.gx.etl.flow.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -8,6 +10,7 @@ import java.util.List;
 
 @Data
 @TableName("T_PLAN_CATEGORY")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class PlanCategory {
 
     @TableId(type = IdType.AUTO)
