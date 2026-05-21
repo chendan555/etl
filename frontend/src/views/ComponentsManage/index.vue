@@ -1463,7 +1463,7 @@ public class AddFieldsOperator extends AbstractOperator {
 .el-select {
   display: block;
 }
-/deep/.use .el-select .el-input .el-select__caret {
+::v-deep.use .el-select .el-input .el-select__caret {
   margin-top: 80%;
 }
 
@@ -1519,7 +1519,7 @@ public class AddFieldsOperator extends AbstractOperator {
 
 .tablearea {
   padding-bottom: 20px;
-  /deep/ .el-table__body-wrapper {
+  ::v-deep .el-table__body-wrapper {
     height: calc(100% - 42px) !important;
     overflow: auto;
   }
@@ -1568,7 +1568,7 @@ public class AddFieldsOperator extends AbstractOperator {
   color: #fefcb9;
   font-weight: bold;
 }
-/deep/ .detailDialog .el-form-item__label {
+::v-deep .detailDialog .el-form-item__label {
   color: #fff;
   width: 130px;
 }

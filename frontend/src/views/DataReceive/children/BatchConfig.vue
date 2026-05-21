@@ -114,7 +114,7 @@ export default {
     },
     getCreateBatchNum() {
       API.dataReceive.getCreatedBatchNum().then(({ data }) => {
-        this.formConfig.ruleForm.currentBatch = data.result;
+        this.formConfig.ruleForm.currentBatch = data.data;
       });
     }
   }

@@ -104,12 +104,12 @@ export default Vue.extend({
     top: 40px;
     left: 0;
     background: #1d2b1a;
-    /deep/ .el-tree {
+    ::v-deep .el-tree {
       background: transparent;
       color: $normalWordsClr;
     }
-    /deep/ .el-tree-node__content:hover,
-    /deep/ .el-tree-node:focus > .el-tree-node__content {
+    ::v-deep .el-tree-node__content:hover,
+    ::v-deep .el-tree-node:focus > .el-tree-node__content {
       background: $crtTreeNode;
     }
   }

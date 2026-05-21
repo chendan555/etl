@@ -517,13 +517,13 @@ export default Vue.extend({
 });
 </script>
 <style lang="scss" scoped>
-/deep/ .el-form {
+::v-deep .el-form {
   .el-select,
   .el-autocomplete {
     width: 100%;
   }
 }
-/deep/ .el-tree-node__content {
+::v-deep .el-tree-node__content {
   height: auto;
 }
 .labeldiv {
@@ -537,7 +537,7 @@ export default Vue.extend({
     margin-left: 24px;
   }
 }
-/deep/ .el-tree {
+::v-deep .el-tree {
   background: transparent;
   .custom-tree-node {
     width: 100%;
@@ -559,7 +559,7 @@ export default Vue.extend({
       }
       .treeHandle {
         padding: 0 10px;
-        /deep/ .el-button {
+        ::v-deep .el-button {
           color: #fff;
         }
       }
@@ -606,7 +606,7 @@ export default Vue.extend({
   padding-left: 24px;
   margin-top: 10px;
   display: flex;
-  /deep/ .el-button {
+  ::v-deep .el-button {
     margin-right: 10px;
   }
 }

@@ -24,7 +24,7 @@ export default {
     title: '数据引接配置',
     pageType: 'mainNav',
     belongTo: 'receive',
-    hidden: true
+    hidden: false
   },
   data() {
     return {
@@ -81,10 +81,10 @@ export default {
   background: $contBg;
   border-radius: 6px;
   padding: 5px;
-  // /deep/.wjClass .el-tabs__nav-wrap {
+  // ::v-deep.wjClass .el-tabs__nav-wrap {
   //   border-bottom: none;
   // }
-  /deep/ .el-tabs {
+  ::v-deep .el-tabs {
     width: 100%;
     height: 100%;
     &__header {
@@ -99,14 +99,14 @@ export default {
     }
   }
   .wjClass {
-    // /deep/ .el-tabs__item {
+    // ::v-deep .el-tabs__item {
     //   color: #555;
     // }
     // padding-top: 10px;
-    // /deep/ .el-tabs__nav-wrap {
+    // ::v-deep .el-tabs__nav-wrap {
     //   background-color: $conterBg !important;
     // }
-    // /deep/ .el-tabs__item.is-active {
+    // ::v-deep .el-tabs__item.is-active {
     //   background-color: $conterBg !important;
     //   color: #7db5ef !important;
     // }

@@ -42,4 +42,8 @@ public class Result<T> implements Serializable {
     public void setMsg(String msg) { this.msg = msg; }
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
+
+    // 兼容前端读取 data.result
+    public String getResult() { return msg; }
+    public void setResult(String result) { this.msg = result; }
 }

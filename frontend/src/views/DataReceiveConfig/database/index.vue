@@ -186,7 +186,6 @@ export default Vue.extend({
           break;
       }
     },
-    receiveData({ row }: any) {},
     // 编辑表关系配置项
     editItem({ row }: any) {
       this.tableRelationConfig.relationInfo = row;

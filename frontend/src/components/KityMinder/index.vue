@@ -399,7 +399,7 @@ export default Vue.extend({
       .handleItem {
         text-align: center;
         margin-bottom: 10px;
-        /deep/ .el-button {
+        ::v-deep .el-button {
           font-size: 20px;
         }
       }

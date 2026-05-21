@@ -29,7 +29,7 @@ export default class DataCenterService extends BaseApi {
     const newConfig = this.transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/database/yj/getValusByColumn.do', newConfig.formData, newConfig.config)
+        .post('/api/database/yj/getValusByColumn', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -263,7 +263,7 @@ export default class DataCenterService extends BaseApi {
   getDatabases(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/common/getDatabases.do', { params })
+        .post('/api/common/getDatabases', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -277,7 +277,7 @@ export default class DataCenterService extends BaseApi {
     const newConfig = this.transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/database/getSchema.do', newConfig.formData, newConfig.config)
+        .post('/api/database/getSchema', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -291,7 +291,7 @@ export default class DataCenterService extends BaseApi {
     const newConfig = this.transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/database/getColumnsByTable.do', newConfig.formData, newConfig.config)
+        .post('/api/database/getColumnsByTable', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -304,7 +304,7 @@ export default class DataCenterService extends BaseApi {
   saveDatabase(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/v1/center/database/save.do', params, { headers: { 'Content-Type': 'application/json;charset=UTF-8' } })
+        .post('/v1/center/database/save', params, { headers: { 'Content-Type': 'application/json;charset=UTF-8' } })
         .then(resolve)
         .catch(reject);
     });
@@ -318,7 +318,7 @@ export default class DataCenterService extends BaseApi {
     const newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/v1/center/database/del.do', newConfig.formData, newConfig.config)
+        .post('/v1/center/database/del', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -331,7 +331,7 @@ export default class DataCenterService extends BaseApi {
   getArtificial(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/data/source/artificial/list.do', { params })
+        .get('/api/data/source/artificial/list', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -344,7 +344,7 @@ export default class DataCenterService extends BaseApi {
   saveArtificial(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/data/source/artificial/save/or/edit.do', params)
+        .post('/api/data/source/artificial/save/or/edit', params)
         .then(resolve)
         .catch(reject);
     });
@@ -357,7 +357,7 @@ export default class DataCenterService extends BaseApi {
   deleteArtificial(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .delete(`/api/data/source/delete/${params.id}.do`)
+        .delete(`/api/data/source/delete/${params.id}`)
         .then(resolve)
         .catch(reject);
     });
@@ -372,7 +372,7 @@ export default class DataCenterService extends BaseApi {
   saveFileServer(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/data/source/file/save/or/edit.do', params)
+        .post('/api/data/source/file/save/or/edit', params)
         .then(resolve)
         .catch(reject);
     });
@@ -384,7 +384,7 @@ export default class DataCenterService extends BaseApi {
   getFileServerList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/data/source/file/list.do', { params })
+        .get('/api/data/source/file/list', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -398,7 +398,7 @@ export default class DataCenterService extends BaseApi {
   saveEmulateServer(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/data/source/artificial/save/or/edit.do', params)
+        .post('/api/data/source/artificial/save/or/edit', params)
         .then(resolve)
         .catch(reject);
     });
@@ -409,7 +409,7 @@ export default class DataCenterService extends BaseApi {
   getFileDataList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/data/source/fileMessage/list/all.do', { params })
+        .get('/api/data/source/fileMessage/list/all', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -421,7 +421,7 @@ export default class DataCenterService extends BaseApi {
   downloadFile(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/data/source/fileMessage/download.do', { params })
+        .get('/api/data/source/fileMessage/download', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -433,7 +433,7 @@ export default class DataCenterService extends BaseApi {
   uploadFtpFiles(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/data/source/fileMessage/ftp/upload.do', params)
+        .post('/api/data/source/fileMessage/ftp/upload', params)
         .then(resolve)
         .catch(reject);
     });
@@ -445,7 +445,7 @@ export default class DataCenterService extends BaseApi {
   getUploadRecords(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/data/source/fileMessage/ftp/record/list.do', params)
+        .post('/api/data/source/fileMessage/ftp/record/list', params)
         .then(resolve)
         .catch(reject);
     });

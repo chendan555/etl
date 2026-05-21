@@ -104,7 +104,7 @@ export default Vue.extend({
     title: '调度任务管理',
     pageType: 'mainNav',
     belongTo: 'receive',
-    hidden: true
+    hidden: false
   },
   data() {
     return {
@@ -163,7 +163,7 @@ export default Vue.extend({
       };
 
       this.$axios
-        .post('/api/quartz/task/list.do', params)
+        .post('/api/quartz/task/list', params)
         .then(({ data }: any) => {
           if (data.code == 200) {
             this.loading = false;
@@ -200,7 +200,7 @@ export default Vue.extend({
      * @param row
      */
     handleView({ row }: any) {
-      this.$axios.get(`/api/quartz/task/${row.jobId}.do`).then(({ data }: any) => {
+      this.$axios.get(`/api/quartz/task/${row.jobId}`).then(({ data }: any) => {
         console.log(data);
         this.ruleForm = data.data;
         this.dialogConfig.visible = true;
@@ -213,7 +213,7 @@ export default Vue.extend({
           jobIds: row.jobId
         };
         this.$axios
-          .delete('/api/quartz/task/delete.do', { params })
+          .delete('/api/quartz/task/delete', { params })
           .then(({ data }: any) => {
             this.$utils.setMessage(data.success, data.result);
             if (data.success) {
@@ -237,7 +237,7 @@ export default Vue.extend({
           status: row.status === '0' ? '1' : '0'
         };
         this.$axios
-          .put('/api/quartz/task/changeStatus.do', params)
+          .put('/api/quartz/task/changeStatus', params)
           .then(({ data }: any) => {
             this.$utils.setMessage(data.success, data.result);
             if (data.success) {
@@ -260,7 +260,7 @@ export default Vue.extend({
           jobId: row.jobId
         };
         this.$axios
-          .post('/api/quartz/task/run.do', params)
+          .post('/api/quartz/task/run', params)
           .then(({ data }: any) => {
             this.$utils.setMessage(data.success, data.result);
             if (data.success) {

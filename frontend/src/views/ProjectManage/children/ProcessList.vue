@@ -922,7 +922,7 @@ export default {
     initDataSource() {
       return new Promise((resolve, reject) => {
         this.$API.getDatabases().then(res => {
-          this.dataSourceList = res.data;
+          this.dataSourceList = res.data.data || res.data;
           resolve();
         });
       });
@@ -1070,10 +1070,10 @@ $itemMaxWidth: var(--itemMaxWidth, calc((100% - 80px) / 3));
       .el-form-item--small.el-form-item {
         margin-bottom: 0;
       }
-      /deep/ .el-form-item__label {
+      ::v-deep .el-form-item__label {
         color: $formLabelClr;
       }
-      /deep/ .el-input__inner {
+      ::v-deep .el-input__inner {
         background: $inputBgClr;
         .el-range-input {
           background: transparent;
@@ -1258,10 +1258,10 @@ $itemMaxWidth: var(--itemMaxWidth, calc((100% - 80px) / 3));
     width: 100%;
     height: 40px;
   }
-  // /deep/ .el-dialog__header {
+  // ::v-deep .el-dialog__header {
   //   border-bottom: 1px solid #394e39;
   // }
-  /deep/ .el-form {
+  ::v-deep .el-form {
     // .el-form-item__label {
     //   color: $normalWordsClr;
     // }
@@ -1270,7 +1270,7 @@ $itemMaxWidth: var(--itemMaxWidth, calc((100% - 80px) / 3));
     }
   }
 }
-.newProcessDialog /deep/ .el-dialog {
+.newProcessDialog ::v-deep .el-dialog {
   height: 80%;
   margin-top: 5% !important;
   .el-dialog__body {

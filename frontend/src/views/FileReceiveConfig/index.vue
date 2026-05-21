@@ -22,7 +22,7 @@ export default {
     title: '文件引接配置',
     pageType: 'mainNav',
     belongTo: 'receive',
-    hidden: true
+    hidden: false
   },
   data() {
     return {
@@ -79,10 +79,10 @@ export default {
   background: $contBg;
   border-radius: 6px;
   padding: 5px;
-  // /deep/.wjClass .el-tabs__nav-wrap {
+  // ::v-deep.wjClass .el-tabs__nav-wrap {
   //   // border-bottom: none;
   // }
-  /deep/ .el-tabs {
+  ::v-deep .el-tabs {
     width: 100%;
     height: 100%;
     &__header {

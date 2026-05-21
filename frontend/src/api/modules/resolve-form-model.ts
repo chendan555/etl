@@ -17,7 +17,7 @@ export default class ResolveFormModel extends baseApi {
   getResolveFormModelList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/form/page.do', params)
+        .post('/api/yj/form/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -36,7 +36,7 @@ export default class ResolveFormModel extends baseApi {
   saveResolveFormModel(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/form/save.do', params)
+        .post('/api/yj/form/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -50,7 +50,7 @@ export default class ResolveFormModel extends baseApi {
   deleteResolveFormModel(data: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .delete('/api/yj/form/delete.do', { data })
+        .delete('/api/yj/form/delete', { data })
         .then(resolve)
         .catch(reject);
     });

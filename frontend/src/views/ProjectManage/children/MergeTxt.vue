@@ -176,7 +176,7 @@ export default Vue.extend({
       }
       .value {
         flex: 1;
-        /deep/ .el-select {
+        ::v-deep .el-select {
           width: 100%;
         }
       }

@@ -13,7 +13,7 @@ export default class Toolset extends baseApi {
   saveToolset(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/dll/exec/model/save.do', params, { headers: { 'Content-Type': 'multipart/form-data' } })
+        .post('/api/dll/exec/model/save', params, { headers: { 'Content-Type': 'multipart/form-data' } })
         .then(resolve)
         .catch(reject);
     });
@@ -25,7 +25,7 @@ export default class Toolset extends baseApi {
   getToolsetList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post(`/api/dll/exec/list/page.do`, params)
+        .post(`/api/dll/exec/list/page`, params)
         .then(resolve)
         .catch(reject);
     });
@@ -37,7 +37,7 @@ export default class Toolset extends baseApi {
   uploadDataFile(formData: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/dll/exec/data/file/upload.do', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        .post('/api/dll/exec/data/file/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
         .then(resolve)
         .catch(reject);
     });
@@ -49,7 +49,7 @@ export default class Toolset extends baseApi {
   deleteToolset(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get(`/api/dll/exec/model/del.do`, { params })
+        .get(`/api/dll/exec/model/del`, { params })
         .then(resolve)
         .catch(reject);
     });
@@ -61,7 +61,7 @@ export default class Toolset extends baseApi {
   runToolset(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post(`/api/dll/exec/model/exec.do`, params, { responseType: 'blob' })
+        .post(`/api/dll/exec/model/exec`, params, { responseType: 'blob' })
         .then(resolve)
         .catch(reject);
     });

@@ -523,7 +523,7 @@ export default {
   }
   &-body {
     margin-top: 10px;
-    /deep/ textarea {
+    ::v-deep textarea {
       height: 200px;
     }
   }

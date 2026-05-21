@@ -77,7 +77,7 @@ export default Vue.extend({
   height: 100%;
 
   // background-color: $conterBg !important;
-  /deep/ .el-tabs {
+  ::v-deep .el-tabs {
     height: 40px;
     &__header {
       margin-bottom: 0;

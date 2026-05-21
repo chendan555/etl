@@ -92,7 +92,7 @@ export default {
   border: 1px solid #435b44;
   padding-top: 15px;
 }
-.base-search /deep/ .el-form-item {
+.base-search ::v-deep .el-form-item {
   margin-bottom: 15px;
 }
 </style>

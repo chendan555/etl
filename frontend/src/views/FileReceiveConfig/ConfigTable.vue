@@ -14,7 +14,7 @@
         <el-select
           v-model="tableRelationForm.database"
           placeholder="请选择数据源"
-          value-key="databaseId"
+          value-key="value"
           clearable
           filterable
         >
@@ -22,7 +22,7 @@
             v-for="database in databaseList"
             :label="database.name"
             :value="database"
-            :key="database.databaseId"
+            :key="database.value"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -199,7 +199,7 @@ export default Vue.extend({
     // 获取数据源列表
     getDatabaseList() {
       this.$API.getDatabases().then(({ data }) => {
-        this.databaseList = data;
+        this.databaseList = data.data || data;
       });
     },
     // 获取所选数据源下模式列表
@@ -207,7 +207,7 @@ export default Vue.extend({
       this.$API
         .getSchema({ connection: database.name })
         .then(({ data }) => {
-          this.modeList = data;
+          this.modeList = data.data || data;
         })
         .catch();
     },
@@ -241,7 +241,7 @@ export default Vue.extend({
         table: table.tableName
       };
       this.$API.getColumnsByTable(params).then(({ data }) => {
-        this.mainTableKeysList = data;
+        this.mainTableKeysList = data.data || data;
       });
     },
     // 获取子数据表的字段列表
@@ -253,7 +253,7 @@ export default Vue.extend({
         table: table.tableName
       };
       this.$API.getColumnsByTable(params).then(({ data }) => {
-        table.table.keys = data;
+        table.table.keys = data.data || data;
       });
     },
     // 初始化表关系树形结构
@@ -323,15 +323,15 @@ export default Vue.extend({
 });
 </script>
 <style lang="scss" scoped>
-/deep/ .el-form {
+::v-deep .el-form {
   .el-select {
     width: 100%;
   }
 }
-/deep/ .el-tree-node__content {
+::v-deep .el-tree-node__content {
   height: auto;
 }
-/deep/ .el-tree {
+::v-deep .el-tree {
   background: transparent;
   .custom-tree-node {
     width: 100%;
@@ -339,12 +339,12 @@ export default Vue.extend({
     justify-content: space-between;
     align-items: center;
     margin: 5px 0;
-    /deep/ .el-select {
+    ::v-deep .el-select {
       margin-right: 5px;
     }
     .treeHandle {
       padding: 0 10px;
-      /deep/ .el-button {
+      ::v-deep .el-button {
         color: #fff;
       }
     }

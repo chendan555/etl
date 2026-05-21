@@ -70,7 +70,7 @@ export default {
   height: 100%;
   display: flex;
   align-items: center;
-  /deep/ .el-button {
+  ::v-deep .el-button {
     .el-icon-edit-outline {
       color: #409eff;
     }

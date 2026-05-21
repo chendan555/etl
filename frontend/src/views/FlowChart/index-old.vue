@@ -441,7 +441,7 @@ export default Vue.extend({
       this.cancelCreateDialog();
     },
     getPlanGroupList() {
-      axios.get('/api/trans/plan/categroy/tree.do').then((res: any) => {
+      axios.get('/api/trans/plan/categroy/tree').then((res: any) => {
         console.log(res.data.data);
         this.createModelDialog.planGroupOptions = res.data.data;
       });
@@ -1360,10 +1360,10 @@ export default Vue.extend({
   animation: showAttrSide 0.8s;
   width: 300px !important;
 }
-/deep/.dialogModel1 .el-tabs__content {
+::v-deep.dialogModel1 .el-tabs__content {
   display: none;
 }
-/deep/.dialogModel1 .el-input__inner,
+::v-deep.dialogModel1 .el-input__inner,
 .dialogModel1 .el-textarea__inner {
   border: 1px solid #435b44 !important;
 }

@@ -25,7 +25,7 @@ export default {
     title: '批量数据引接',
     pageType: 'mainNav',
     belongTo: 'receive',
-    hidden: true
+    hidden: false
   },
   components: { wjTable, sjkTable },
   data() {
@@ -44,10 +44,6 @@ export default {
         this.$refs.sjkActive.getList();
       } else if (this.activeTab == 2) {
         this.$refs.wjActive.getList();
-      } else if (this.activeTab == 3) {
-        this.$refs.fzActive.getList();
-      } else {
-        this.$refs.formActive.getList();
       }
     }
   },
@@ -79,7 +75,7 @@ export default {
     width: 100%;
     height: 100%;
     // padding-top: 5px;
-    /deep/ .el-tabs {
+    ::v-deep .el-tabs {
       width: 100%;
       height: 100%;
       &__header {
@@ -93,8 +89,8 @@ export default {
       }
     }
   }
-  /deep/ .el-input-number__decrease,
-  /deep/ .el-input-number__increase {
+  ::v-deep .el-input-number__decrease,
+  ::v-deep .el-input-number__increase {
     background: $defaultBtnBgClr;
     color: #fff;
     border: none;

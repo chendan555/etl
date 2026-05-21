@@ -835,7 +835,7 @@ export default Vue.extend({
       this.cancelCreateDialog();
     },
     getPlanGroupList() {
-      axios.get('/api/trans/plan/categroy/tree.do').then((res: any) => {
+      axios.get('/api/trans/plan/categroy/tree').then((res: any) => {
         this.createModelDialog.planGroupOptions = res.data.data;
       });
     },
@@ -1679,15 +1679,15 @@ export default Vue.extend({
 //  width: 80%;
 //  height: 20%;
 // }
-.bottom-container /deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active {
+.bottom-container ::v-deep .el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active {
   border: none;
   color: #409eff;
   background-color: $contBg;
 }
-/deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item {
+::v-deep .el-tabs--border-card > .el-tabs__header .el-tabs__item {
   color: #606266;
 }
-/deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item:hover {
+::v-deep .el-tabs--border-card > .el-tabs__header .el-tabs__item:hover {
   color: #409eff;
 }
 .flowChartWrap {
@@ -1914,15 +1914,15 @@ export default Vue.extend({
   animation: showAttrSide 0.8s;
   width: 300px !important;
 }
-/deep/.dialogModel1 .el-tabs__content {
+::v-deep.dialogModel1 .el-tabs__content {
   display: none;
 }
-/deep/.dialogModel1 .el-input__inner,
+::v-deep.dialogModel1 .el-input__inner,
 .dialogModel1 .el-textarea__inner {
   border: 1px solid #435b44 !important;
 }
 #previewDialog {
-  /deep/ .el-dialog {
+  ::v-deep .el-dialog {
     height: calc(100% - 11vh);
     .el-dialog__body {
       height: calc(100% - 107px);
@@ -1932,7 +1932,7 @@ export default Vue.extend({
   }
 }
 #previewDataDialog {
-  /deep/ .el-dialog {
+  ::v-deep .el-dialog {
     margin-top: 10vh !important;
     height: calc(100% - 20vh);
     .el-dialog__body {
@@ -1952,7 +1952,7 @@ export default Vue.extend({
 }
 /* 算子弹窗标题栏样式 - 深蓝渐变 */
 #previewDialog {
-  /deep/ .el-dialog {
+  ::v-deep .el-dialog {
     background-color: #fff;
     .el-dialog__header {
       padding: 0 15px !important;
@@ -1980,10 +1980,10 @@ export default Vue.extend({
   }
 }
 /* 参数执行/批量处理弹窗标题栏样式 */
-/deep/ .dialogModel1 .el-dialog {
+::v-deep .dialogModel1 .el-dialog {
   background-color: #fff;
 }
-/deep/ .dialogModel1 .el-dialog__header {
+::v-deep .dialogModel1 .el-dialog__header {
   padding: 0 15px !important;
   margin: 0;
   border-bottom: none !important;
@@ -2015,26 +2015,26 @@ export default Vue.extend({
   }
 }
 /* 修复白色弹窗内表格悬浮文字颜色 */
-/deep/ .dialogModel1 .el-table__body tr.hover-row > td,
-/deep/ .dialogModel1 .el-table__body tr.el-table__row--striped.hover-row > td {
+::v-deep .dialogModel1 .el-table__body tr.hover-row > td,
+::v-deep .dialogModel1 .el-table__body tr.el-table__row--striped.hover-row > td {
   color: #333 !important;
   background-color: #ecf5ff !important;
 }
-/deep/ .dialogModel1 .el-table__body tr:hover > td {
+::v-deep .dialogModel1 .el-table__body tr:hover > td {
   color: #333 !important;
   background-color: #ecf5ff !important;
 }
-/deep/ .dialogModel1 .el-table .cell {
+::v-deep .dialogModel1 .el-table .cell {
   color: #333;
 }
-/deep/ .dialogModel1 .el-table th .cell {
+::v-deep .dialogModel1 .el-table th .cell {
   color: #333;
 }
-/deep/ .dialogModel1 .el-table td,
-/deep/ .dialogModel1 .el-table th {
+::v-deep .dialogModel1 .el-table td,
+::v-deep .dialogModel1 .el-table th {
   border-color: #ebeef5;
 }
-/deep/ .dialogModel1 .el-table td .el-input__inner {
+::v-deep .dialogModel1 .el-table td .el-input__inner {
   color: #333;
 }
 </style>

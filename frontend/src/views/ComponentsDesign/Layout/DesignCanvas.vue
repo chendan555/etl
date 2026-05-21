@@ -331,37 +331,37 @@ export default {
   }
   .design-ele {
     margin-bottom: 0;
-    /deep/ .el-form-item__label {
+    ::v-deep .el-form-item__label {
       line-height: 20px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       height: 40px;
     }
-    /deep/ .el-select {
+    ::v-deep .el-select {
       width: 100%;
     }
-    /deep/ .el-date-editor.el-input {
+    ::v-deep .el-date-editor.el-input {
       width: 100%;
     }
-    /deep/ .el-radio__input.is-checked .el-radio__inner {
+    ::v-deep .el-radio__input.is-checked .el-radio__inner {
       border-color: #719681;
       background-color: var(--inputBgClr, #1d2822);
     }
-    /deep/ .el-radio__inner {
+    ::v-deep .el-radio__inner {
       background-color: var(--inputBgClr, #1d2822);
       border-color: #719681;
     }
-    /deep/ .el-radio__label {
+    ::v-deep .el-radio__label {
       color: $normalWordsClr;
     }
-    /deep/ .el-radio {
+    ::v-deep .el-radio {
       line-height: inherit;
     }
-    /deep/ .el-checkbox-group {
+    ::v-deep .el-checkbox-group {
       font-size: inherit;
     }
-    /deep/ .el-tabs__header {
+    ::v-deep .el-tabs__header {
       margin: 0;
     }
   }

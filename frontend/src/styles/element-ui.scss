@@ -217,7 +217,7 @@
 // 树形结构菜单列表样式（非颜色）
 .el-tree {
   font-size: 14px;
-  /deep/ .el-tree-node__children {
+  ::v-deep .el-tree-node__children {
     .el-tree-node__content {
       padding-left: 10px !important;
     }
@@ -225,7 +225,7 @@
       padding-left: 20px !important;
     }
   }
-  /deep/ .custom-tree-node {
+  ::v-deep .custom-tree-node {
     width: 100%;
     display: flex;
     align-items: center;
@@ -242,7 +242,7 @@
       }
     }
   }
-  /deep/ .el-tree-node__expand-icon {
+  ::v-deep .el-tree-node__expand-icon {
     display: none;
   }
 }

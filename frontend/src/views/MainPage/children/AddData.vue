@@ -184,7 +184,7 @@ export default {
             cursor: pointer;
         }
     }
-    /deep/ .el-table td, /deep/ .el-table th{
+    ::v-deep .el-table td, ::v-deep .el-table th{
         padding: 7px 0;
         text-align: center;
     }

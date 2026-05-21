@@ -83,7 +83,7 @@ export default Vue.extend({
     title: '引接记录查询',
     pageType: 'mainNav',
     belongTo: 'receive',
-    hidden: true
+    hidden: false
   },
   data() {
     return {
@@ -175,10 +175,7 @@ export default Vue.extend({
       let params = {
         pageIndex: this.pageConfig.pageNum,
         pageSize: this.pageConfig.pageSize,
-        searchData: {
-          tableName: this.filterFormConfig.ruleForm.tableName,
-          // ddType: this.filterFormConfig.ruleForm.ddType
-        }
+        tableName: this.filterFormConfig.ruleForm.tableName
       };
       API.dataReceive
         .yjRecordData(params)
@@ -219,7 +216,7 @@ export default Vue.extend({
       this.pageConfig.pageSize = size;
       this.getMainTableList();
     },
-    handleView({ row }: any) {
+    handleView(row: any) {
       this.crtFileRecord = row;
       switch (row.receiveType) {
         case '1':
@@ -256,7 +253,7 @@ export default Vue.extend({
         this.dialogConfig.visible = true;
       });
     },
-    removeRecordData({ row }: any) {
+    removeRecordData(row: any) {
       console.log(row);
       this.$utils.confirm().then(() => {
         const loading = this.$utils.setLoading('删除中...');

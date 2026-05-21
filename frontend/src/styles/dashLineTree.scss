@@ -8,7 +8,7 @@
  * 可根据实际情况和界面修改样式以达到样式统一
  */
 
-/deep/ .tree-line {
+::v-deep .tree-line {
   .el-tree-node {
     position: relative;
     // padding-left: 16px;
@@ -60,9 +60,9 @@
     }
   }
 }
-/deep/ .el-tree .el-tree-node__children .el-tree-node__content {
+::v-deep .el-tree .el-tree-node__children .el-tree-node__content {
   padding-left: 18px !important;
 }
-// /deep/ .tree-line>.el-tree-node>.el-tree-node__content>.el-tree-node__expand-icon{
+// ::v-deep .tree-line>.el-tree-node>.el-tree-node__content>.el-tree-node__expand-icon{
 //     display: block;
 // }

@@ -18,8 +18,8 @@
           <el-option
             v-for="database in databaseList"
             :label="database.name"
-            :value="database.databaseId"
-            :key="database.databaseId"
+            :value="database.value"
+            :key="database.value"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -85,8 +85,8 @@
           <el-option
             v-for="database in databaseList"
             :label="database.name"
-            :value="database.databaseId"
-            :key="database.databaseId"
+            :value="database.value"
+            :key="database.value"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -252,12 +252,6 @@ export default Vue.extend({
       // 数据回显
       if (this.relationInfo) {
         let relationInfo = this.$utils.deepCopy(this.relationInfo);
-        if (this.$utils.checkDataType(relationInfo.dataSourceId) === 'String') {
-          relationInfo.dataSourceId = Number(relationInfo.dataSourceId);
-        }
-        if (this.$utils.checkDataType(relationInfo.targetDataSourceId) === 'String') {
-          relationInfo.targetDataSourceId = Number(relationInfo.targetDataSourceId);
-        }
         if (relationInfo.taskId) {
           await this.setTaskName(relationInfo.taskId);
         }
@@ -268,6 +262,12 @@ export default Vue.extend({
             this.tableRelationForm[key] = relationInfo[key];
           }
         }
+        // 确保 el-select 绑定的 ID 字段为字符串，与 option value 类型一致
+        ['dataSourceId', 'targetDataSourceId', 'tableConfigId'].forEach(k => {
+          if (this.tableRelationForm[k] != null) {
+            this.tableRelationForm[k] = String(this.tableRelationForm[k]);
+          }
+        });
         if (relationInfo.jsonForm) {
           this.tableRelation = JSON.parse(relationInfo.jsonForm).tableRelation;
         }
@@ -314,7 +314,7 @@ export default Vue.extend({
      * 设置数据库
      */
     setDatabase(data) {
-      let database = this.databaseList.find(ele => ele.databaseId === data);
+      let database = this.databaseList.find(ele => ele.value === data);
       if (database) {
         this.tableRelationForm.databaseName = database.name;
         this.getModeList(database);
@@ -324,7 +324,7 @@ export default Vue.extend({
      * 设置目标数据库列表
      */
     setTargetDatabase(data) {
-      let database = this.databaseList.find(ele => ele.databaseId === data);
+      let database = this.databaseList.find(ele => ele.value === data);
       this.tableRelationForm.targetDataSourceName = database.name;
       this.getTargetModeList(database);
     },
@@ -406,7 +406,9 @@ export default Vue.extend({
       this.$API
         .getDatabases()
         .then(({ data }) => {
-          this.databaseList = data;
+          console.log('[getDatabases] raw response:', data);
+          this.databaseList = data.data || data;
+          console.log('[getDatabases] databaseList:', this.databaseList);
         })
         .finally(() => {
           this.initInfoData();
@@ -420,9 +422,12 @@ export default Vue.extend({
       this.$API
         .getSchema({ connection: database.name })
         .then(({ data }) => {
-          this.modeList = data;
+          this.modeList = data.data || data;
         })
-        .catch();
+        .catch((err) => {
+          console.error('获取源模式列表失败:', err);
+          this.modeList = [];
+        });
     },
     /**
      * 获取所选数据源下模式列表
@@ -432,9 +437,12 @@ export default Vue.extend({
       this.$API
         .getSchema({ connection: database.name })
         .then(({ data }) => {
-          this.targetModeList = data;
+          this.targetModeList = data.data || data;
         })
-        .catch();
+        .catch((err) => {
+          console.error('获取目标模式列表失败:', err);
+          this.targetModeList = [];
+        });
     },
     /**
      * 选择所选数据源和模式下数据表列表
@@ -460,7 +468,7 @@ export default Vue.extend({
               }
             }
           })
-          .catch((this.tableList = []));
+          .catch(() => { this.tableList = [] });
       }
     },
     /**
@@ -475,7 +483,7 @@ export default Vue.extend({
         table: table.tableName
       };
       this.$API.getColumnsByTable(params).then(({ data }) => {
-        this.mainTableKeysList = data;
+        this.mainTableKeysList = data.data || data;
       });
     },
     /**
@@ -490,7 +498,7 @@ export default Vue.extend({
         table: table.tableName
       };
       this.$API.getColumnsByTable(params).then(({ data }) => {
-        table.table.keys = data;
+        table.table.keys = data.data || data;
       });
     },
     /**
@@ -512,8 +520,10 @@ export default Vue.extend({
           // 判断是否为同一数据源
           // 源和目标都一致时不能引接
           const reg = /\(.+\)/;
-          let dataSource1 = this.tableRelationForm.databaseName.match(reg)[0];
-          let dataSource2 = this.tableRelationForm.targetDataSourceName.match(reg)[0];
+          let match1 = this.tableRelationForm.databaseName ? this.tableRelationForm.databaseName.match(reg) : null;
+          let match2 = this.tableRelationForm.targetDataSourceName ? this.tableRelationForm.targetDataSourceName.match(reg) : null;
+          let dataSource1 = match1 ? match1[0] : this.tableRelationForm.databaseName;
+          let dataSource2 = match2 ? match2[0] : this.tableRelationForm.targetDataSourceName;
           if (dataSource1 === dataSource2 && this.tableRelationForm.schema === this.tableRelationForm.targetSchema) {
             this.$message.error('相同数据源和模式的数据表不能执行引接操作，请修改相关配置！');
             return;
@@ -565,15 +575,15 @@ export default Vue.extend({
 });
 </script>
 <style lang="scss" scoped>
-/deep/ .el-form {
+::v-deep .el-form {
   .el-select {
     width: 100%;
   }
 }
-/deep/ .el-tree-node__content {
+::v-deep .el-tree-node__content {
   height: auto;
 }
-/deep/ .el-tree {
+::v-deep .el-tree {
   background: transparent;
   .custom-tree-node {
     width: 100%;
@@ -581,12 +591,12 @@ export default Vue.extend({
     justify-content: space-between;
     align-items: center;
     margin: 5px 0;
-    /deep/ .el-select {
+    ::v-deep .el-select {
       margin-right: 5px;
     }
     .treeHandle {
       padding: 0 10px;
-      /deep/ .el-button {
+      ::v-deep .el-button {
         color: #fff;
       }
     }

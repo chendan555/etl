@@ -458,10 +458,10 @@ export default {
       margin-left: 0;
     }
   }
-  /deep/ .el-select {
+  ::v-deep .el-select {
     width: 100%;
   }
-  /deep/ .el-date-editor.el-input {
+  ::v-deep .el-date-editor.el-input {
     width: 100%;
   }
 }

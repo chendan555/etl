@@ -270,7 +270,7 @@ export default {
 .tableList {
   width: 100%;
   @include h(100%);
-  /deep/ .el-table__body-wrapper {
+  ::v-deep .el-table__body-wrapper {
     height: calc(100% - 40px) !important;
     overflow: auto;
   }

@@ -259,7 +259,7 @@ export default {
     display: flex;
     flex-direction: column;
 
-    /deep/ .el-tree--highlight-current {
+    ::v-deep .el-tree--highlight-current {
       .el-tree-node.is-current {
         > .el-tree-node__content {
           background-color: #bddaf9;

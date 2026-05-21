@@ -216,7 +216,7 @@ export default Vue.extend({
     .operation {
       display: flex;
       justify-content: space-around;
-      /deep/ .el-button {
+      ::v-deep .el-button {
         color: #fff;
       }
     }

@@ -13,7 +13,7 @@ export default class MainPage extends baseApi {
   getReceiveItemStat(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/index/config/merge/num.do', { params })
+        .get('/api/yj/index/config/merge/num', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -24,7 +24,7 @@ export default class MainPage extends baseApi {
   getReceiveItemStatus() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/index/config/exec/situation.do')
+        .get('/api/yj/index/config/exec/situation')
         .then(resolve)
         .catch(reject);
     });
@@ -35,7 +35,7 @@ export default class MainPage extends baseApi {
   getReceiveTotal() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/index/cumulative/volume.do')
+        .get('/api/yj/index/cumulative/volume')
         .then(resolve)
         .catch(reject);
     });

@@ -99,7 +99,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 #previewDataDialog {
-  /deep/ .el-dialog {
+  ::v-deep .el-dialog {
     margin-top: 10vh !important;
     height: calc(100% - 20vh);
     .el-dialog__body {

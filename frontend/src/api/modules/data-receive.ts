@@ -13,7 +13,7 @@ export default class DataReceive extends baseApi {
   getTableRelationList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/exec/table/page.do', params)
+        .post('/api/yj/exec/table/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -25,7 +25,7 @@ export default class DataReceive extends baseApi {
   getFileReceiveList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/exec/file/page.do', params)
+        .post('/api/yj/exec/file/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -60,7 +60,7 @@ export default class DataReceive extends baseApi {
   receiveExec(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/exec/table/exec.do', params)
+        .post('/api/yj/exec/table/exec', params)
         .then(resolve)
         .catch(reject);
     });
@@ -72,7 +72,7 @@ export default class DataReceive extends baseApi {
   receiveEmulate(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/es/imitate/call.do', params)
+        .post('/api/es/imitate/call', params)
         .then(resolve)
         .catch(reject);
     });
@@ -84,7 +84,7 @@ export default class DataReceive extends baseApi {
   getEmulateData(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/record/simulation/page.do', params)
+        .post('/api/yj/record/simulation/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -93,10 +93,10 @@ export default class DataReceive extends baseApi {
    * 引接文件数据
    * params：参数
    */
-  receiveFileData(params: any) {
+  receiveFileExec(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/file/analysis/context.do', params)
+        .post('/api/yj/exec/file/exec', params)
         .then(resolve)
         .catch(reject);
     });
@@ -108,7 +108,7 @@ export default class DataReceive extends baseApi {
   yjRecordData(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/record/history/page.do', params)
+        .post('/api/yj/record/history/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -120,7 +120,7 @@ export default class DataReceive extends baseApi {
   removeRecordData(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/record/history/del.do', { params })
+        .get('/api/yj/record/history/del', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -132,7 +132,7 @@ export default class DataReceive extends baseApi {
   seeYjData(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/record/check/page.do', params)
+        .post('/api/yj/record/check/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -144,7 +144,7 @@ export default class DataReceive extends baseApi {
   getFileReceiveData(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/file/analysis/whereabouts.do', { params })
+        .get('/api/file/analysis/whereabouts', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -156,7 +156,7 @@ export default class DataReceive extends baseApi {
   saveJsonConfig(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/jsonData/saveJsonConfig.do', params)
+        .post('/api/yj/jsonData/saveJsonConfig', params)
         .then(resolve)
         .catch(reject);
     });
@@ -168,7 +168,7 @@ export default class DataReceive extends baseApi {
   getJsonConfig(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/jsonData/queryJsonConfigById.do', { params })
+        .get('/api/yj/jsonData/queryJsonConfigById', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -180,7 +180,7 @@ export default class DataReceive extends baseApi {
   getCreatedBatchNum() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/batch/num/generate.do')
+        .get('/api/yj/batch/num/generate')
         .then(resolve)
         .catch(reject);
     });

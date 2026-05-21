@@ -195,7 +195,7 @@ export default {
       background: none;
       color: $normalWordsClr;
       font-size: 14px;
-      /deep/ .el-tree-node__children {
+      ::v-deep .el-tree-node__children {
         .el-tree-node__content {
           padding-left: 10px !important;
         }
@@ -203,7 +203,7 @@ export default {
           padding-left: 20px !important;
         }
       }
-      /deep/ .custom-tree-node {
+      ::v-deep .custom-tree-node {
         width: 100%;
         display: flex;
         justify-content: space-between;
@@ -212,12 +212,12 @@ export default {
           // font-size: 12px;
         }
       }
-      /deep/ .el-tree-node:hover {
+      ::v-deep .el-tree-node:hover {
         > .el-tree-node__content {
           background: none;
         }
       }
-      /deep/ .el-tree-node.is-current {
+      ::v-deep .el-tree-node.is-current {
         .el-tree-node__content {
           background: $crtTreeNode !important;
         }

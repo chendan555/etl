@@ -13,7 +13,7 @@ export default class PlanManage extends baseApi {
   getTransByPlanId(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/trans/plan/getTransByPlan.do', { params })
+        .get('/api/trans/plan/getTransByPlan', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -25,7 +25,7 @@ export default class PlanManage extends baseApi {
   addToCaseBank(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .put('/api/trans/plan/update/type.do', { ...params })
+        .put('/api/trans/plan/update/type', { ...params })
         .then(resolve)
         .catch(reject);
     });
@@ -37,7 +37,7 @@ export default class PlanManage extends baseApi {
   deleteFromCaseBank(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/trans/plan/quit/type.do', params)
+        .post('/api/trans/plan/quit/type', params)
         .then(resolve)
         .catch(reject);
     });

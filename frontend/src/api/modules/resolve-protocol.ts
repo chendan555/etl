@@ -13,7 +13,7 @@ export default class ResolveProtocol extends baseApi {
   getResolveProtocolList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/protocol/page.do', params)
+        .post('/api/yj/protocol/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -25,7 +25,7 @@ export default class ResolveProtocol extends baseApi {
   saveProtocol(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/protocol/save.do', params)
+        .post('/api/yj/protocol/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -37,7 +37,7 @@ export default class ResolveProtocol extends baseApi {
   deleteProtocol(data: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .delete('/api/yj/protocol/delete.do', { data })
+        .delete('/api/yj/protocol/delete', { data })
         .then(resolve)
         .catch(reject);
     });

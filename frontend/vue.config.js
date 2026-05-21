@@ -48,6 +48,13 @@ module.exports = {
   configureWebpack: webpackConfig,
   chainWebpack: config => {
     config.resolve.alias.set('@', resolve('src'));
+    // 跳过TS类型检查，加速开发构建
+    config.module.rule('ts').use('ts-loader').tap(options => {
+      options.transpileOnly = true;
+      return options;
+    });
+    // 禁用fork-ts-checker-webpack-plugin的类型检查
+    config.plugins.delete('fork-ts-checker');
     // 一个规则里的基础loader，svg是个基础loader
     const svgRule = config.module.rule('svg');
     // 清除已有的所有loader。不然接下来的loader会附加再该规则现有的loader之后

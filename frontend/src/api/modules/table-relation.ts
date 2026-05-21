@@ -13,7 +13,7 @@ export default class TableRelation extends baseApi {
   getTableRelationList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/tableConfig/queryListTableConfig.do', params)
+        .post('/api/yj/tableConfig/queryListTableConfig', params)
         .then(resolve)
         .catch(reject);
     });
@@ -25,7 +25,7 @@ export default class TableRelation extends baseApi {
   saveTableRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/tableConfig/saveTableConfigAndDetail.do', params)
+        .post('/api/yj/tableConfig/saveTableConfigAndDetail', params)
         .then(resolve)
         .catch(reject);
     });
@@ -37,7 +37,7 @@ export default class TableRelation extends baseApi {
   deleteTableRelation(data: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .delete(`/api/yj/tableConfig/deleteTableConfigAndDetail.do?id=${data}`)
+        .delete(`/api/yj/tableConfig/deleteTableConfigAndDetail?id=${data}`)
         .then(resolve)
         .catch(reject);
     });
@@ -49,7 +49,7 @@ export default class TableRelation extends baseApi {
   getAllTableRelationList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/tableConfig/getTableConfigList.do', params)
+        .post('/api/yj/tableConfig/getTableConfigList', params)
         .then(resolve)
         .catch(reject);
     });
@@ -61,7 +61,7 @@ export default class TableRelation extends baseApi {
   getTableRelationInfor(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/yj/tableConfig/queryTableConfigById.do', { params })
+        .get('/api/yj/tableConfig/queryTableConfigById', { params })
         .then(resolve)
         .catch(reject);
     });

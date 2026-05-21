@@ -13,7 +13,7 @@ export default class ProjectManage extends baseApi {
   updateTransToModel(data: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .put('/api/repository/new/updateTransToModel.do', data)
+        .put('/api/repository/new/updateTransToModel', data)
         .then(resolve)
         .catch(reject);
     });
@@ -25,7 +25,7 @@ export default class ProjectManage extends baseApi {
   addCopyTrans(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/repository/new/addCopyTrans.do', params)
+        .post('/api/repository/new/addCopyTrans', params)
         .then(resolve)
         .catch(reject);
     });
@@ -36,7 +36,7 @@ export default class ProjectManage extends baseApi {
   getGroupList() {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/task/group/getGroupList.do')
+        .post('/api/task/group/getGroupList')
         .then(resolve)
         .catch(reject);
     });
@@ -48,7 +48,7 @@ export default class ProjectManage extends baseApi {
   setTransEditing(id: string) {
     return new Promise((resolve, reject) => {
       this.$http
-        .put(`/api/task/compiling/${id}.do`)
+        .put(`/api/task/compiling/${id}`)
         .then(resolve)
         .catch(reject);
     });
@@ -60,7 +60,7 @@ export default class ProjectManage extends baseApi {
   setTransEditable(id: string) {
     return new Promise((resolve, reject) => {
       this.$http
-        .put(`/api/task/may/compile/${id}.do`)
+        .put(`/api/task/may/compile/${id}`)
         .then(resolve)
         .catch(reject);
     });

@@ -143,6 +143,25 @@ public class DynamicDataSourceManager {
         DataSource ds = getDataSource(id, dbType, host, port, databaseName, username, password, sid, schema);
         List<Map<String, Object>> columns = new ArrayList<>();
         try (Connection conn = ds.getConnection()) {
+            // DM数据库 meta.getColumns 可能因 SF_GET_OCT_LENGTH 报错，先尝试用 ResultSetMetaData
+            if ("DM".equalsIgnoreCase(dbType)) {
+                String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
+                String fullTable = actualSchema + "." + tableName;
+                try (java.sql.Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT * FROM " + fullTable + " WHERE 1=0")) {
+                    java.sql.ResultSetMetaData rsMeta = rs.getMetaData();
+                    for (int i = 1; i <= rsMeta.getColumnCount(); i++) {
+                        Map<String, Object> col = new LinkedHashMap<>();
+                        col.put("name", rsMeta.getColumnName(i));
+                        col.put("comments", "");
+                        col.put("type", rsMeta.getColumnTypeName(i));
+                        col.put("lenght", rsMeta.getPrecision(i));
+                        columns.add(col);
+                    }
+                }
+                return columns;
+            }
+
             DatabaseMetaData meta = conn.getMetaData();
             ResultSet rs = null;
             try {

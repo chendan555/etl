@@ -1,0 +1,4 @@
+SET IDENTITY_INSERT "ETL"."T_YJ_TABLE_RELATION" ON;
+INSERT INTO "ETL"."T_YJ_TABLE_RELATION"("ID","CONFIG_NAME","TASK_ID","TASK_NAME","NODE_ID","NODE_NAME","DATA_SOURCE_ID","DATABASE_NAME","SCHEMA_ID","SCHEMA","MAIN_TABLE_NAME","JSON_FORM","REMARK","CREATE_BY","CREATE_TIME","UPDATE_BY","UPDATE_TIME") VALUES(3,'≤‚ ‘','','','','',1,'≤‚ ‘',null,'ETL','TABLE_3','[{"connection":"","schema":"","tableName":"TABLE_3","table":{"keyNums":0,"remarks":"","tableName":"TABLE_3","keys":[{"name":"COLUMN_1","comments":"","type":"VARCHAR2","lenght":10},{"name":"COLUMN_2","comments":"","type":"VARCHAR2","lenght":10}]},"mainKey":"","outLinkKey":"","id":"955e-1779375304845-14588"}]','≤‚ ‘',null,'2026-05-21 22:55:13.864469',null,'2026-05-21 22:55:13.864469');
+
+SET IDENTITY_INSERT "ETL"."T_YJ_TABLE_RELATION" OFF;

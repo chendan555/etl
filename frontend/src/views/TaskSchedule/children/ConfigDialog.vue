@@ -87,7 +87,7 @@ export default {
           };
         })
       };
-      this.$axios.post('/api/quartz/task/save.do', params).then(({ data }) => {
+      this.$axios.post('/api/quartz/task/save', params).then(({ data }) => {
         if (data.success) {
           this.$message.success(data.result);
           this.$emit('closeDialog', true);
@@ -137,7 +137,7 @@ export default {
 .dialogContdiv {
   width: 100%;
   height: calc(100% - 40px);
-  /deep/ .el-input-group__append,
+  ::v-deep .el-input-group__append,
   .el-input-group__prepend {
     background: none;
     border: none;

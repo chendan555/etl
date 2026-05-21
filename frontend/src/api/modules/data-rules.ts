@@ -37,7 +37,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/rule/save.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/rule/save', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -50,7 +50,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/rule/delete.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/rule/delete', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -63,7 +63,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/rule/find.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/rule/find', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -76,7 +76,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/rule/findTypeList.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/rule/findTypeList', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -89,7 +89,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/assess/find.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/assess/find', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -102,7 +102,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/assess/save.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/assess/save', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -115,7 +115,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/assess/page.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/assess/page', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -128,7 +128,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/audit/page.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/audit/page', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -141,7 +141,7 @@ export default class DataRules extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/audit/find.do', newConfig.formData, newConfig.config)
+        .post('/api/transNew/audit/find', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -153,7 +153,7 @@ export default class DataRules extends BaseApi {
   apiSaveAudit(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/audit/auditById.do', params)
+        .post('/api/transNew/audit/auditById', params)
         .then(resolve)
         .catch(reject);
     });
@@ -164,7 +164,7 @@ export default class DataRules extends BaseApi {
   apiGetCategoryCacheData() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/common/CategoryCache/tree.do')
+        .get('/api/common/CategoryCache/tree')
         .then(resolve)
         .catch(reject);
     });
@@ -176,7 +176,7 @@ export default class DataRules extends BaseApi {
   apiAddCategory(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/common/CategoryCache/save.do', params)
+        .post('/api/common/CategoryCache/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -188,7 +188,7 @@ export default class DataRules extends BaseApi {
   apiDelCategory(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/common/CategoryCache/deleteBatchIds.do', { params })
+        .get('/api/common/CategoryCache/deleteBatchIds', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -200,7 +200,7 @@ export default class DataRules extends BaseApi {
   apiUpdateCatalog(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/common/CategoryCache/update.do', params)
+        .post('/api/common/CategoryCache/update', params)
         .then(resolve)
         .catch(reject);
     });
@@ -212,7 +212,7 @@ export default class DataRules extends BaseApi {
   apiUpdateCategory(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/transNew/update/reorganization.do', params)
+        .post('/api/transNew/update/reorganization', params)
         .then(resolve)
         .catch(reject);
     });
@@ -237,7 +237,7 @@ export default class DataRules extends BaseApi {
   apiGetAuditResult() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/transNew/census/auditResult.do')
+        .get('/api/transNew/census/auditResult')
         .then(resolve)
         .catch(reject);
     });
@@ -248,7 +248,7 @@ export default class DataRules extends BaseApi {
   apiGetRunResult() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/transNew/census/runResult.do')
+        .get('/api/transNew/census/runResult')
         .then(resolve)
         .catch(reject);
     });
@@ -260,7 +260,7 @@ export default class DataRules extends BaseApi {
   apiGetCategroy(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/transNew/census/categroy.do', params)
+        .get('/api/transNew/census/categroy', params)
         .then(resolve)
         .catch(reject);
     });
@@ -271,7 +271,7 @@ export default class DataRules extends BaseApi {
   apiGetAllNums() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/transNew/census/allNums.do')
+        .get('/api/transNew/census/allNums')
         .then(resolve)
         .catch(reject);
     });
@@ -282,7 +282,7 @@ export default class DataRules extends BaseApi {
   apiGetQuality() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/transNew/census/checkNum.do')
+        .get('/api/transNew/census/checkNum')
         .then(resolve)
         .catch(reject);
     });
@@ -294,7 +294,7 @@ export default class DataRules extends BaseApi {
   apiGetErrorForm(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/transNew/errorForm/page.do', { params })
+        .get('/api/transNew/errorForm/page', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -306,7 +306,7 @@ export default class DataRules extends BaseApi {
   apiDelFormatTree(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/trans/plan/categroy/tree/delete.do', { params })
+        .get('/api/trans/plan/categroy/tree/delete', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -318,7 +318,7 @@ export default class DataRules extends BaseApi {
   apiSaveFormatTree(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/trans/plan/categroy/tree/save.do', { params })
+        .get('/api/trans/plan/categroy/tree/save', { params })
         .then(resolve)
         .catch(reject);
     });

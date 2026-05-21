@@ -23,7 +23,7 @@ export default {
     title: '处理方案管理',
     pageType: 'mainNav',
     belongTo: 'process',
-    hidden: true
+    hidden: false
   },
   components: {
     BaseFrameTwo,

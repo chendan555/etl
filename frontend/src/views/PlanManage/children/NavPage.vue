@@ -269,13 +269,13 @@ export default {
       flex: 1;
       overflow: hidden;
       overflow-y: auto;
-      /deep/ .el-button--mini,
-      /deep/ .el-button--small {
+      ::v-deep .el-button--mini,
+      ::v-deep .el-button--small {
         font-size: 14px;
       }
     }
   }
-  /deep/ .el-form {
+  ::v-deep .el-form {
     // .el-form-item__label {
     //   color: $normalWordsClr;
     // }

@@ -10,7 +10,7 @@ import request from '../base/http';
  *  - params：参数
  */
 const list = (params: any) => {
-  return request({ url: '/api/trans/plan/page/data/query.do', method: 'GET', params });
+  return request({ url: '/api/trans/plan/page/data/query', method: 'GET', params });
 };
 
 /**
@@ -18,26 +18,26 @@ const list = (params: any) => {
  *  - params：参数
  */
 const get = (params: any) => {
-  return request({ url: '/api/trans/plan/get/out/detail.do', method: 'GET', params });
+  return request({ url: '/api/trans/plan/get/out/detail', method: 'GET', params });
 };
 
 /* 
  * 数据类别 
 */
 const sjlx = () => {
-  return request({ url: '/api/trans/plan/getDataType.do', method: 'GET' });
+  return request({ url: '/api/trans/plan/getDataType', method: 'GET' });
 };
 /* 
  * 数据状态
 */
 const sjzt = () => {
-  return request({ url: '/api/trans/plan/getDataStatus.do', method: 'GET' });
+  return request({ url: '/api/trans/plan/getDataStatus', method: 'GET' });
 };
 /* 
  * 数据分类
 */
 const sjfl = () => {
-  return request({ url: '/api/trans/plan/getFileType.do', method: 'GET' });
+  return request({ url: '/api/trans/plan/getFileType', method: 'GET' });
 };
 export default {
   list, // 表格数据查询

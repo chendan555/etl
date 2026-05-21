@@ -206,7 +206,7 @@ export default {
   display: flex;
   justify-content: space-around;
   &:hover {
-    /deep/ .el-button {
+    ::v-deep .el-button {
       color: #fff;
     }
     .delete {

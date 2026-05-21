@@ -186,7 +186,7 @@ export default {
         background: #333;
         .el-textarea {
           height: 100%;
-          /deep/ .el-textarea__inner {
+          ::v-deep .el-textarea__inner {
             height: 100%;
           }
         }

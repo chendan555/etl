@@ -13,7 +13,7 @@ export default class ClassifyService extends BaseApi {
   getClassifyFind(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/equip/classify/tree.do', { params })
+        .get('/api/equip/classify/tree', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -26,7 +26,7 @@ export default class ClassifyService extends BaseApi {
   getClassifyDetails(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/equip/classify/info.do', { params })
+        .get('/api/equip/classify/info', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -39,7 +39,7 @@ export default class ClassifyService extends BaseApi {
   getClassifyDel(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .delete('/api/equip/classify/delete.do', { params })
+        .delete('/api/equip/classify/delete', { params })
         .then(resolve)
         .catch(reject);
     });
@@ -52,7 +52,7 @@ export default class ClassifyService extends BaseApi {
   getClassifySave(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .put('/api/equip/classify/update.do', params)
+        .put('/api/equip/classify/update', params)
         .then(resolve)
         .catch(reject);
     });
@@ -65,7 +65,7 @@ export default class ClassifyService extends BaseApi {
   getClassifyId(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/equip/classify/selectMaxId.do', { params })
+        .get('/api/equip/classify/selectMaxId', { params })
         .then(resolve)
         .catch(reject);
     });

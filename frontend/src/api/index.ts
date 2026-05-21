@@ -80,7 +80,7 @@ function getStepsName(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/previousSteps.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/previousSteps', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -94,7 +94,7 @@ function getParamsName(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/prevSteps.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/prevSteps', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -169,7 +169,7 @@ function getMenuData(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/steps.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/steps', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -205,7 +205,7 @@ function getCategoriesList() {
 function getDatabases() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/common/getDatabases.do')
+      .post('/api/common/getDatabases')
       .then(resolve)
       .catch(reject);
   });
@@ -228,7 +228,7 @@ function getSchema(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/getSchema.do', newConfig.formData, newConfig.config)
+      .post('/api/database/getSchema', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -241,7 +241,7 @@ function getColumnsByTable(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/getColumnsByTable.do', newConfig.formData, newConfig.config)
+      .post('/api/database/getColumnsByTable', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -259,7 +259,7 @@ function getTableDatas(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/yj/getDataTables.do', newConfig.formData, newConfig.config)
+      .post('/api/database/yj/getDataTables', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -297,7 +297,7 @@ function getSchemaData(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/getSchema.do', newConfig.formData, newConfig.config)
+      .post('/api/database/getSchema', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -311,7 +311,7 @@ function getBaseTableData(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/getDataTables.do', newConfig.formData, newConfig.config)
+      .post('/api/database/getDataTables', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -325,7 +325,7 @@ function apiTableColumns(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/getColumnsByTable.do', newConfig.formData, newConfig.config)
+      .post('/api/database/getColumnsByTable', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -338,7 +338,7 @@ function apiTableColumns(params: any) {
 function getAllTaskGroupBeforeCreate() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/group/getAllTaskGroupBeforeCreate.do')
+      .post('/api/task/group/getAllTaskGroupBeforeCreate')
       .then(resolve)
       .catch(reject);
   });
@@ -352,7 +352,7 @@ function createTrans(params: any) {
   // let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/repository/new/createTrans.do', params)
+      .post('/api/repository/new/createTrans', params)
       .then(resolve)
       .catch(reject);
   });
@@ -366,7 +366,7 @@ function modifyTrans(params: any) {
   // let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/repository/new/updateTrans.do', params)
+      .post('/api/repository/new/updateTrans', params)
       .then(resolve)
       .catch(reject);
   });
@@ -378,7 +378,7 @@ function modifyTrans(params: any) {
 function addReceiveProc(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/repository/new/createYJTrans.do', params)
+      .post('/api/repository/new/createYJTrans', params)
       .then(resolve)
       .catch(reject);
   });
@@ -390,7 +390,7 @@ function addReceiveProc(params: any) {
 function updateReceiveProc(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/repository/new/updateYJTrans.do', params)
+      .post('/api/repository/new/updateYJTrans', params)
       .then(resolve)
       .catch(reject);
   });
@@ -402,7 +402,7 @@ function updateReceiveProc(params: any) {
 function getReceiceProcList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/find/yjTrans.do', { params })
+      .get('/api/task/find/yjTrans', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -415,7 +415,7 @@ function getReceiceProcList(params: any) {
 function createTransByJson(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/repository/createTrans.do', params)
+      .post('/api/repository/createTrans', params)
       .then(resolve)
       .catch(reject);
   });
@@ -429,7 +429,7 @@ function deleteTask(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/delete.do', newConfig.formData, newConfig.config)
+      .post('/api/task/delete', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -443,7 +443,7 @@ function getAllTransScheduler(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transScheduler/getAllTransScheduler.do', newConfig.formData, newConfig.config)
+      .post('/api/transScheduler/getAllTransScheduler', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -457,7 +457,7 @@ function fiexdExecuteTrans(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transTask/fiexdExecuteTrans.do', newConfig.formData, newConfig.config)
+      .post('/api/transTask/fiexdExecuteTrans', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -471,7 +471,7 @@ function deleteScheduler(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transScheduler/deleteScheduler.do', newConfig.formData, newConfig.config)
+      .post('/api/transScheduler/deleteScheduler', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -485,7 +485,7 @@ function stopTransScheduler(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transScheduler/stopTransScheduler.do', newConfig.formData, newConfig.config)
+      .post('/api/transScheduler/stopTransScheduler', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -499,7 +499,7 @@ function updateTransScheduler(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transScheduler/updateTransScheduler.do', newConfig.formData, newConfig.config)
+      .post('/api/transScheduler/updateTransScheduler', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -513,7 +513,7 @@ function getExplorer(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/explorer.do', newConfig.formData, newConfig.config)
+      .post('/api/database/explorer', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -526,7 +526,7 @@ function getExplorer(params: any) {
 function getFilesName(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get(`/api/transNew/files.do`, { params })
+      .get(`/api/transNew/files`, { params })
       .then(resolve)
       .catch(reject);
   });
@@ -552,7 +552,7 @@ function filePreview(params: any) {
   };
   return new Promise((resolve, reject) => {
     axios
-      .post(`/api/transNew/previewFile.do`, param)
+      .post(`/api/transNew/previewFile`, param)
       .then(resolve)
       .catch(reject);
   });
@@ -579,7 +579,7 @@ function getExplorerById(params: any) {
 
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/explorer.do', formData, newConfig.config)
+      .post('/api/database/explorer', formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -594,7 +594,7 @@ function getTableFields(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/tableFields.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/tableFields', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -609,7 +609,7 @@ function getPreviewData(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/previewData.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/previewData', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -624,7 +624,7 @@ function getPreviewDataOut(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/previewDataOut.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/previewDataOut', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -638,7 +638,7 @@ function previewDataView(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/getDataView.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/getDataView', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -656,7 +656,7 @@ function getExcelDataOut(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/excelInputController/excelPreview.do', newConfig.formData, newConfig.config)
+      .post('/api/excelInputController/excelPreview', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -675,7 +675,7 @@ function SaveJSON(params: any) {
   };
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/saveJSON.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/saveJSON', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -687,7 +687,7 @@ function SaveJSON(params: any) {
 function SaveJSONAuto(params: any) {
   params = { ...getFlowChart(), ...params };
   params.nodes.forEach((item: any, itemIndex: any) => {
-    let dom = JSON.parse(item.data.dom);
+    let dom = JSON.parse(item.datam);
     let ruleForm = item.properties.ruleForm;
     let domString = JSON.stringify(dom);
     for (let props in ruleForm) {
@@ -697,7 +697,7 @@ function SaveJSONAuto(params: any) {
         dom[index].config.value = ruleForm[props];
       }
     }
-    item.data.dom = JSON.stringify(dom);
+    item.datam = JSON.stringify(dom);
   });
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
@@ -716,7 +716,7 @@ function getFlowChartData(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/openNew.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/openNew', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -729,7 +729,7 @@ function updateProjFolder(params: any) {
   // let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/group/save.do', params)
+      .post('/api/task/group/save', params)
       .then(resolve)
       .catch(reject);
   });
@@ -741,7 +741,7 @@ function updateProjFolder(params: any) {
 function getPlanData(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get(`/api/trans/plan/${params.id}/detail.do`)
+      .get(`/api/trans/plan/${params.id}/detail`)
       .then(resolve)
       .catch(reject);
   });
@@ -764,7 +764,7 @@ function execModel(params: any, execParams?: any) {
   };
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/run.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/run', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -814,7 +814,7 @@ function execRunResult(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/result.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/result', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -829,7 +829,7 @@ function getInputOutputFields(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/iputOutputFields.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/iputOutputFields', newConfig.formData, newConfig.config)
       .then(res => {
         if (res.data && res.data.length) {
           res.data.forEach((item: any) => {
@@ -851,7 +851,7 @@ function getIputOutputFieldsName(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/iputOutputFieldsName.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/iputOutputFieldsName', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -866,7 +866,7 @@ function getFieldAndRow(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/getFieldAndRow.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/getFieldAndRow', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -887,7 +887,7 @@ function getReplaceValue(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/contendValue.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/contendValue', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -902,7 +902,7 @@ function getJavaScriptCodeFields(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/script/variables.do', newConfig.formData, newConfig.config)
+      .post('/api/script/variables', newConfig.formData, newConfig.config)
       .then(res => {
         if (res.data && res.data.length) {
           res.data.forEach((item: any) => {
@@ -922,7 +922,7 @@ function getJavaScriptCodeFields(params: any) {
 function getColumnType() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/fieldType.do')
+      .post('/api/transNew/fieldType')
       .then(resolve)
       .catch(reject);
   });
@@ -935,7 +935,7 @@ function getColumnType() {
 function downloadExcel(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/transNew/downloadExcel.do', { params })
+      .get('/api/transNew/downloadExcel', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -948,7 +948,7 @@ function downloadExcel(params: any) {
 function getColumnFormats() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/ExcelOutput/columnFormats.do')
+      .post('/api/ExcelOutput/columnFormats')
       .then(resolve)
       .catch(reject);
   });
@@ -961,7 +961,7 @@ function getColumnFormats() {
 function getAggre() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/denormaliser/aggre.do')
+      .post('/api/denormaliser/aggre')
       .then(resolve)
       .catch(reject);
   });
@@ -974,7 +974,7 @@ function getAggre() {
 function getValueMeta() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/system/valueMeta.do')
+      .post('/api/system/valueMeta')
       .then(resolve)
       .catch(reject);
   });
@@ -987,7 +987,7 @@ function getValueMeta() {
 function getfuncType() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/system/func.do')
+      .post('/api/system/func')
       .then(resolve)
       .catch(reject);
   });
@@ -1000,7 +1000,7 @@ function getfuncType() {
 function getMergeJoinType() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/mergejoin/types.do')
+      .post('/api/mergejoin/types')
       .then(resolve)
       .catch(reject);
   });
@@ -1013,7 +1013,7 @@ function getMergeJoinType() {
 function getCalcDesc() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/calcDesc.do')
+      .post('/api/transNew/calcDesc')
       .then(resolve)
       .catch(reject);
   });
@@ -1027,7 +1027,7 @@ function getTrans(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/trans/get.do', newConfig.formData, newConfig.config)
+      .post('/api/task/trans/get', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1041,7 +1041,7 @@ function getTaskGroupList(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/trans/get.do', newConfig.formData, newConfig.config)
+      .post('/api/task/trans/get', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1056,7 +1056,7 @@ function getNextSteps(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/nextSteps.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/nextSteps', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1071,7 +1071,7 @@ function getPreviousSteps(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/previousSteps.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/previousSteps', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1086,7 +1086,7 @@ function addStepName(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/addStepName.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/addStepName', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1101,7 +1101,7 @@ function updateStepName(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/updateStepName.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/updateStepName', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1116,7 +1116,7 @@ function getExcelSheet(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/excelInputController/getExcelSheet.do', newConfig.formData, newConfig.config)
+      .post('/api/excelInputController/getExcelSheet', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1131,7 +1131,7 @@ function getExcelFields(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/excelInputController/getFields.do', newConfig.formData, newConfig.config)
+      .post('/api/excelInputController/getFields', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1144,7 +1144,7 @@ function getExcelFields(params: any) {
 function getFileUpload(uploadFile: any, params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/excelInputController/upload.do', uploadFile, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .post('/api/excelInputController/upload', uploadFile, { headers: { 'Content-Type': 'multipart/form-data' } })
       .then(resolve)
       .catch(reject);
   });
@@ -1197,7 +1197,7 @@ function getDatabaseDelete(params: any) {
   let newConfig = transferToFormData(params);
   //
   // return new Promise((resolve, reject) => {
-  //   axios.post('/repository/createTrans.do', newConfig.formData, newConfig.config).then(resolve).catch(reject);
+  //   axios.post('/repository/createTrans', newConfig.formData, newConfig.config).then(resolve).catch(reject);
   // });
   //
   return new Promise((resolve, reject) => {
@@ -1241,7 +1241,7 @@ function getDatabaseConnTypeList(params: any) {
 function getLocalDateTimeFormat() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/system/datetimeformat.do')
+      .post('/api/system/datetimeformat')
       .then(resolve)
       .catch(reject);
   });
@@ -1254,7 +1254,7 @@ function getLocalDateTimeFormat() {
 function getAvailableCharsets() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/system/availableCharsets.do')
+      .post('/api/system/availableCharsets')
       .then(resolve)
       .catch(reject);
   });
@@ -1267,7 +1267,7 @@ function getAvailableCharsets() {
 function getCompressionProviderNames() {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/system/compressionProviderNames.do')
+      .post('/api/system/compressionProviderNames')
       .then(resolve)
       .catch(reject);
   });
@@ -1280,7 +1280,7 @@ function getCompressionProviderNames() {
 function getCreateTable(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plugin/create/table.do', params)
+      .post('/api/trans/plugin/create/table', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1293,7 +1293,7 @@ function getCreateTable(params: any) {
 function getCheckTableName(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plugin/check/table.do', { params })
+      .get('/api/trans/plugin/check/table', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1308,7 +1308,7 @@ function getCreatePlan(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plan/create.do', newConfig.formData, newConfig.config)
+      .post('/api/trans/plan/create', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1321,7 +1321,7 @@ function getCreatePlan(params: any) {
 function getCreatePlanList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/page.do', { params })
+      .get('/api/trans/plan/page', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1335,7 +1335,7 @@ function getCreatePlanEdit(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plan/edit.do', newConfig.formData, newConfig.config)
+      .post('/api/trans/plan/edit', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1349,7 +1349,7 @@ function getCreatePlanRemove(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plan/deletePlanAndDetail.do', newConfig.formData, newConfig.config)
+      .post('/api/trans/plan/deletePlanAndDetail', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1362,7 +1362,7 @@ function getCreatePlanRemove(params: any) {
 function getPlanResultList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/findTransList.do', { params })
+      .get('/api/trans/plan/findTransList', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1374,7 +1374,7 @@ function getPlanResultList(params: any) {
 function getPlanResultData(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/yulan.do', { params })
+      .get('/api/trans/plan/yulan', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1387,7 +1387,7 @@ function getPlanResultData(params: any) {
 function getConnectCodeTree() {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/userDefinedJavacClass/tree.do')
+      .get('/api/userDefinedJavacClass/tree')
       .then(resolve)
       .catch(reject);
   });
@@ -1439,7 +1439,7 @@ function getTaskListData() {
 function getProjListData(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/group/all/list.do', { params })
+      .get('/api/task/group/all/list', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1452,7 +1452,7 @@ function getProjListData(params: any) {
 function getProjTransList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/find/trans.do', { params })
+      .get('/api/task/find/trans', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1465,7 +1465,7 @@ function getProjTransList(params: any) {
 function getTotalProcList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/find/trans/no/group.do', { params })
+      .get('/api/task/find/trans/no/group', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1478,7 +1478,7 @@ function getTotalProcList(params: any) {
 function getProjDetail(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/group/detail.do', { params })
+      .get('/api/task/group/detail', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1491,7 +1491,7 @@ function getProjDetail(params: any) {
 function getProjDataSource(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/group/datasource/info.do', { params })
+      .get('/api/task/group/datasource/info', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1505,7 +1505,7 @@ function createProjFolder(params: any) {
   // let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/group/create.do', params)
+      .post('/api/task/group/create', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1518,7 +1518,7 @@ function createProjFolder(params: any) {
 function modifyProjFolder(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/group/modify.do', params)
+      .post('/api/task/group/modify', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1531,7 +1531,7 @@ function modifyProjFolder(params: any) {
 function removeProjFolder(data: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/group/dels.do', data)
+      .post('/api/task/group/dels', data)
       .then(resolve)
       .catch(reject);
   });
@@ -1544,7 +1544,7 @@ function removeProjFolder(data: any) {
 function getReportLists(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/report/template/list.do', { params })
+      .get('/api/report/template/list', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1557,7 +1557,7 @@ function getReportLists(params: any) {
 function addReportTemplate(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/report/template/add.do', params)
+      .post('/api/report/template/add', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1570,7 +1570,7 @@ function addReportTemplate(params: any) {
 function delReportTemplate(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/report/template/delete.do', params)
+      .post('/api/report/template/delete', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1583,7 +1583,7 @@ function delReportTemplate(params: any) {
 function runPlan(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/start.do', { params })
+      .get('/api/trans/plan/start', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1595,7 +1595,7 @@ function runPlan(params: any) {
 function stopPlan(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/stop.do', { params })
+      .get('/api/trans/plan/stop', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1610,7 +1610,7 @@ function stopPlan(params: any) {
 function getAssessTemplateList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/quality/assess/template/page.do', { params })
+      .get('/api/quality/assess/template/page', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1624,7 +1624,7 @@ function getAssessTemplateList(params: any) {
 function getAllAssessTemplateList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/quality/assess/template/list.do', { params })
+      .get('/api/quality/assess/template/list', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1638,7 +1638,7 @@ function getAllAssessTemplateList(params: any) {
 function saveNewTemplate(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/quality/assess/template/save.do', params)
+      .post('/api/quality/assess/template/save', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1653,7 +1653,7 @@ function removeTemplate(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/quality/assess/template/delete.do', newConfig.formData, newConfig.config)
+      .post('/api/quality/assess/template/delete', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1667,7 +1667,7 @@ function removeTemplate(params: any) {
 function getAllPlanList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/run/list.do', { params })
+      .get('/api/trans/plan/run/list', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1681,7 +1681,7 @@ function getAllPlanList(params: any) {
 function saveNewAssess(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/quality/assess/save.do', params)
+      .post('/api/quality/assess/save', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1696,7 +1696,7 @@ function getAssessList(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/assess/page.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/assess/page', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1710,7 +1710,7 @@ function getAssessList(params: any) {
 function getAssessInfor(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/quality/assess/info.do', { params })
+      .get('/api/quality/assess/info', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1725,7 +1725,7 @@ function deleteAssessItem(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/assess/delete.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/assess/delete', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1740,7 +1740,7 @@ function getAssessRuleList(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/rule/page.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/rule/page', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1756,7 +1756,7 @@ function runAssess(params: any) {
   (newConfig.config as any).loadText = '执行中...';
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/assess/run.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/assess/run', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1770,7 +1770,7 @@ params: {
 function getReplenishList(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/transNew/errorForm/page.do', { params })
+      .get('/api/transNew/errorForm/page', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1795,7 +1795,7 @@ function getReplenishForm(params: any) {
 function getPlanNavTree(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/trans/plan/categroy/tree.do', { params })
+      .get('/api/trans/plan/categroy/tree', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1806,7 +1806,7 @@ function getPlanNavTree(params: any) {
 function newPlan(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plan/savePlanAndDetail.do', params)
+      .post('/api/trans/plan/savePlanAndDetail', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1818,7 +1818,7 @@ function newPlan(params: any) {
 function count(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/get/count.do', params)
+      .post('/api/transNew/get/count', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1831,7 +1831,7 @@ function getTableDataed(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/database/yj/getTableDatas.do', newConfig.formData, newConfig.config)
+      .post('/api/database/yj/getTableDatas', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1843,7 +1843,7 @@ function getTableDataed(params: any) {
 function getTransByPlanId(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plan/getTransPlanById.do', params)
+      .post('/api/trans/plan/getTransPlanById', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1880,7 +1880,7 @@ function DealResult(params: any) {
   let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/transNew/log/page.do', newConfig.formData, newConfig.config)
+      .post('/api/transNew/log/page', newConfig.formData, newConfig.config)
       .then(resolve)
       .catch(reject);
   });
@@ -1892,7 +1892,7 @@ function DealResult(params: any) {
 function removeDealRecord(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/transNew/log/del.do', { params })
+      .get('/api/transNew/log/del', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1904,7 +1904,7 @@ function removeDealRecord(params: any) {
 function download(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/file/download.do', { params })
+      .get('/api/file/download', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1921,7 +1921,7 @@ function getAllProtocolList() {
   };
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/yj/protocol/page.do', params)
+      .post('/api/yj/protocol/page', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1933,7 +1933,7 @@ function getAllProtocolList() {
 function getArtificial(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/data/source/artificial/list.do', { params })
+      .get('/api/data/source/artificial/list', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1945,7 +1945,7 @@ function getArtificial(params: any) {
 function getFzDataByNodeId(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/es/find.do', params)
+      .post('/api/es/find', params)
       .then(resolve)
       .catch(reject);
   });
@@ -1957,7 +1957,7 @@ function getFzDataByNodeId(params: any) {
 function getTaskLists() {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/task/plan/node/tree.do')
+      .get('/api/task/plan/node/tree')
       .then(resolve)
       .catch(reject);
   });
@@ -1969,7 +1969,7 @@ function getTaskLists() {
 // function getServerSourceList() {
 //   return new Promise((resolve, reject) => {
 //     axios
-//       .get('/api/data/source/serverSource/list.do')
+//       .get('/api/data/source/serverSource/list')
 //       .then(resolve)
 //       .catch(reject);
 //   });
@@ -1983,7 +1983,7 @@ function getTaskLists() {
 function getDatabasesByType(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/common/getDatabasesByType.do', { params })
+      .get('/api/common/getDatabasesByType', { params })
       .then(resolve)
       .catch(reject);
   });
@@ -1998,7 +1998,7 @@ function getDatabasesByType(params: any) {
 function saveFileServer(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/data/source/file/save/or/edit.do', params)
+      .post('/api/data/source/file/save/or/edit', params)
       .then(resolve)
       .catch(reject);
   });
@@ -2010,7 +2010,7 @@ function saveFileServer(params: any) {
 function receiveMysql(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/yj/exec/exec/transfer/script.do', params)
+      .post('/api/yj/exec/exec/transfer/script', params)
       .then(resolve)
       .catch(reject);
   });
@@ -2022,7 +2022,7 @@ function receiveMysql(params: any) {
 function receiveOracle(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/yj/exec/exec/transfer/script.do', params)
+      .post('/api/yj/exec/exec/transfer/script', params)
       .then(resolve)
       .catch(reject);
   });
@@ -2033,7 +2033,7 @@ function receiveOracle(params: any) {
 function getBatchList() {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/data/source/serverSource/list.do')
+      .get('/api/data/source/serverSource/list')
       .then(resolve)
       .catch(reject);
   });
@@ -2045,7 +2045,7 @@ function getBatchList() {
 function getBatchNumList() {
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/yj/batch/num/list.do')
+      .get('/api/yj/batch/num/list')
       .then(resolve)
       .catch(reject);
   });
@@ -2057,7 +2057,7 @@ function getBatchNumList() {
 function downloadFileToServer(params: any) {
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/task/plan/download/file.do', params, { headers: { 'Content-Type': 'application/json;charset=UTF-8' } })
+      .post('/api/task/plan/download/file', params, { headers: { 'Content-Type': 'application/json;charset=UTF-8' } })
       .then(resolve)
       .catch(reject);
   });
@@ -2075,7 +2075,7 @@ function getTypeInputHis(params?: any) {
   delete params.nodeId; // 删除默认参数nodeId   --Leo 20221014
   return new Promise((resolve, reject) => {
     axios
-      .get('/api/yj/queryRecord/get/limit.do', { params })
+      .get('/api/yj/queryRecord/get/limit', { params })
       .then(resolve)
       .catch(reject);
   });

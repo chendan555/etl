@@ -9,21 +9,21 @@ import request from '../base/http';
     - params：参数
 */
 const allNums = (params: any) => {
-  return request({ url: '/api/transNew/log/allNums.do', method: 'GET', params });
+  return request({ url: '/api/transNew/log/allNums', method: 'GET', params });
 };
 /* 
   获取处理执行结果
     - params：参数
 */
 const apiGetRunResult = (params: any) => {
-  return request({ url: '/api/transNew/log/runResult.do', method: 'GET', params });
+  return request({ url: '/api/transNew/log/runResult', method: 'GET', params });
 };
 /* 
   获取处理执行结果
     - params：参数
 */
 const apiGetRunResult_New = (params: any) => {
-  return request({ url: '/api/transNew/get/transformationByTask.do', method: 'GET', params });
+  return request({ url: '/api/transNew/get/transformationByTask', method: 'GET', params });
 };
 export default {
   allNums, // 表格数据查询

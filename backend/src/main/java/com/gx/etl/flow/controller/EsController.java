@@ -9,8 +9,9 @@ import java.util.Map;
 @RequestMapping("/api/es")
 public class EsController {
 
-    @PostMapping("/imitate/call")
+    @PostMapping("/imitate/call.do")
     public Result<?> imitateCall(@RequestBody Map<String, Object> params) {
+        // 仿真引接 - 暂时返回成功，后续实现
         return Result.ok();
     }
 }

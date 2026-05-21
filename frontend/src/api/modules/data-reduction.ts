@@ -9,7 +9,7 @@ import request from '../base/http';
  * 获取菜单树
  */
 const navTree = () => {
-  return request({ url: '/api/trans/plan/categroy/cache/tree.do', method: 'GET' });
+  return request({ url: '/api/trans/plan/categroy/cache/tree', method: 'GET' });
 };
 
 /**
@@ -25,7 +25,7 @@ const list = (params: any) => {
  * params：参数
  */
 const updata = (params: any) => {
-  return request({ url: '/api/trans/plan/update/reorganization.do', method: 'POST', params });
+  return request({ url: '/api/trans/plan/update/reorganization', method: 'POST', params });
 };
 
 export default {

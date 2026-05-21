@@ -12,7 +12,7 @@ export default class ConfigRelation extends baseApi {
   getTableRelationList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/table/page.do', params)
+        .post('/api/yj/config/table/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -24,7 +24,7 @@ export default class ConfigRelation extends baseApi {
   deleteTableRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/table/delete.do', params)
+        .post('/api/yj/config/table/delete', params)
         .then(resolve)
         .catch(reject);
     });
@@ -36,7 +36,7 @@ export default class ConfigRelation extends baseApi {
   saveTableRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/table/save.do', params)
+        .post('/api/yj/config/table/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -48,7 +48,7 @@ export default class ConfigRelation extends baseApi {
   getFileList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/file/page.do', params)
+        .post('/api/yj/config/file/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -60,7 +60,7 @@ export default class ConfigRelation extends baseApi {
   saveFileRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/file/save.do', params)
+        .post('/api/yj/config/file/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -72,7 +72,7 @@ export default class ConfigRelation extends baseApi {
   deleteFileRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/file/delete.do', params)
+        .post('/api/yj/config/file/delete', params)
         .then(resolve)
         .catch(reject);
     });
@@ -84,7 +84,7 @@ export default class ConfigRelation extends baseApi {
   getEmulatedataList(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/simulation/page.do', params)
+        .post('/api/yj/config/simulation/page', params)
         .then(resolve)
         .catch(reject);
     });
@@ -96,7 +96,7 @@ export default class ConfigRelation extends baseApi {
   saveEmulateRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/simulation/save.do', params)
+        .post('/api/yj/config/simulation/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -108,7 +108,7 @@ export default class ConfigRelation extends baseApi {
   deleteEmulateRelation(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/config/simulation/delete.do', params)
+        .post('/api/yj/config/simulation/delete', params)
         .then(resolve)
         .catch(reject);
     });
@@ -132,7 +132,7 @@ export default class ConfigRelation extends baseApi {
   uploadFile(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/task/plan/upload/file/col.do', params)
+        .post('/api/task/plan/upload/file/col', params)
         .then(resolve)
         .catch(reject);
     });
@@ -144,7 +144,7 @@ export default class ConfigRelation extends baseApi {
   mergeTxt(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/yj/protocol/file/merge.do', params)
+        .post('/api/yj/protocol/file/merge', params)
         .then(resolve)
         .catch(reject);
     });

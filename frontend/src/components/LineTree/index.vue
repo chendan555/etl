@@ -178,7 +178,7 @@ export default {
     width: 100%;
     height: 30px;
     // padding: 0 10px;
-    /deep/ .el-input__inner {
+    ::v-deep .el-input__inner {
       border: 1px solid var(--currentRow);
       background: var(--headerBg);
       color: #fff;
@@ -197,7 +197,7 @@ export default {
         margin-right: 4px;
       }
     }
-    /deep/ .el-loading-mask {
+    ::v-deep .el-loading-mask {
       background-color: $inputBgClr;
     }
   }

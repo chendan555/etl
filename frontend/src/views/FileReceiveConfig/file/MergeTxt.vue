@@ -19,16 +19,6 @@
       </div>
     </div>
     <el-button type="primary" @click="getLocalFiles" size="small">添加本地文件</el-button>
-
-    <input
-      type="file"
-      name="chooseFile"
-      id="chooseFile"
-      ref="chooseFile"
-      accept=".txt"
-      @change="getFilesPath"
-      hidden
-    >
   </div>
 </template>
 <script lang="ts">
@@ -59,7 +49,27 @@ export default Vue.extend({
   methods: {
     // 展示文件选择器
     getLocalFiles() {
-      (this.$refs.chooseFile as any).click();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.txt';
+      const self = this;
+      const cleanup = () => {
+        if (input.parentNode) document.body.removeChild(input);
+      };
+      input.addEventListener('change', function(e: any) {
+        self.getFilesPath(e);
+        cleanup();
+      });
+      window.addEventListener('focus', function onFocus() {
+        setTimeout(() => {
+          if (input.files && input.files.length === 0) {
+            cleanup();
+          }
+          window.removeEventListener('focus', onFocus);
+        }, 500);
+      });
+      document.body.appendChild(input);
+      input.click();
     },
     // 上传文件
     getFilesPath(e: any) {
@@ -165,7 +175,7 @@ export default Vue.extend({
       }
       .value {
         flex: 1;
-        /deep/ .el-select{
+        ::v-deep .el-select{
           width: 100%;
         }
       }

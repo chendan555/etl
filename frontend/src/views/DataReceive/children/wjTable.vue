@@ -158,35 +158,19 @@ export default {
     },
 
     receiveFile(row) {
-      console.log(row);
       let params = {
-        id: row.analysisProtocolId,
-        yjMappingId: row.id,
-        fileUrl: row.filePath,
-        batchNum: this.batchNumber,
-        isNewBatchNum: this.isNewBatchNum
+        id: row.id,
+        batchNum: this.batchNumber
       };
-      API.dataReceive.receiveFileData(params).then(({ data }) => {
-        console.log(data);
-        sessionStorage.setItem('database', JSON.stringify(data.data));
-        row = {
-          databaseName: '本地(localhost)',
-          ...row,
-          ...data.data
-        };
-        let params = {
-          records: {
-            fileList: [row]
-          }
-        };
-        this.dataReceive(params);
-      });
+      this.dataReceive([params]);
     },
     dataReceive(params) {
       const loading = this.$utils.setLoading('引接中...');
-      API.dataReceive.receiveData(params).then(({ data }) => {
-        this.$utils.setMessage(data.success, data.msg);
+      API.dataReceive.receiveFileExec(params).then(({ data }) => {
+        this.$utils.setMessage(data.data.success, data.data.result);
         this.getList();
+      }).finally(() => {
+        loading.close();
       });
     },
     // 查询

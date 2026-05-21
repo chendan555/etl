@@ -205,10 +205,10 @@ export default Vue.extend({
   z-index: 10;
   cursor: pointer;
 }
-.tabdiv /deep/ .el-tabs--border-card > .el-tabs__header .el-tabs__item {
+.tabdiv ::v-deep .el-tabs--border-card > .el-tabs__header .el-tabs__item {
   color: $normalWordsClr !important;
 }
-.tabdiv /deep/ .el-tabs__nav {
+.tabdiv ::v-deep .el-tabs__nav {
   padding-top: 4px;
 }
 .search {
@@ -235,7 +235,7 @@ export default Vue.extend({
 .components-tree .el-tree-node__content:hover {
   background: transparent !important;
 }
-.components-tree /deep/ .el-tree-node__expand-icon {
+.components-tree ::v-deep .el-tree-node__expand-icon {
   display: inline-block !important;
 }
 .tabdiv .el-tabs {
@@ -262,7 +262,7 @@ export default Vue.extend({
 .tabdiv .el-tabs .el-tabs__content .tab_cz_div {
   height: 100%;
   background: var(--flowBgClr, #082b5f);
-  /deep/ .el-tree {
+  ::v-deep .el-tree {
     background: transparent;
   }
 }

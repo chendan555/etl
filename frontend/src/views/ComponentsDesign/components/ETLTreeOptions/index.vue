@@ -87,11 +87,11 @@ export default {
   .node-icon {
     width: 20px;
   }
-  /deep/ .el-tree {
+  ::v-deep .el-tree {
     background: transparent;
   }
 
-  /deep/ .el-tree-node__content {
+  ::v-deep .el-tree-node__content {
     height: auto;
     margin-top: 5px;
   }

@@ -105,25 +105,11 @@ export default Vue.extend({
       },
       filterFormConfig: {
         ruleForm: {
-          ddType: '',
           configName: ''
         },
         formItemConfig: [
           {
-            span: 12,
-            label: '型号',
-            valueKey: 'ddType',
-            type: 'select',
-            labelWidth: '80px',
-            options: 'getTypeInputHis',
-            optionsConfig: {
-              name: 'keyword',
-              value: 'keyword'
-            },
-            refresh: false
-          },
-          {
-            span: 12,
+            span: 24,
             label: '名称',
             valueKey: 'configName',
             type: 'input',

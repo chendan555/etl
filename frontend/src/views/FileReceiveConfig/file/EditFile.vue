@@ -116,15 +116,6 @@
         <span v-else>{{file.filePath}}</span>
       </p>
     </div>
-    <input
-      type="file"
-      name="chooseFile"
-      id="chooseFile"
-      ref="chooseFile"
-      @change="getFilesPath"
-      accept=".txt, .xml, .csv, .dat"
-      hidden
-    >
     <base-dialog
       :dialogConfig="serverConfig"
       @closeDialog="closeServerConfig"
@@ -228,7 +219,36 @@ export default Vue.extend({
     },
     // 展示文件选择器
     getLocalFiles() {
-      (this.$refs.chooseFile as any).click();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.txt, .xml, .csv, .dat';
+      input.multiple = true;
+      const self = this;
+      const cleanup = () => {
+        if (input.parentNode) document.body.removeChild(input);
+      };
+      input.addEventListener('change', function(e: any) {
+        const files = e.target.files;
+        for (let i = 0; i < files.length; i++) {
+          self.localFileList.push({
+            type: 'local',
+            url: files[i].name
+          });
+          self.filesList.push(files[i]);
+        }
+        cleanup();
+      });
+      // 用户取消选择时清理
+      window.addEventListener('focus', function onFocus() {
+        setTimeout(() => {
+          if (input.files && input.files.length === 0) {
+            cleanup();
+          }
+          window.removeEventListener('focus', onFocus);
+        }, 500);
+      });
+      document.body.appendChild(input);
+      input.click();
     },
     // 展示服务器文件列表
     getServerList() {
@@ -428,7 +448,7 @@ export default Vue.extend({
 });
 </script>
 <style lang="scss" scoped>
-/deep/ .el-select {
+::v-deep .el-select {
   width: 100%;
 }
 .fileList {
@@ -440,7 +460,7 @@ export default Vue.extend({
   align-items: center;
   .addRow {
     width: 180px;
-    /deep/ .el-input-group__append {
+    ::v-deep .el-input-group__append {
       border: 1px solid #1c5dbf;
       color: #fff;
     }

@@ -132,7 +132,7 @@ export default {
         searchData: { tableName: '', planId: this.planId, yjMappingId: this.sourceId, batchNum: this.logId }
       };
       this.$axios
-        .post(`/api/yj/record/history/page.do`, params)
+        .post(`/api/yj/record/history/page`, params)
         .then(({ data }) => {
           this.tableConfig.tableData = data.data.records;
           this.pageConfig.total = data.data.total;
@@ -152,7 +152,7 @@ export default {
       };
       let newConfig = this.$utils.transferToFormData(params);
       this.$axios
-        .post(`/api/transNew/log/page.do`, newConfig.formData, newConfig.config)
+        .post(`/api/transNew/log/page`, newConfig.formData, newConfig.config)
         .then(({ data }) => {
           this.tableConfig.tableData = data.data.records;
           this.pageConfig.total = data.data.total;
@@ -172,8 +172,8 @@ export default {
     // 文件下载
     downloadFile({ row }) {
       let url = encodeURI(row.excelPath);
-      let href = `api/file/download.do?url=${url}`; // 设置下载路径
-      this.$utils.downloadFile(href, row.excelPath);
+      let href = `api/file/download?url=${url}`; // 设置下载路径
+      this.$utilswnloadFile(href, row.excelPath);
     },
     closeRecordDialog() {
       this.recordObj = null;
@@ -190,10 +190,10 @@ export default {
         let url = '';
         if (this.recordType === 5) {
           params = { nodeId: row.nodeId, transId: row.transId, fireId: row.batchNum };
-          url = '/api/transNew/log/del.do';
+          url = '/api/transNew/log/del';
         } else {
           params.id = row.id;
-          url = '/api/yj/record/history/del.do';
+          url = '/api/yj/record/history/del';
         }
         this.$axios
           .get(url, { params })
@@ -218,7 +218,7 @@ export default {
           jobId: this.crtJobId
         };
         this.$axios
-          .delete('/api/quartz/log/clean.do', { params })
+          .delete('/api/quartz/log/clean', { params })
           .then(({ data }) => {
             this.$utils.setMessage(data.success, data.result);
             if (data.success) {

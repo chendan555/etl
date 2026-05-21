@@ -96,7 +96,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /deep/ .el-tree {
+  ::v-deep .el-tree {
     flex-grow: 1;
     height: 2px;
     color: #fff;
@@ -113,16 +113,16 @@ export default {
       }
     }
   }
-  /deep/ .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+  ::v-deep .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
     background-color: #1d6641;
   }
-  /deep/ .el-tree-node__content {
+  ::v-deep .el-tree-node__content {
     background-color: transparent;
   }
-  /deep/ .el-tree-node__content:hover {
+  ::v-deep .el-tree-node__content:hover {
     background-color: $crtNavBgClr;
   }
-  /deep/ .el-tree-node__content:focus {
+  ::v-deep .el-tree-node__content:focus {
     background-color: $crtNavBgClr;
   }
 }

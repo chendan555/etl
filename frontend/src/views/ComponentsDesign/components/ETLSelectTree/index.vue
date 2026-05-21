@@ -101,7 +101,7 @@ export default Vue.extend({
   line-height: auto;
   padding: 0;
 }
-.el-tree /deep/ .el-tree-node__expand-icon {
+.el-tree ::v-deep .el-tree-node__expand-icon {
   display: inline-block;
 }
 </style>

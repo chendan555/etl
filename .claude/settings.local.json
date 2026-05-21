@@ -10,6 +10,7 @@
       "Grep(*)",
       "WebFetch(*)",
       "WebSearch"
-    ]
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }

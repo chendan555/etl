@@ -4,7 +4,7 @@ let optionsParams = {
   index: -1,
   spreadsheet_type: 'Excel 2007 XLSX (Apache POI)'
 };
-// axios.post('/api/transNew/prevSteps.do').then((res) => {
+// axios.post('/api/transNew/prevSteps').then((res) => {
 //   console.log('獲取字典',res);
 // });
 let disableType = {

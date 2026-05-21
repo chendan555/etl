@@ -269,10 +269,10 @@ export default {
   .common-tree {
     height: calc(100% - 35px);
   }
-  /deep/ .el-tree {
+  ::v-deep .el-tree {
     font-size: 14px;
   }
-  /deep/ .el-form {
+  ::v-deep .el-form {
     .el-form-item__label {
       color: #fff;
     }

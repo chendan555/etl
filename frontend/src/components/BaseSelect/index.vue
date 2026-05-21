@@ -391,13 +391,13 @@ export default {
 }
 .tree-select {
   position: relative;
-  & /deep/ span {
+  & ::v-deep span {
     padding: 0 !important;
   }
 }
 .base-select {
-  & /deep/ .el-input__inner,
-  & /deep/ .el-input__icon {
+  & ::v-deep .el-input__inner,
+  & ::v-deep .el-input__icon {
     // height: 32px;
     // line-height: 32px;
   }

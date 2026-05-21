@@ -54,7 +54,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  /deep/ .el-form-item--small.el-form-item {
+  ::v-deep .el-form-item--small.el-form-item {
     margin-bottom: 0;
   }
   .btndiv {

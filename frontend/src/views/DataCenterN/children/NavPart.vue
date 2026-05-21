@@ -533,7 +533,7 @@ export default Vue.extend({
   width: 100%;
   height: 100%;
   .searchdiv {
-    /deep/.el-input {
+    ::v-deep.el-input {
       width: calc(100% - 10px);
       margin: 5px;
       &__inner {
@@ -588,7 +588,7 @@ export default Vue.extend({
       }
       .navCont {
         width: 100%;
-        /deep/ .el-tree {
+        ::v-deep .el-tree {
           background: transparent;
           color: #666666;
           .custom-tree-node {

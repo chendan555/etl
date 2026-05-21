@@ -17,8 +17,8 @@
         <el-option
           v-for="database in databaseList"
           :label="database.name"
-          :value="database.databaseId"
-          :key="database.databaseId"
+          :value="database.value"
+          :key="database.value"
         ></el-option>
       </el-select>
     </el-form-item>
@@ -178,7 +178,9 @@ export default Vue.extend({
      */
     getDatabaseList() {
       this.$API.getDatabases().then(({ data }: any) => {
-        this.databaseList = data;
+        console.log('[ChsDatabase getDatabases] raw:', data);
+        this.databaseList = data.data || data;
+        console.log('[ChsDatabase getDatabases] databaseList:', this.databaseList);
       });
     },
     /**
@@ -189,7 +191,7 @@ export default Vue.extend({
         connection: this.ruleForm.connection
       };
       this.$API.getSchema(params).then(({ data }: any) => {
-        this.schemaList = data;
+        this.schemaList = data.data || data;
       });
     },
     /**
@@ -215,14 +217,14 @@ export default Vue.extend({
         table: this.ruleForm.table
       };
       this.$API.getColumnsByTable(params).then(({ data }: any) => {
-        this.columnList = data;
+        this.columnList = data.data || data;
       });
     },
     /**
      * 设置数据源
      */
     setDatabase(id: string) {
-      let database = this.databaseList.find((database: any) => database.databaseId === id);
+      let database = this.databaseList.find((database: any) => database.value === id);
       if (database) {
         this.ruleForm.connection = database.name;
         this.ruleForm.schema = '';
@@ -261,7 +263,7 @@ export default Vue.extend({
 });
 </script>
 <style lang="scss" scoped>
-/deep/ .el-select {
+::v-deep .el-select {
   width: 100%;
 }
 </style>

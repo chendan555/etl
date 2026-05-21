@@ -98,7 +98,7 @@ export default {
         searchData: { jobId: this.jobId }
       };
       this.$axios
-        .post(`/api/quartz/plan/list/by/jobId.do`, params)
+        .post(`/api/quartz/plan/list/by/jobId`, params)
         .then(({ data }) => {
           console.log(data);
           this.tableConfig.tableData = data.data.records;
@@ -127,7 +127,7 @@ export default {
           jobLogIds: row.logId
         };
         this.$axios
-          .delete('/api/quartz/log/delete.do', { params })
+          .delete('/api/quartz/log/delete', { params })
           .then(({ data }) => {
             this.$utils.setMessage(data.success, data.result);
             if (data.success) {
@@ -149,7 +149,7 @@ export default {
           jobId: this.jobId
         };
         this.$axios
-          .delete('/api/quartz/log/clean.do', { params })
+          .delete('/api/quartz/log/clean', { params })
           .then(({ data }) => {
             this.$utils.setMessage(data.success, data.result);
             if (data.success) {

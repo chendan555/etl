@@ -272,10 +272,10 @@ export default {
   position: fixed;
   width: 300px;
   margin-top: 0;
-  /deep/ .el-input {
+  ::v-deep .el-input {
     height: 100%;
   }
-  /deep/ .el-input__inner {
+  ::v-deep .el-input__inner {
     height: 100%;
   }
 }

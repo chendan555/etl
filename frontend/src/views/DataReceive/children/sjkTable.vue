@@ -166,8 +166,10 @@ export default {
     dataReceive(params) {
       const loading = this.$utils.setLoading('引接中...');
       API.dataReceive.receiveExec(params).then(({ data }) => {
-        this.$utils.setMessage(data.success, data.result);
+        this.$utils.setMessage(data.data.success, data.data.result);
         this.getList();
+      }).finally(() => {
+        loading.close();
       });
     },
     // 查询

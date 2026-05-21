@@ -328,7 +328,7 @@ export default {
 @import '@/styles/theme.scss';
 .base-dialog {
   .dialog-body {
-    /deep/ .el-form {
+    ::v-deep .el-form {
       .el-form-item {
         display: inline-flex;
         align-items: center;
@@ -360,7 +360,7 @@ export default {
 }
 
 .half {
-  /deep/ .el-form {
+  ::v-deep .el-form {
     .el-form-item {
       width: 48% !important;
       &:nth-child(even) {
@@ -369,7 +369,7 @@ export default {
     }
   }
 }
-/deep/ .el-dialog__header {
+::v-deep .el-dialog__header {
   border-bottom: 1px solid #394e39;
   .el-icon-close {
     position: relative;
@@ -377,10 +377,10 @@ export default {
     color: #ffffff;
   }
 }
-/deep/ .el-dialog__body {
+::v-deep .el-dialog__body {
   // background-color: #1f2b25 !important ;
 }
-/deep/ .el-popper .popper__arrow::after {
+::v-deep .el-popper .popper__arrow::after {
   top: 0;
 }
 </style>

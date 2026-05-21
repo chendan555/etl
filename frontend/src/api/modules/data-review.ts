@@ -10,7 +10,7 @@ import request from '@/utils/request.js';
  * 获取侧边栏数据
  */
 const navTree = () => {
-  return request({ url: '/api/audit/rule/types.do', method: 'POST' });
+  return request({ url: '/api/audit/rule/types', method: 'POST' });
 };
 
 /**
@@ -18,7 +18,7 @@ const navTree = () => {
  * params：参数
  */
 const list = (params: any) => {
-  return request({ url: '/api/audit/rule/page.do', method: 'POST', params });
+  return request({ url: '/api/audit/rule/page', method: 'POST', params });
 };
 
 /**
@@ -26,7 +26,7 @@ const list = (params: any) => {
  * params：参数
  */
 const get = (params: any) => {
-  return request({ url: '/api/audit/rule/detail.do', method: 'POST', params });
+  return request({ url: '/api/audit/rule/detail', method: 'POST', params });
 };
 
 /**
@@ -34,7 +34,7 @@ const get = (params: any) => {
  * params：参数
  */
 const add = (data: any) => {
-  return request({ url: '/api/audit/rule/create.do', method: 'POST', data });
+  return request({ url: '/api/audit/rule/create', method: 'POST', data });
 };
 
 /**
@@ -42,7 +42,7 @@ const add = (data: any) => {
  * params：参数
  */
 const update = (data: any) => {
-  return request({ url: '/api/audit/rule/edit.do', method: 'POST', data });
+  return request({ url: '/api/audit/rule/edit', method: 'POST', data });
 };
 
 /**
@@ -50,7 +50,7 @@ const update = (data: any) => {
  * params：参数
  */
 const review = (params: any) => {
-  return request({ url: '/api/audit/rule/audit.do', method: 'POST', params });
+  return request({ url: '/api/audit/rule/audit', method: 'POST', params });
 };
 
 export default {

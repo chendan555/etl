@@ -307,37 +307,37 @@ export default {
   padding: 0px 10px;
   position: relative;
   height: 100%;
-  & /deep/ .el-checkbox-button__inner {
+  & ::v-deep .el-checkbox-button__inner {
     padding: 7px 11px;
   }
-  & /deep/ .el-checkbox__input.is-checked .el-checkbox__inner,
-  & /deep/ .el-checkbox__input.is-indeterminate .el-checkbox__inner {
+  & ::v-deep .el-checkbox__input.is-checked .el-checkbox__inner,
+  & ::v-deep .el-checkbox__input.is-indeterminate .el-checkbox__inner {
     background: var(--tree-checked);
     border-color: var(--tree-checked);
   }
-  & /deep/ .el-tree {
+  & ::v-deep .el-tree {
     background: none;
   }
-  & /deep/ .el-tree-node__content {
+  & ::v-deep .el-tree-node__content {
     height: 34px;
   }
-  & /deep/ .el-tree-node__content:hover {
+  & ::v-deep .el-tree-node__content:hover {
     background-color: var(--tree-hover-bg);
   }
-  & /deep/ .is-current > .el-tree-node__content {
+  & ::v-deep .is-current > .el-tree-node__content {
     background-color: var(--tree-hover-bg);
   }
-  & /deep/ .el-tree-node:focus > .el-tree-node__content {
+  & ::v-deep .el-tree-node:focus > .el-tree-node__content {
     background: var(--tree-hover-bg);
   }
-  & /deep/ .tree-search {
+  & ::v-deep .tree-search {
     padding: 5px 5px;
     position: absolute;
     left: 0;
     top: 0;
     width: 97%;
   }
-  .tree-search /deep/ .el-input__inner {
+  .tree-search ::v-deep .el-input__inner {
     background: none;
     border-color: var(--tree-bg);
     color: #fff;

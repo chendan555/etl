@@ -966,7 +966,7 @@ export default {
 </script>
 <style scoped lang="scss">
 @import '@/styles/theme.scss';
-.mixin-components /deep/ .el-input__inner {
+.mixin-components ::v-deep .el-input__inner {
   background: $inputBgClr !important;
   border: 1px solid $tableBorderClr;
   border-radius: 4px;
@@ -974,39 +974,39 @@ export default {
   height: 30px;
   line-height: 30px;
 }
-.mixin-components /deep/ .el-input-group__append .el-button.el-button--default {
+.mixin-components ::v-deep .el-input-group__append .el-button.el-button--default {
   background-color: transparent !important;
   border-color: transparent !important;
 }
 
-.mixin-components /deep/ .el-input__icon {
+.mixin-components ::v-deep .el-input__icon {
   line-height: 30px;
 }
 
-.mixin-components /deep/ .el-date-editor.el-input {
+.mixin-components ::v-deep .el-date-editor.el-input {
   width: 100%;
 }
 
-.mixin-components /deep/ .el-select {
+.mixin-components ::v-deep .el-select {
   width: 100%;
 }
 
-.mixin-components /deep/ .el-textarea__inner {
+.mixin-components ::v-deep .el-textarea__inner {
   background: $inputBgClr;
   border: 1px solid $inputBgClr;
   border-radius: 4px;
 }
-.mixin-components /deep/ .el-tag + .el-tag {
+.mixin-components ::v-deep .el-tag + .el-tag {
   margin-left: 10px;
 }
-.mixin-components /deep/ .button-new-tag {
+.mixin-components ::v-deep .button-new-tag {
   margin-left: 10px;
   height: 32px;
   line-height: 30px;
   padding-top: 0;
   padding-bottom: 0;
 }
-.mixin-components /deep/ .input-new-tag {
+.mixin-components ::v-deep .input-new-tag {
   width: 90px;
   margin-left: 10px;
   vertical-align: bottom;
@@ -1019,8 +1019,8 @@ export default {
   width: 80px;
   text-align: center;
 }
-.mixin-components /deep/ .el-input-number__decrease,
-.mixin-components /deep/ .el-input-number__increase {
+.mixin-components ::v-deep .el-input-number__decrease,
+.mixin-components ::v-deep .el-input-number__increase {
   color: #fff;
   border-color: $inputBgClr;
   background-color: $inputBgClr;

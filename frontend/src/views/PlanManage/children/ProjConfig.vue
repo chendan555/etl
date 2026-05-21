@@ -124,10 +124,10 @@ export default {
   .sideContent {
     width: 100%;
     height: 100%;
-    /deep/ .el-form-item__label {
+    ::v-deep .el-form-item__label {
       color: #fff;
     }
-    /deep/ .el-input__inner {
+    ::v-deep .el-input__inner {
       //   background: #1d2822;
       .el-range-input {
         background: transparent;

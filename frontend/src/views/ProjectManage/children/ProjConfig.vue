@@ -168,7 +168,7 @@ export default {
   .sideContent {
     width: 100%;
     // height: 100%;
-    /deep/ .el-tabs__header {
+    ::v-deep .el-tabs__header {
       border: none;
       .el-tabs__nav {
         width: 100%;
@@ -182,9 +182,9 @@ export default {
         }
       }
     }
-    /deep/ .el-tabs__content {
-      /deep/ .cell,
-      /deep/ .cell span {
+    ::v-deep .el-tabs__content {
+      ::v-deep .cell,
+      ::v-deep .cell span {
         font-size: 12px !important;
       }
     }

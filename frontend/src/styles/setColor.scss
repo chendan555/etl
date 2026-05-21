@@ -463,19 +463,19 @@
 .el-tree {
   // @include color($normalWordsClr);
   @include bc(none);
-  /deep/ .el-tree-node:hover {
+  ::v-deep .el-tree-node:hover {
     > .el-tree-node__content {
       // @include color($normalWordsClr);
       @include bc($crtTreeNode !important);
     }
   }
-  /deep/ .el-tree-node.is-current {
+  ::v-deep .el-tree-node.is-current {
     > .el-tree-node__content {
       @include bc($crtTreeNode !important);
       // @include color($normalWordsClr);
     }
   }
-  /deep/ .el-tree-node:focus > .el-tree-node__content {
+  ::v-deep .el-tree-node:focus > .el-tree-node__content {
     @include bc($crtTreeNode !important);
     // @include color($normalWordsClr);
   }

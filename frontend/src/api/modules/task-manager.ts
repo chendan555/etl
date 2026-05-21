@@ -33,7 +33,7 @@ export default class TaskManagerService extends BaseApi {
   apiImportTask(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/task/plan/import/task/node.do', params, { timeout: 5 * 60 * 1000, headers: { 'Content-Type': 'multipart/form-data' } })
+        .post('/api/task/plan/import/task/node', params, { timeout: 5 * 60 * 1000, headers: { 'Content-Type': 'multipart/form-data' } })
         .then(resolve)
         .catch(reject);
     });
@@ -46,7 +46,7 @@ export default class TaskManagerService extends BaseApi {
   getTaskLists() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/task/plan/task/node/list.do')
+        .get('/api/task/plan/task/node/list')
         .then(resolve)
         .catch(reject);
     });
@@ -83,7 +83,7 @@ export default class TaskManagerService extends BaseApi {
   getTaskFlowById(taskId: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get(`/api/task/plan/map/info/${taskId}.do`)
+        .get(`/api/task/plan/map/info/${taskId}`)
         .then(resolve)
         .catch(reject);
     });
@@ -96,7 +96,7 @@ export default class TaskManagerService extends BaseApi {
   saveTaskFlow(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post(`/api/task/plan/save/both.do`, params)
+        .post(`/api/task/plan/save/both`, params)
         .then(resolve)
         .catch(reject);
     });
@@ -108,7 +108,7 @@ export default class TaskManagerService extends BaseApi {
   deleteTaskFlow(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .delete(`/api/task/plan/delete/both.do`, { params })
+        .delete(`/api/task/plan/delete/both`, { params })
         .then(resolve)
         .catch(reject);
     });
@@ -120,7 +120,7 @@ export default class TaskManagerService extends BaseApi {
   apiGetDatabases() {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/common/getDatabases.do')
+        .post('/api/common/getDatabases')
         .then(resolve)
         .catch(reject);
     });
@@ -134,7 +134,7 @@ export default class TaskManagerService extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/database/getSchema.do', newConfig.formData, newConfig.config)
+        .post('/api/database/getSchema', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -148,7 +148,7 @@ export default class TaskManagerService extends BaseApi {
     let newConfig = transferToFormData(params);
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/database/getDataTables.do', newConfig.formData, newConfig.config)
+        .post('/api/database/getDataTables', newConfig.formData, newConfig.config)
         .then(resolve)
         .catch(reject);
     });
@@ -161,7 +161,7 @@ export default class TaskManagerService extends BaseApi {
   apiGetArtificialData() {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/data/source/artificial/list.do')
+        .get('/api/data/source/artificial/list')
         .then(resolve)
         .catch(reject);
     });
@@ -174,7 +174,7 @@ export default class TaskManagerService extends BaseApi {
   apiUploadFile(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/task/plan/upload/file.do', params, { timeout: 5 * 60 * 1000, headers: { 'Content-Type': 'multipart/form-data' } })
+        .post('/api/task/plan/upload/file', params, { timeout: 5 * 60 * 1000, headers: { 'Content-Type': 'multipart/form-data' } })
         .then(resolve)
         .catch(reject);
     });
@@ -187,7 +187,7 @@ export default class TaskManagerService extends BaseApi {
   apiSaveTaskNode(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/task/plan/node/data/sourceAndFile/save.do', params)
+        .post('/api/task/plan/node/data/sourceAndFile/save', params)
         .then(resolve)
         .catch(reject);
     });
@@ -200,7 +200,7 @@ export default class TaskManagerService extends BaseApi {
   getTaskNodeDetails(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get(`/api/task/plan/node/data/source/find.do`, { params })
+        .get(`/api/task/plan/node/data/source/find`, { params })
         .then(resolve)
         .catch(reject);
     });

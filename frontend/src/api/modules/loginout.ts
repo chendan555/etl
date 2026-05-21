@@ -15,7 +15,7 @@ export default class UserService extends BaseApi {
   login(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .post('/api/sys/login.do', params)
+        .post('/api/sys/login', params)
         .then(resolve)
         .catch(reject);
     });

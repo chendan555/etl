@@ -67,7 +67,7 @@ export default {
         batchNum: this.recordObj.batchNum
       };
       this.$axios
-        .get('api/trans/plan/yulan.do', { params })
+        .get('api/trans/plan/yulan', { params })
         .then(({ data }) => {
           console.log(data);
           this.tableConfig.tableData = data.firstRecords;
@@ -96,7 +96,7 @@ export default {
         batchNum: this.recordObj.batch
       };
       let newConfig = this.$utils.transferToFormData(params);
-      this.$axios.post('api/database/yj/getTableDatas.do', newConfig.formData, newConfig.config).then(({ data }) => {
+      this.$axios.post('api/database/yj/getTableDatas', newConfig.formData, newConfig.config).then(({ data }) => {
         console.log(data);
         if (data.success) {
           this.tableConfig.tableData = data.data.page.records;

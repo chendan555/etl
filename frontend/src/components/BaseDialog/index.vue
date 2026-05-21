@@ -88,7 +88,7 @@ export default Vue.extend({
 .baseDialog {
   width: auto;
   height: auto;
-  /deep/ .el-dialog {
+  ::v-deep .el-dialog {
     // background: #1f2b1f;
     display: flex;
     flex-direction: column;

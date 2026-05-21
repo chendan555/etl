@@ -1231,7 +1231,7 @@ export default {
      */
     getSocketUrl() {
       const self = this;
-      http.get('/api/trans/plan/websocketUrl.do').then(res => {
+      http.get('/api/trans/plan/websocketUrl').then(res => {
         if (res.data.code == 200) {
           this.socketUrlInfo = res.data.data;
           let ws = new WebSocket(res.data.data.url);
@@ -1627,10 +1627,10 @@ export default {
       .el-form-item--small.el-form-item {
         margin-bottom: 0;
       }
-      // /deep/ .el-form-item__label {
+      // ::v-deep .el-form-item__label {
       //   color: #fff;
       // }
-      /deep/ .el-input__inner {
+      ::v-deep .el-input__inner {
         background: $inputBgClr;
         .el-range-input {
           background: transparent;
@@ -1734,7 +1734,7 @@ export default {
     width: 100%;
     height: 40px;
   }
-  /deep/ .el-form {
+  ::v-deep .el-form {
     // .el-form-item__label {
     //   color: $normalWordsClr;
     // }
@@ -1783,9 +1783,9 @@ export default {
   .multiplePerform .chsdListdiv {
     width: 100%;
   }
-  /deep/ .procList .el-dialog,
-  /deep/ .procDialog .el-dialog,
-  /deep/ .multiplePerform .el-dialog {
+  ::v-deep .procList .el-dialog,
+  ::v-deep .procDialog .el-dialog,
+  ::v-deep .multiplePerform .el-dialog {
     height: 750px;
     margin-top: 100px !important;
     .el-dialog__body {
@@ -1804,13 +1804,13 @@ export default {
     }
   }
   // .procList{
-  //   /deep/ .el-table__header thead.has-gutter .el-checkbox{
+  //   ::v-deep .el-table__header thead.has-gutter .el-checkbox{
   //     display: none;
   //   }
   // }
 }
 #previewResultData {
-  /deep/ .el-dialog {
+  ::v-deep .el-dialog {
     height: calc(100% - 10vh);
     .el-dialog__body {
       height: calc(100% - 45px);
