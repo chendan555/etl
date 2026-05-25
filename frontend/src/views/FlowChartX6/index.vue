@@ -342,7 +342,10 @@ function initEleList() {
 export default Vue.extend({
   name: 'FlowChartX6',
   meta: {
-    title: '流程设计(X6)'
+    title: '流程设计(X6)',
+    pageType: 'mainNav',
+    belongTo: 'process',
+    hidden: false
   },
   components: {
     ProgressEle,
