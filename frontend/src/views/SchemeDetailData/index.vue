@@ -206,16 +206,16 @@ export default {
   align-items: center;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #3e524b;
 }
 .header-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #ffffff;
 }
 .header-time {
   margin-left: auto;
-  color: #909399;
+  color: #b7c0c7;
   font-size: 13px;
 }
 .detail-body {
@@ -227,15 +227,15 @@ export default {
 .side-tabs {
   width: 120px;
   flex-shrink: 0;
-  border-right: 1px solid #e6e6e6;
+  border-right: 1px solid #3e524b;
   padding-right: 12px;
 }
 .side-tab {
   padding: 10px 12px;
   margin-bottom: 8px;
   border-radius: 4px;
-  border: 1px solid #dcdfe6;
-  color: #606266;
+  border: 1px solid #3e524b;
+  color: #ffffff;
   cursor: pointer;
   text-align: center;
   font-size: 14px;
@@ -259,13 +259,13 @@ export default {
   flex-wrap: wrap;
   gap: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #3e524b;
 }
 .equip-tab {
   padding: 8px 14px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid #3e524b;
   border-radius: 4px;
-  color: #606266;
+  color: #ffffff;
   cursor: pointer;
   font-size: 13px;
 }
@@ -274,7 +274,7 @@ export default {
 }
 .info-panel {
   margin-top: 10px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid #3e524b;
   border-radius: 4px;
   flex: 1;
   min-height: 0;
@@ -283,11 +283,11 @@ export default {
 }
 .info-tabs {
   display: flex;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #3e524b;
 }
 .info-tab {
   padding: 10px 16px;
-  color: #606266;
+  color: #ffffff;
   cursor: pointer;
   font-size: 13px;
   border-bottom: 2px solid transparent;
@@ -309,17 +309,17 @@ export default {
   border-collapse: collapse;
 }
 .info-table td {
-  border: 1px solid #e6e6e6;
+  border: 1px solid #3e524b;
   padding: 8px 12px;
   font-size: 13px;
 }
 .info-label {
   width: 140px;
-  background: #f5f7fa;
-  color: #909399;
+  background: #233129;
+  color: #b7c0c7;
 }
 .info-value {
-  color: #303133;
+  color: #ffffff;
 }
 .status-cards {
   display: flex;
@@ -328,23 +328,23 @@ export default {
 }
 .status-card {
   width: 180px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid #3e524b;
   border-radius: 4px;
   padding: 12px;
 }
 .status-label {
-  color: #909399;
+  color: #b7c0c7;
   font-size: 12px;
   margin-bottom: 6px;
 }
 .status-value {
-  color: #303133;
+  color: #ffffff;
   font-size: 16px;
   font-weight: 600;
 }
 .empty-tip {
   text-align: center;
-  color: #909399;
+  color: #b7c0c7;
   padding: 40px 0;
   font-size: 14px;
 }
