@@ -31,6 +31,9 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
     @Resource
     private SchemeDetailDataBuilder schemeDetailDataBuilder;
 
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     // ========== 主题配置 ==========
 
     @Resource
@@ -133,22 +136,20 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
 
     /**
      * 获取方案详细数据（红蓝方/装备/4类信息）。装备树为固定数据，方案头部取自数据库。
+     * 方案不存在时返回 null，由 Controller 返回失败。
      */
     public SchemeDetailDataVO getSchemeDetailData(Long schemeId) {
         Scheme scheme = getById(schemeId);
-        SchemeDetailDataVO vo = new SchemeDetailDataVO();
-        if (scheme != null) {
-            vo.setSchemeId(scheme.getId());
-            vo.setSchemeName(scheme.getSchemeName());
-            vo.setStatus(scheme.getStatus());
-            vo.setCreateTime(scheme.getCreateTime() != null
-                    ? scheme.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                    : null);
-        } else {
-            vo.setSchemeId(schemeId);
-            vo.setSchemeName("方案" + schemeId);
-            vo.setStatus(0);
+        if (scheme == null) {
+            return null;
         }
+        SchemeDetailDataVO vo = new SchemeDetailDataVO();
+        vo.setSchemeId(scheme.getId());
+        vo.setSchemeName(scheme.getSchemeName());
+        vo.setStatus(scheme.getStatus() == null ? 0 : scheme.getStatus());
+        vo.setCreateTime(scheme.getCreateTime() != null
+                ? scheme.getCreateTime().format(DATE_FORMATTER)
+                : null);
         vo.setSides(schemeDetailDataBuilder.buildFixedSides());
         return vo;
     }

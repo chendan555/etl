@@ -262,7 +262,11 @@ public class SchemeController {
 
     @GetMapping("/detailData")
     public Result<SchemeDetailDataVO> getSchemeDetailData(@RequestParam Long schemeId) {
-        return Result.ok(schemeService.getSchemeDetailData(schemeId));
+        SchemeDetailDataVO data = schemeService.getSchemeDetailData(schemeId);
+        if (data == null) {
+            return Result.fail("方案不存在");
+        }
+        return Result.ok(data);
     }
 
     @PostMapping("/save")
