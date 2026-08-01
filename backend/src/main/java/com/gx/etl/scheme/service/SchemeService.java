@@ -7,10 +7,12 @@ import com.gx.etl.flow.entity.Transformation;
 import com.gx.etl.flow.mapper.TransformationMapper;
 import com.gx.etl.scheme.entity.*;
 import com.gx.etl.scheme.mapper.*;
+import com.gx.etl.scheme.vo.SchemeDetailDataVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,9 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
 
     @Resource
     private TransformationMapper transformationMapper;
+
+    @Resource
+    private SchemeDetailDataBuilder schemeDetailDataBuilder;
 
     // ========== 主题配置 ==========
 
@@ -124,5 +129,27 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
         );
         // 删主表
         removeById(id);
+    }
+
+    /**
+     * 获取方案详细数据（红蓝方/装备/4类信息）。装备树为固定数据，方案头部取自数据库。
+     */
+    public SchemeDetailDataVO getSchemeDetailData(Long schemeId) {
+        Scheme scheme = getById(schemeId);
+        SchemeDetailDataVO vo = new SchemeDetailDataVO();
+        if (scheme != null) {
+            vo.setSchemeId(scheme.getId());
+            vo.setSchemeName(scheme.getSchemeName());
+            vo.setStatus(scheme.getStatus());
+            vo.setCreateTime(scheme.getCreateTime() != null
+                    ? scheme.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    : null);
+        } else {
+            vo.setSchemeId(schemeId);
+            vo.setSchemeName("方案" + schemeId);
+            vo.setStatus(0);
+        }
+        vo.setSides(schemeDetailDataBuilder.buildFixedSides());
+        return vo;
     }
 }
