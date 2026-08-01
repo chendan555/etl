@@ -2,6 +2,7 @@ package com.gx.etl.scheme.service;
 
 import com.gx.etl.scheme.vo.EquipmentInfoVO;
 import com.gx.etl.scheme.vo.EquipmentVO;
+import com.gx.etl.scheme.vo.InfoCategoryVO;
 import com.gx.etl.scheme.vo.SideVO;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 方案详细数据（红蓝方/装备/4类信息）构建器。
+ * 方案详细数据（红蓝方/装备/信息分类）构建器。
  * 当前为固定数据，接入真实数据源后替换 buildFixedSides() 的实现即可。
  */
 @Component
@@ -79,6 +80,15 @@ public class SchemeDetailDataBuilder {
         return map;
     }
 
+    /** 构造一个信息分类（含 key/label/items，label 为前端 Tab 显示文字） */
+    private static InfoCategoryVO category(String key, String label, List<Map<String, Object>> items) {
+        InfoCategoryVO vo = new InfoCategoryVO();
+        vo.setKey(key);
+        vo.setLabel(label);
+        vo.setItems(items);
+        return vo;
+    }
+
     private static EquipmentVO buildEquip(Long id, String name, String type, Map<String, String> o) {
         EquipmentVO vo = new EquipmentVO();
         vo.setId(id);
@@ -91,35 +101,37 @@ public class SchemeDetailDataBuilder {
         String ammo = o.getOrDefault("ammo", "85%");
 
         EquipmentInfoVO info = new EquipmentInfoVO();
-        info.setBasic(Arrays.asList(
-            item("label", "型号", "value", o.getOrDefault("model", name)),
-            item("label", "类型", "value", type),
-            item("label", "状态", "value", status, "tag", tag),
-            item("label", "位置", "value", o.getOrDefault("pos", "东经120° 北纬35°")),
-            item("label", "速度", "value", speed),
-            item("label", "航向", "value", o.getOrDefault("course", "东北 45°")),
-            item("label", "武器配置", "value", o.getOrDefault("weapon", "制式装备")),
-            item("label", "油弹量", "value", ammo)
-        ));
-        info.setStatus(Arrays.asList(
-            item("label", "当前状态", "value", status, "tag", tag),
-            item("label", "航速", "value", speed),
-            item("label", "油量", "value", ammo),
-            item("label", "电子系统", "value", "正常", "tag", "success")
-        ));
-        info.setCombat(Arrays.asList(
-            item("label", "命中率", "value", "92%"),
-            item("label", "侦测范围", "value", "80 km"),
-            item("label", "载弹量", "value", "42 枚"),
-            item("label", "持续作战时间", "value", "6 h")
-        ));
-        info.setRecords(Arrays.asList(
-            item("time", "2026-08-01 10:30:00", "item", "航速", "value", "58 km/h"),
-            item("time", "2026-08-01 10:20:00", "item", "油量", "value", "86%"),
-            item("time", "2026-08-01 10:10:00", "item", "航向", "value", "45°"),
-            item("time", "2026-08-01 10:00:00", "item", "海拔", "value", "320 m"),
-            item("time", "2026-08-01 09:50:00", "item", "航速", "value", "55 km/h"),
-            item("time", "2026-08-01 09:40:00", "item", "油量", "value", "88%")
+        info.setCategories(Arrays.asList(
+            category("basic", "基本信息", Arrays.asList(
+                item("label", "型号", "value", o.getOrDefault("model", name)),
+                item("label", "类型", "value", type),
+                item("label", "状态", "value", status, "tag", tag),
+                item("label", "位置", "value", o.getOrDefault("pos", "东经120° 北纬35°")),
+                item("label", "速度", "value", speed),
+                item("label", "航向", "value", o.getOrDefault("course", "东北 45°")),
+                item("label", "武器配置", "value", o.getOrDefault("weapon", "制式装备")),
+                item("label", "油弹量", "value", ammo)
+            )),
+            category("status", "实时状态", Arrays.asList(
+                item("label", "当前状态", "value", status, "tag", tag),
+                item("label", "航速", "value", speed),
+                item("label", "油量", "value", ammo),
+                item("label", "电子系统", "value", "正常", "tag", "success")
+            )),
+            category("combat", "作战指标", Arrays.asList(
+                item("label", "命中率", "value", "92%"),
+                item("label", "侦测范围", "value", "80 km"),
+                item("label", "载弹量", "value", "42 枚"),
+                item("label", "持续作战时间", "value", "6 h")
+            )),
+            category("records", "数据记录", Arrays.asList(
+                item("time", "2026-08-01 10:30:00", "item", "航速", "value", "58 km/h"),
+                item("time", "2026-08-01 10:20:00", "item", "油量", "value", "86%"),
+                item("time", "2026-08-01 10:10:00", "item", "航向", "value", "45°"),
+                item("time", "2026-08-01 10:00:00", "item", "海拔", "value", "320 m"),
+                item("time", "2026-08-01 09:50:00", "item", "航速", "value", "55 km/h"),
+                item("time", "2026-08-01 09:40:00", "item", "油量", "value", "88%")
+            ))
         ));
         vo.setInfo(info);
         return vo;
