@@ -153,6 +153,9 @@ export default {
         resolve(this.scheme);
       }).then(data => {
         this.scheme = data;
+        if (this.$route.query.schemeName) {
+          this.scheme.schemeName = this.$route.query.schemeName;
+        }
         this.initSelection();
       });
     },
