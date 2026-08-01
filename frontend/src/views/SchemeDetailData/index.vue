@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import { getMockSchemeDetailData } from './mock';
+import API from '@/api/index';
 
 export default {
   name: 'SchemeDetailData',
@@ -146,19 +146,20 @@ export default {
     this.loadData(this.schemeId);
   },
   methods: {
-    // TODO: 接入真实数据时替换为 API.sampleCascade.getSchemeDetailData(schemeId)
-    // 注意：真实接口响应为 axios 包装，需解包 res.data.data 得到与 mock 同构的 scheme 对象，
-    // 并补 .catch 错误处理（如 $message.error + loading 态）。
     loadData(schemeId) {
-      return new Promise(resolve => {
-        this.scheme = getMockSchemeDetailData(schemeId);
-        resolve(this.scheme);
-      }).then(data => {
-        this.scheme = data;
-        if (this.$route.query.schemeName) {
-          this.scheme.schemeName = this.$route.query.schemeName;
+      return API.sampleCascade.getSchemeDetailData(schemeId).then(res => {
+        if (res.data && res.data.success) {
+          this.scheme = res.data.data;
+          if (this.$route.query.schemeName) {
+            this.scheme.schemeName = this.$route.query.schemeName;
+          }
+          this.initSelection();
+        } else {
+          this.$message.error((res.data && res.data.msg) || '加载详细数据失败');
         }
-        this.initSelection();
+      }).catch(err => {
+        console.error('load detail data error:', err);
+        this.$message.error('加载详细数据失败');
       });
     },
     initSelection() {
