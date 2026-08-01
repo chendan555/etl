@@ -49,7 +49,7 @@
               class="info-tab"
               :class="{ active: activeInfoTab === tab.key }"
               :style="activeInfoTab === tab.key ? { color: currentSideColor, borderBottomColor: currentSideColor } : {}"
-              @click="activeInfoTab = tab.key"
+              @click="onInfoTabChange(tab.key)"
             >
               {{ tab.label }}
             </div>
@@ -143,12 +143,23 @@ export default {
       this.$message.warning('缺少方案参数');
       return;
     }
-    // TODO: 接入真实数据时替换为 API.sampleCascade.getSchemeDetailData(this.schemeId)
-    this.scheme = getMockSchemeDetailData(this.schemeId);
-    this.initSelection();
+    this.loadData(this.schemeId);
   },
   methods: {
+    // TODO: 接入真实数据时，把下面实现替换为 API.sampleCascade.getSchemeDetailData(schemeId)
+    loadData(schemeId) {
+      return new Promise(resolve => {
+        this.scheme = getMockSchemeDetailData(schemeId);
+        resolve(this.scheme);
+      }).then(data => {
+        this.scheme = data;
+        this.initSelection();
+      });
+    },
     initSelection() {
+      if (this.scheme.sides.length > 0 && !this.scheme.sides.some(s => s.side === this.activeSide)) {
+        this.activeSide = this.scheme.sides[0].side;
+      }
       if (this.currentEquips.length > 0) {
         this.activeEquipId = this.currentEquips[0].id;
         this.activeInfoTab = 'basic';
@@ -162,6 +173,9 @@ export default {
     onEquipChange(id) {
       this.activeEquipId = id;
       this.activeInfoTab = 'basic';
+    },
+    onInfoTabChange(key) {
+      this.activeInfoTab = key;
     },
     goBack() {
       if (window.history.length > 1) {
