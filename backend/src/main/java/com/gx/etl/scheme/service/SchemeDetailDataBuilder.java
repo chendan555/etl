@@ -20,6 +20,11 @@ import java.util.Map;
 @Component
 public class SchemeDetailDataBuilder {
 
+    private static final String KEY_BASIC = "basic";
+    private static final String KEY_STATUS = "status";
+    private static final String KEY_COMBAT = "combat";
+    private static final String KEY_RECORDS = "records";
+
     public List<SideVO> buildFixedSides() {
         List<SideVO> sides = new ArrayList<>();
         sides.add(buildSide("red", "红方", "#E54D42", buildRedEquips()));
@@ -102,7 +107,7 @@ public class SchemeDetailDataBuilder {
 
         EquipmentInfoVO info = new EquipmentInfoVO();
         info.setCategories(Arrays.asList(
-            category("basic", "基本信息", Arrays.asList(
+            category(KEY_BASIC, "基本信息", Arrays.asList(
                 item("label", "型号", "value", o.getOrDefault("model", name)),
                 item("label", "类型", "value", type),
                 item("label", "状态", "value", status, "tag", tag),
@@ -112,19 +117,19 @@ public class SchemeDetailDataBuilder {
                 item("label", "武器配置", "value", o.getOrDefault("weapon", "制式装备")),
                 item("label", "油弹量", "value", ammo)
             )),
-            category("status", "实时状态", Arrays.asList(
+            category(KEY_STATUS, "实时状态", Arrays.asList(
                 item("label", "当前状态", "value", status, "tag", tag),
                 item("label", "航速", "value", speed),
                 item("label", "油量", "value", ammo),
                 item("label", "电子系统", "value", "正常", "tag", "success")
             )),
-            category("combat", "作战指标", Arrays.asList(
+            category(KEY_COMBAT, "作战指标", Arrays.asList(
                 item("label", "命中率", "value", "92%"),
                 item("label", "侦测范围", "value", "80 km"),
                 item("label", "载弹量", "value", "42 枚"),
                 item("label", "持续作战时间", "value", "6 h")
             )),
-            category("records", "数据记录", Arrays.asList(
+            category(KEY_RECORDS, "数据记录", Arrays.asList(
                 item("time", "2026-08-01 10:30:00", "item", "航速", "value", "58 km/h"),
                 item("time", "2026-08-01 10:20:00", "item", "油量", "value", "86%"),
                 item("time", "2026-08-01 10:10:00", "item", "航向", "value", "45°"),
