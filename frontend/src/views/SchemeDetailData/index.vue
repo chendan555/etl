@@ -42,23 +42,23 @@
         </div>
 
         <div class="info-panel">
-          <div class="info-tabs" v-if="currentEquip">
+          <div class="info-tabs" v-if="currentInfoCategories.length > 0">
             <div
-              v-for="tab in infoTabs"
-              :key="tab.key"
+              v-for="cat in currentInfoCategories"
+              :key="cat.key"
               class="info-tab"
-              :class="{ active: activeInfoTab === tab.key }"
-              :style="activeInfoTab === tab.key ? { color: currentSideColor, borderBottomColor: currentSideColor } : {}"
-              @click="onInfoTabChange(tab.key)"
+              :class="{ active: activeInfoTab === cat.key }"
+              :style="activeInfoTab === cat.key ? { color: currentSideColor, borderBottomColor: currentSideColor } : {}"
+              @click="onInfoTabChange(cat.key)"
             >
-              {{ tab.label }}
+              {{ cat.label }}
             </div>
           </div>
 
-          <div class="info-content" v-if="currentEquip">
+          <div class="info-content" v-if="activeCategory">
             <!-- 基本信息：属性表 -->
             <table v-if="activeInfoTab === 'basic'" class="info-table">
-              <tr v-for="(item, i) in currentEquip.info.basic" :key="i">
+              <tr v-for="(item, i) in activeCategory.items" :key="i">
                 <td class="info-label">{{ item.label }}</td>
                 <td class="info-value">
                   <el-tag v-if="item.tag" :type="item.tag" size="small">{{ item.value }}</el-tag>
@@ -69,7 +69,7 @@
 
             <!-- 实时状态：卡片 -->
             <div v-else-if="activeInfoTab === 'status'" class="status-cards">
-              <div v-for="(item, i) in currentEquip.info.status" :key="i" class="status-card">
+              <div v-for="(item, i) in activeCategory.items" :key="i" class="status-card">
                 <div class="status-label">{{ item.label }}</div>
                 <div class="status-value">
                   <el-tag v-if="item.tag" :type="item.tag" size="small">{{ item.value }}</el-tag>
@@ -79,20 +79,20 @@
             </div>
 
             <!-- 作战指标：表格 -->
-            <el-table v-else-if="activeInfoTab === 'combat'" :data="currentEquip.info.combat" border size="small" class="info-content-table">
+            <el-table v-else-if="activeInfoTab === 'combat'" :data="activeCategory.items" border size="small" class="info-content-table">
               <el-table-column prop="label" label="指标" />
               <el-table-column prop="value" label="数值" />
             </el-table>
 
             <!-- 数据记录：表格 -->
-            <el-table v-else-if="activeInfoTab === 'records'" :data="currentEquip.info.records" border size="small" class="info-content-table">
+            <el-table v-else-if="activeInfoTab === 'records'" :data="activeCategory.items" border size="small" class="info-content-table">
               <el-table-column prop="time" label="时间" width="180" />
               <el-table-column prop="item" label="数据项" />
               <el-table-column prop="value" label="数值" />
             </el-table>
           </div>
 
-          <!-- 空状态（element-ui 2.8.2 无 el-empty，用纯文本） -->
+          <!-- 空状态 -->
           <div v-else class="empty-tip">暂无装备数据</div>
         </div>
       </div>
@@ -114,13 +114,7 @@ export default {
       scheme: { schemeName: '', status: 0, createTime: '', sides: [] },
       activeSide: 'red',
       activeEquipId: null,
-      activeInfoTab: 'basic',
-      infoTabs: [
-        { key: 'basic', label: '基本信息' },
-        { key: 'status', label: '实时状态' },
-        { key: 'combat', label: '作战指标' },
-        { key: 'records', label: '数据记录' }
-      ]
+      activeInfoTab: 'basic'
     };
   },
   computed: {
@@ -135,6 +129,12 @@ export default {
     },
     currentEquip() {
       return this.currentEquips.find(e => e.id === this.activeEquipId) || null;
+    },
+    currentInfoCategories() {
+      return (this.currentEquip && this.currentEquip.info && this.currentEquip.info.categories) || [];
+    },
+    activeCategory() {
+      return this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
     }
   },
   created() {
@@ -164,17 +164,20 @@ export default {
       }
       if (this.currentEquips.length > 0) {
         this.activeEquipId = this.currentEquips[0].id;
-        this.activeInfoTab = 'basic';
+        this.resetInfoTab();
       }
+    },
+    resetInfoTab() {
+      this.activeInfoTab = this.currentInfoCategories.length > 0 ? this.currentInfoCategories[0].key : 'basic';
     },
     onSideChange(side) {
       this.activeSide = side;
       this.activeEquipId = this.currentEquips.length > 0 ? this.currentEquips[0].id : null;
-      this.activeInfoTab = 'basic';
+      this.resetInfoTab();
     },
     onEquipChange(id) {
       this.activeEquipId = id;
-      this.activeInfoTab = 'basic';
+      this.resetInfoTab();
     },
     onInfoTabChange(key) {
       this.activeInfoTab = key;
