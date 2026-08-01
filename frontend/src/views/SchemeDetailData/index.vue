@@ -146,7 +146,9 @@ export default {
     this.loadData(this.schemeId);
   },
   methods: {
-    // TODO: 接入真实数据时，把下面实现替换为 API.sampleCascade.getSchemeDetailData(schemeId)
+    // TODO: 接入真实数据时替换为 API.sampleCascade.getSchemeDetailData(schemeId)
+    // 注意：真实接口响应为 axios 包装，需解包 res.data.data 得到与 mock 同构的 scheme 对象，
+    // 并补 .catch 错误处理（如 $message.error + loading 态）。
     loadData(schemeId) {
       return new Promise(resolve => {
         this.scheme = getMockSchemeDetailData(schemeId);
