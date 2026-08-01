@@ -90,9 +90,15 @@
               <el-table-column prop="item" label="数据项" />
               <el-table-column prop="value" label="数值" />
             </el-table>
+
+            <!-- 未知分类兜底：通用 label/value 表格 -->
+            <el-table v-else :data="activeCategory.items" border size="small" class="info-content-table">
+              <el-table-column prop="label" label="项目" />
+              <el-table-column prop="value" label="数值" />
+            </el-table>
           </div>
 
-          <!-- 空状态 -->
+          <!-- 空状态（element-ui 2.8.2 无 el-empty，用纯文本） -->
           <div v-else class="empty-tip">暂无装备数据</div>
         </div>
       </div>
@@ -114,7 +120,7 @@ export default {
       scheme: { schemeName: '', status: 0, createTime: '', sides: [] },
       activeSide: 'red',
       activeEquipId: null,
-      activeInfoTab: 'basic'
+      activeInfoTab: null
     };
   },
   computed: {
@@ -134,7 +140,8 @@ export default {
       return (this.currentEquip && this.currentEquip.info && this.currentEquip.info.categories) || [];
     },
     activeCategory() {
-      return this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
+      const cat = this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
+      return cat ? { ...cat, items: cat.items || [] } : null;
     }
   },
   created() {
@@ -168,7 +175,12 @@ export default {
       }
     },
     resetInfoTab() {
-      this.activeInfoTab = this.currentInfoCategories.length > 0 ? this.currentInfoCategories[0].key : 'basic';
+      const cats = this.currentInfoCategories;
+      if (cats.length === 0) {
+        this.activeInfoTab = null;
+      } else if (!cats.some(c => c.key === this.activeInfoTab)) {
+        this.activeInfoTab = cats[0].key;
+      }
     },
     onSideChange(side) {
       this.activeSide = side;
