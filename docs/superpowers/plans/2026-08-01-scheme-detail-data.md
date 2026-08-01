@@ -8,6 +8,8 @@
 
 **技术栈：** Vue 2.6 + element-ui 2.8.2 + vue-router（自动注册 views），vue-cli。前端无测试基础设施，用 `eslint` + `npm run build` + 手动浏览器验证。
 
+**验证策略说明（2026-08-01 修正）：** 项目 eslint 为 `plugin:vue/essential` + `@vue/airbnb`，仓库 CRLF 行尾，**所有已提交文件**都报 linebreak-style 等风格错误——"eslint 无报错"非本项目实际门槛。因此每个任务以 `npm run build`（真正的编译门槛）为主；跑 eslint 时只拦截真正的逻辑错误（undefined var、语法错误、import 不存在的模块），忽略 CRLF 与 airbnb 风格噪音。
+
 **设计规格：** [2026-08-01-scheme-detail-data-design.md](../specs/2026-08-01-scheme-detail-data-design.md)
 
 ---
@@ -124,7 +126,7 @@ export function getMockSchemeDetailData(schemeId) {
 - [ ] **步骤 2：语法校验**
 
 运行：`npx eslint frontend/src/views/SchemeDetailData/mock.js`
-预期：无报错。
+预期：除项目固有的 CRLF/airbnb 风格错误外，无新增逻辑错误（undefined var、语法错误、import 不存在的模块）。
 
 - [ ] **步骤 3：Commit**
 
@@ -480,7 +482,7 @@ export default {
 - [ ] **步骤 2：eslint 校验**
 
 运行：`npx eslint frontend/src/views/SchemeDetailData/index.vue`
-预期：无报错。
+预期：除项目固有的 CRLF/airbnb 风格错误外，无新增逻辑错误（undefined var、语法错误、import 不存在的模块）。
 
 - [ ] **步骤 3：Commit**
 
@@ -512,7 +514,7 @@ git commit -m "feat: add scheme detail data page with red/blue side and equipmen
 - [ ] **步骤 2：eslint 校验**
 
 运行：`npx eslint frontend/src/api/modules/sample-cascade.ts`
-预期：无报错。
+预期：除项目固有的 CRLF/airbnb 风格错误外，无新增逻辑错误（undefined var、语法错误、import 不存在的模块）。
 
 - [ ] **步骤 3：Commit**
 
@@ -565,7 +567,7 @@ git commit -m "feat: reserve getSchemeDetailData API signature"
 - [ ] **步骤 3：eslint 校验**
 
 运行：`npx eslint frontend/src/views/SchemeManage/index.vue`
-预期：无报错。
+预期：除项目固有的 CRLF/airbnb 风格错误外，无新增逻辑错误（undefined var、语法错误、import 不存在的模块）。
 
 - [ ] **步骤 4：Commit**
 
