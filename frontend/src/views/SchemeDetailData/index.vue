@@ -148,18 +148,14 @@ export default {
   methods: {
     loadData(schemeId) {
       return API.sampleCascade.getSchemeDetailData(schemeId).then(res => {
-        if (res.data && res.data.success) {
-          this.scheme = res.data.data;
-          if (this.$route.query.schemeName) {
-            this.scheme.schemeName = this.$route.query.schemeName;
-          }
-          this.initSelection();
-        } else {
-          this.$message.error((res.data && res.data.msg) || '加载详细数据失败');
+        // 拦截器已保证此处为成功响应（业务失败由拦截器统一提示并 reject）
+        this.scheme = (res.data && res.data.data) || { schemeName: '', status: 0, createTime: '', sides: [] };
+        if (this.$route.query.schemeName) {
+          this.scheme.schemeName = this.$route.query.schemeName;
         }
+        this.initSelection();
       }).catch(err => {
         console.error('load detail data error:', err);
-        this.$message.error('加载详细数据失败');
       });
     },
     initSelection() {

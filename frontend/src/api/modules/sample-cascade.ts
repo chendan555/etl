@@ -107,7 +107,7 @@ export default class SampleCascade extends baseApi {
     });
   }
 
-  // ========== 方案详细数据（接口预留，本阶段后端未实现） ==========
+  // ========== 方案详细数据 ==========
   getSchemeDetailData(schemeId: number) {
     return new Promise((resolve, reject) => {
       this.$http.get('/api/scheme/detailData', { params: { schemeId } }).then(resolve).catch(reject);
