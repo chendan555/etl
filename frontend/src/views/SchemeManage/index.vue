@@ -32,10 +32,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="170" />
-      <el-table-column label="操作" width="280" fixed="right">
+      <el-table-column label="操作" width="360" fixed="right">
         <template slot-scope="scope">
           <el-button type="text" size="small" @click="openDialog(scope.row)">编辑</el-button>
           <el-button type="text" size="small" @click="viewDetail(scope.row)">查看详情</el-button>
+          <el-button type="text" size="small" @click="viewDetailData(scope.row)">详细数据</el-button>
           <el-button type="text" size="small" @click="startProcess(scope.row)">引接</el-button>
           <el-button v-if="scope.row.transId" type="text" size="small" @click="goFlowChart(scope.row)">设计流程</el-button>
           <el-button type="text" size="small" style="color: #F56C6C" @click="deleteScheme(scope.row)">删除</el-button>
@@ -518,6 +519,16 @@ export default {
           this.detailData = res.data.data;
           this.detailPage = 1;
           this.detailVisible = true;
+        }
+      });
+    },
+    // ========== 详细数据 ==========
+    viewDetailData(row) {
+      this.$router.push({
+        path: '/SchemeDetailData',
+        query: {
+          schemeId: row.id,
+          schemeName: row.schemeName
         }
       });
     },
