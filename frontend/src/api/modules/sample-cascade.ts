@@ -108,9 +108,9 @@ export default class SampleCascade extends baseApi {
   }
 
   // ========== 方案详细数据 ==========
-  getSchemeDetailData(schemeId: number) {
+  getSchemeDetailData(schemeId: number, ybList?: string) {
     return new Promise((resolve, reject) => {
-      this.$http.get('/api/scheme/detailData', { params: { schemeId } }).then(resolve).catch(reject);
+      this.$http.get('/api/scheme/detailData', { params: { schemeId, ybList } }).then(resolve).catch(reject);
     });
   }
 

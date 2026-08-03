@@ -261,8 +261,10 @@ public class SchemeController {
     }
 
     @GetMapping("/detailData")
-    public Result<SchemeDetailDataVO> getSchemeDetailData(@RequestParam Long schemeId) {
-        SchemeDetailDataVO data = schemeService.getSchemeDetailData(schemeId);
+    public Result<SchemeDetailDataVO> getSchemeDetailData(
+            @RequestParam Long schemeId,
+            @RequestParam(required = false) String ybList) {
+        SchemeDetailDataVO data = schemeService.getSchemeDetailData(schemeId, ybList);
         if (data == null) {
             return Result.fail("方案不存在");
         }

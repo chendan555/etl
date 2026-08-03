@@ -105,7 +105,8 @@ export default {
       activeEquipId: null,
       activeInfoTab: null,
       schemeDetails: [],
-      selectedDetailId: null
+      selectedDetailId: null,
+      selectedYbList: null
     };
   },
   computed: {
@@ -139,12 +140,12 @@ export default {
       this.$message.warning('缺少方案参数');
       return;
     }
-    this.loadData(this.schemeId);
+    this.loadData(this.schemeId, this.selectedYbList);
     this.loadSchemeDetails(this.schemeId);
   },
   methods: {
-    loadData(schemeId) {
-      return API.sampleCascade.getSchemeDetailData(schemeId).then(res => {
+    loadData(schemeId, ybList) {
+      return API.sampleCascade.getSchemeDetailData(schemeId, ybList).then(res => {
         // 拦截器已保证此处为成功响应（业务失败由拦截器统一提示并 reject）
         this.scheme = (res.data && res.data.data) || { schemeName: '', status: 0, createTime: '', sides: [] };
         if (this.$route.query.schemeName) {
@@ -194,8 +195,11 @@ export default {
       });
     },
     onDetailChange(detailId) {
-      console.log('selected detail:', detailId);
-      // 后续可在此处根据 detailId 过滤装备数据
+      const detail = this.schemeDetails.find(d => d.id === detailId);
+      if (detail) {
+        this.selectedYbList = detail.ybList;
+        this.loadData(this.schemeId, detail.ybList);
+      }
     },
     goBack() {
       if (window.history.length > 1) {
