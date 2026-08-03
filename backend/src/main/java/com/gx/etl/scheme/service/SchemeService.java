@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -155,27 +156,34 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
      * 根据方案ID查询装备树（T_SCHEME_EQUIP）
      */
     public List<SchemeEquipVO> getSchemeEquipTree(String schemeId) {
+        System.out.println("getSchemeEquipTree: schemeId=" + schemeId);
         List<SchemeEquip> allEquips = schemeEquipMapper.selectList(
                 new LambdaQueryWrapper<SchemeEquip>()
                         .eq(SchemeEquip::getSchemeId, schemeId)
         );
+        System.out.println("getSchemeEquipTree: found " + allEquips.size() + " equips");
         return buildEquipTree(allEquips, null);
     }
 
     /**
-     * 递归构建装备树
+     * 递归构建装备树（使用 id 和 pid 构建）
      */
     private List<SchemeEquipVO> buildEquipTree(List<SchemeEquip> allEquips, String parentId) {
         List<SchemeEquipVO> tree = new ArrayList<>();
         for (SchemeEquip equip : allEquips) {
             String pid = equip.getPid();
-            if (parentId == null ? (pid == null || pid.isEmpty()) : parentId.equals(pid)) {
+            // 根节点：pid 为空或 "0"
+            boolean isRoot = (parentId == null && (pid == null || pid.isEmpty() || "0".equals(pid)));
+            // 子节点：pid 等于父节点的 id
+            boolean isChild = (parentId != null && parentId.equals(equip.getId().toString()));
+            if (isRoot || isChild) {
                 SchemeEquipVO vo = new SchemeEquipVO();
                 vo.setId(equip.getId());
                 vo.setEquipId(equip.getEquipId());
                 vo.setEquipName(equip.getEquipName());
                 vo.setPid(equip.getPid());
-                vo.setChildren(buildEquipTree(allEquips, equip.getEquipId()));
+                // 递归查找子节点，使用当前节点的 id 作为父节点
+                vo.setChildren(buildEquipTree(allEquips, equip.getId().toString()));
                 tree.add(vo);
             }
         }
