@@ -14,7 +14,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,14 +28,10 @@ public class SchemeDetailDataBuilder {
     @Resource
     private DataSource dataSource;
 
-    /** 需要显示的数据库表配置：表名 → 显示名称（Tab 标签） */
-    private static final Map<String, String> TABLE_CONFIG = new LinkedHashMap<>();
-    static {
-        TABLE_CONFIG.put("TABLE_1", "表格1");
-        TABLE_CONFIG.put("TABLE_2", "表格2");
-        TABLE_CONFIG.put("TABLE_3", "表格3");
-        TABLE_CONFIG.put("TABLE_4", "表格4");
-    }
+    /** 需要显示的数据库表名列表 */
+    private static final List<String> TABLE_NAMES = Arrays.asList(
+        "TABLE_1", "TABLE_2", "TABLE_3", "TABLE_4"
+    );
 
     public List<SideVO> buildFixedSides() {
         List<SideVO> sides = new ArrayList<>();
@@ -56,46 +51,28 @@ public class SchemeDetailDataBuilder {
 
     private List<EquipmentVO> buildRedEquips() {
         return Arrays.asList(
-            buildEquip(1L, "99式主战坦克", "主战坦克", ov("model", "99A", "weapon", "125mm滑膛炮", "ammo", "82%")),
-            buildEquip(2L, "歼-20", "隐身战斗机", ov("model", "歼-20A", "speed", "2.2 马赫", "status", "巡逻中", "tag", "warning", "ammo", "90%")),
-            buildEquip(3L, "空警-2000", "预警机", ov("model", "空警-2000", "speed", "850 km/h")),
-            buildEquip(4L, "红旗-9", "防空导弹车", ov("model", "HQ-9", "status", "待命", "tag", "warning")),
-            buildEquip(5L, "东风-17", "弹道导弹车", ov("model", "DF-17", "weapon", "DF-17高超音速导弹")),
-            buildEquip(6L, "武直-10", "武装直升机", ov("model", "直-10", "speed", "270 km/h", "status", "巡逻中", "tag", "warning")),
-            buildEquip(7L, "山猫侦察车", "侦察车", ov("model", "山猫", "speed", "80 km/h", "status", "侦察中", "tag", "warning")),
-            buildEquip(8L, "指挥方舱", "指挥车", ov("model", "指挥方舱", "speed", "40 km/h", "status", "待命", "tag", "warning"))
+            buildEquip(1L, "99式主战坦克", "主战坦克"),
+            buildEquip(2L, "歼-20", "隐身战斗机"),
+            buildEquip(3L, "空警-2000", "预警机"),
+            buildEquip(4L, "红旗-9", "防空导弹车"),
+            buildEquip(5L, "东风-17", "弹道导弹车"),
+            buildEquip(6L, "武直-10", "武装直升机"),
+            buildEquip(7L, "山猫侦察车", "侦察车"),
+            buildEquip(8L, "指挥方舱", "指挥车")
         );
     }
 
     private List<EquipmentVO> buildBlueEquips() {
         return Arrays.asList(
-            buildEquip(11L, "M1A2主战坦克", "主战坦克", ov("model", "M1A2 SEPv3", "weapon", "120mm滑膛炮", "ammo", "78%")),
-            buildEquip(12L, "F-35战机", "隐身战斗机", ov("model", "F-35B", "speed", "1.6 马赫", "status", "巡逻中", "tag", "warning", "ammo", "88%")),
-            buildEquip(13L, "宙斯盾驱逐舰", "驱逐舰", ov("model", "DDG-51", "speed", "30 节", "status", "巡航中", "tag", "warning")),
-            buildEquip(14L, "全球鹰无人机", "无人机", ov("model", "RQ-4", "speed", "575 km/h", "status", "侦察中", "tag", "warning")),
-            buildEquip(15L, "爱国者导弹", "防空导弹车", ov("model", "MIM-104", "status", "待命", "tag", "warning")),
-            buildEquip(16L, "CH-53直升机", "运输直升机", ov("model", "CH-53K", "speed", "315 km/h")),
-            buildEquip(17L, "斯特赖克装甲车", "装甲运兵车", ov("model", "LAV III", "speed", "97 km/h")),
-            buildEquip(18L, "两栖登陆舰", "登陆舰", ov("model", "LHD-1", "speed", "22 节", "status", "待命", "tag", "warning"))
+            buildEquip(11L, "M1A2主战坦克", "主战坦克"),
+            buildEquip(12L, "F-35战机", "隐身战斗机"),
+            buildEquip(13L, "宙斯盾驱逐舰", "驱逐舰"),
+            buildEquip(14L, "全球鹰无人机", "无人机"),
+            buildEquip(15L, "爱国者导弹", "防空导弹车"),
+            buildEquip(16L, "CH-53直升机", "运输直升机"),
+            buildEquip(17L, "斯特赖克装甲车", "装甲运兵车"),
+            buildEquip(18L, "两栖登陆舰", "登陆舰")
         );
-    }
-
-    /** 构造覆盖字段 Map（key: model/speed/status/tag/weapon/ammo/pos/course） */
-    private static Map<String, String> ov(String... kv) {
-        Map<String, String> map = new HashMap<>();
-        for (int i = 0; i < kv.length; i += 2) {
-            map.put(kv[i], kv[i + 1]);
-        }
-        return map;
-    }
-
-    /** 构造一条 label/value 键值项（可含可选 tag） */
-    private static Map<String, Object> item(String... kv) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        for (int i = 0; i < kv.length; i += 2) {
-            map.put(kv[i], kv[i + 1]);
-        }
-        return map;
     }
 
     /** 构造一个信息分类（含 key/label/items，label 为前端 Tab 显示文字） */
@@ -107,7 +84,7 @@ public class SchemeDetailDataBuilder {
         return vo;
     }
 
-    private EquipmentVO buildEquip(Long id, String name, String type, Map<String, String> o) {
+    private EquipmentVO buildEquip(Long id, String name, String type) {
         EquipmentVO vo = new EquipmentVO();
         vo.setId(id);
         vo.setName(name);
@@ -121,22 +98,41 @@ public class SchemeDetailDataBuilder {
 
     /**
      * 动态查询配置的数据库表，构建信息分类列表。
-     * 每个表作为一个分类，表头是字段名，数据是行数据。
+     * 每个表作为一个分类，表头是字段名，数据是行数据，Tab 标签为表注释。
      */
     private List<InfoCategoryVO> buildTableCategories() {
         List<InfoCategoryVO> categories = new ArrayList<>();
-        for (Map.Entry<String, String> entry : TABLE_CONFIG.entrySet()) {
-            String tableName = entry.getKey();
-            String displayName = entry.getValue();
+        for (String tableName : TABLE_NAMES) {
             try {
+                String comment = queryTableComment(tableName);
                 List<Map<String, Object>> rows = queryTableData(tableName);
-                categories.add(category(tableName, displayName, rows));
+                categories.add(category(tableName, comment, rows));
             } catch (Exception e) {
-                // 查询失败时添加空分类
-                categories.add(category(tableName, displayName, new ArrayList<>()));
+                // 查询失败时使用表名作为显示名
+                categories.add(category(tableName, tableName, new ArrayList<>()));
             }
         }
         return categories;
+    }
+
+    /**
+     * 查询表注释（达梦数据库）
+     */
+    private String queryTableComment(String tableName) {
+        String sql = "SELECT COMMENTS FROM ALL_TAB_COMMENTS WHERE TABLE_NAME = '" + tableName + "'";
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                String comment = rs.getString("COMMENTS");
+                if (comment != null && !comment.isEmpty()) {
+                    return comment;
+                }
+            }
+        } catch (Exception e) {
+            // 查询失败返回表名
+        }
+        return tableName;
     }
 
     /**
