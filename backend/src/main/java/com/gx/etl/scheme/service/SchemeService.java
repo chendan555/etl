@@ -166,24 +166,30 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
     }
 
     /**
-     * 递归构建装备树（使用 id 和 pid 构建）
+     * 递归构建装备树（使用 pid 字段构建父子关系）
+     * 根节点：pid 为空或 "0"
+     * 子节点：pid 等于父节点的 equipId
      */
-    private List<SchemeEquipVO> buildEquipTree(List<SchemeEquip> allEquips, String parentId) {
+    private List<SchemeEquipVO> buildEquipTree(List<SchemeEquip> allEquips, String parentEquipId) {
         List<SchemeEquipVO> tree = new ArrayList<>();
         for (SchemeEquip equip : allEquips) {
             String pid = equip.getPid();
-            // 根节点：pid 为空或 "0"
-            boolean isRoot = (parentId == null && (pid == null || pid.isEmpty() || "0".equals(pid)));
-            // 子节点：pid 等于父节点的 id
-            boolean isChild = (parentId != null && parentId.equals(equip.getId().toString()));
-            if (isRoot || isChild) {
+            boolean match = false;
+            if (parentEquipId == null) {
+                // 查找根节点：pid 为空或 "0"
+                match = (pid == null || pid.isEmpty() || "0".equals(pid));
+            } else {
+                // 查找子节点：pid 等于父节点的 equipId
+                match = parentEquipId.equals(pid);
+            }
+            if (match) {
                 SchemeEquipVO vo = new SchemeEquipVO();
                 vo.setId(equip.getId());
                 vo.setEquipId(equip.getEquipId());
                 vo.setEquipName(equip.getEquipName());
                 vo.setPid(equip.getPid());
-                // 递归查找子节点，使用当前节点的 id 作为父节点
-                vo.setChildren(buildEquipTree(allEquips, equip.getId().toString()));
+                // 递归查找子节点，使用当前节点的 equipId 作为父节点
+                vo.setChildren(buildEquipTree(allEquips, equip.getEquipId()));
                 tree.add(vo);
             }
         }
