@@ -91,6 +91,7 @@ export default {
       equipTree: [],
       activeEquipId: null,
       activeInfoTab: null,
+      currentEquipDetail: null,
       treeProps: {
         children: 'children',
         label: 'equipName'
@@ -99,9 +100,8 @@ export default {
   },
   computed: {
     currentInfoCategories() {
-      // 从后端返回的数据中获取信息分类
-      // 目前后端返回的是固定数据，后续可改为从装备树节点获取
-      return (this.scheme.sides && this.scheme.sides.length > 0 && this.scheme.sides[0].equipmentList && this.scheme.sides[0].equipmentList[0] && this.scheme.sides[0].equipmentList[0].info && this.scheme.sides[0].equipmentList[0].info.categories) || [];
+      // 从选中的装备详情中获取信息分类
+      return (this.currentEquipDetail && this.currentEquipDetail.info && this.currentEquipDetail.info.categories) || [];
     },
     activeCategory() {
       const cat = this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
@@ -149,6 +149,30 @@ export default {
     },
     onEquipNodeClick(data) {
       this.activeEquipId = data.equipId;
+      // 加载装备详情（这里需要调用接口获取装备的 info 数据）
+      // 目前使用 mock 数据，后续改为真实接口
+      this.loadEquipDetail(data);
+    },
+    loadEquipDetail(equipData) {
+      // 暂时使用固定数据，后续改为真实接口
+      this.currentEquipDetail = {
+        id: equipData.id,
+        equipId: equipData.equipId,
+        equipName: equipData.equipName,
+        info: {
+          categories: [
+            {
+              key: 'basic',
+              label: '基本信息',
+              items: [
+                { label: '装备ID', value: equipData.equipId },
+                { label: '装备名称', value: equipData.equipName },
+                { label: '父节点ID', value: equipData.pid || '无' }
+              ]
+            }
+          ]
+        }
+      };
       this.resetInfoTab();
     },
     resetInfoTab() {
@@ -210,6 +234,26 @@ export default {
   border-right: 1px solid #3e524b;
   padding-right: 12px;
   overflow: auto;
+}
+.equip-tree-panel >>> .el-tree {
+  background: transparent;
+}
+.equip-tree-panel >>> .el-tree-node__content {
+  color: #ffffff;
+  background: transparent;
+}
+.equip-tree-panel >>> .el-tree-node__content:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.equip-tree-panel >>> .el-tree-node.is-current > .el-tree-node__content {
+  background: #409EFF;
+  color: #ffffff;
+}
+.equip-tree-panel >>> .el-tree-node__expand-icon {
+  color: #ffffff;
+}
+.equip-tree-panel >>> .el-tree-node__expand-icon.is-leaf {
+  color: transparent;
 }
 .panel-title {
   font-size: 14px;
