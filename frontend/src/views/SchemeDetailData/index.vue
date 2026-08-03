@@ -147,9 +147,8 @@ export default {
       }
     },
     onEquipNodeClick(data) {
+      console.log('clicked equip:', data);
       this.activeEquipId = data.equipId;
-      // 右边显示的是 TABLE 表数据，不需要改变
-      // 选中效果通过 el-tree 的 highlight-current 实现
     },
     resetInfoTab() {
       const cats = this.currentInfoCategories;
@@ -222,8 +221,8 @@ export default {
   background: rgba(255, 255, 255, 0.1);
 }
 .equip-tree-panel >>> .el-tree-node.is-current > .el-tree-node__content {
-  background: #409EFF;
-  color: #ffffff;
+  background: #409EFF !important;
+  color: #ffffff !important;
 }
 .equip-tree-panel >>> .el-tree-node__expand-icon {
   color: #ffffff;
