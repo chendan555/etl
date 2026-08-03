@@ -17,7 +17,7 @@
         <el-option
           v-for="item in schemeDetails"
           :key="item.id"
-          :label="item.ybName || '明细' + item.id"
+          :label="item.ybName || item.id"
           :value="item.id"
         />
       </el-select>
