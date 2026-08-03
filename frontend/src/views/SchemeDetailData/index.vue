@@ -91,7 +91,6 @@ export default {
       equipTree: [],
       activeEquipId: null,
       activeInfoTab: null,
-      currentEquipDetail: null,
       treeProps: {
         children: 'children',
         label: 'equipName'
@@ -100,8 +99,8 @@ export default {
   },
   computed: {
     currentInfoCategories() {
-      // 从选中的装备详情中获取信息分类
-      return (this.currentEquipDetail && this.currentEquipDetail.info && this.currentEquipDetail.info.categories) || [];
+      // 从方案详情数据中获取信息分类（TABLE 表数据）
+      return (this.scheme && this.scheme.sides && this.scheme.sides.length > 0 && this.scheme.sides[0].equipmentList && this.scheme.sides[0].equipmentList[0] && this.scheme.sides[0].equipmentList[0].info && this.scheme.sides[0].equipmentList[0].info.categories) || [];
     },
     activeCategory() {
       const cat = this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
@@ -149,31 +148,8 @@ export default {
     },
     onEquipNodeClick(data) {
       this.activeEquipId = data.equipId;
-      // 加载装备详情（这里需要调用接口获取装备的 info 数据）
-      // 目前使用 mock 数据，后续改为真实接口
-      this.loadEquipDetail(data);
-    },
-    loadEquipDetail(equipData) {
-      // 暂时使用固定数据，后续改为真实接口
-      this.currentEquipDetail = {
-        id: equipData.id,
-        equipId: equipData.equipId,
-        equipName: equipData.equipName,
-        info: {
-          categories: [
-            {
-              key: 'basic',
-              label: '基本信息',
-              items: [
-                { label: '装备ID', value: equipData.equipId },
-                { label: '装备名称', value: equipData.equipName },
-                { label: '父节点ID', value: equipData.pid || '无' }
-              ]
-            }
-          ]
-        }
-      };
-      this.resetInfoTab();
+      // 右边显示的是 TABLE 表数据，不需要改变
+      // 选中效果通过 el-tree 的 highlight-current 实现
     },
     resetInfoTab() {
       const cats = this.currentInfoCategories;
