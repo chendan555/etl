@@ -7,6 +7,20 @@
       <el-tag :type="scheme.status === 1 ? 'success' : 'info'" size="small">
         {{ scheme.status === 1 ? '已完成' : '未完成' }}
       </el-tag>
+      <el-select
+        v-model="selectedDetailId"
+        placeholder="请选择方案明细"
+        size="small"
+        style="width: 200px; margin-left: 12px;"
+        @change="onDetailChange"
+      >
+        <el-option
+          v-for="item in schemeDetails"
+          :key="item.id"
+          :label="item.ybName || '明细' + item.id"
+          :value="item.id"
+        />
+      </el-select>
       <span class="header-time">{{ scheme.createTime || '' }}</span>
     </div>
 
@@ -89,7 +103,9 @@ export default {
       scheme: { schemeName: '', status: 0, createTime: '', sides: [] },
       activeSide: 'red',
       activeEquipId: null,
-      activeInfoTab: null
+      activeInfoTab: null,
+      schemeDetails: [],
+      selectedDetailId: null
     };
   },
   computed: {
@@ -124,6 +140,7 @@ export default {
       return;
     }
     this.loadData(this.schemeId);
+    this.loadSchemeDetails(this.schemeId);
   },
   methods: {
     loadData(schemeId) {
@@ -166,6 +183,19 @@ export default {
     },
     onInfoTabChange(key) {
       this.activeInfoTab = key;
+    },
+    loadSchemeDetails(schemeId) {
+      return API.sampleCascade.getSchemeDetails(schemeId).then(res => {
+        if (res.data && res.data.success) {
+          this.schemeDetails = res.data.data || [];
+        }
+      }).catch(err => {
+        console.error('load scheme details error:', err);
+      });
+    },
+    onDetailChange(detailId) {
+      console.log('selected detail:', detailId);
+      // 后续可在此处根据 detailId 过滤装备数据
     },
     goBack() {
       if (window.history.length > 1) {

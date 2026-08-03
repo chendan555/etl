@@ -269,6 +269,11 @@ public class SchemeController {
         return Result.ok(data);
     }
 
+    @GetMapping("/schemeDetails")
+    public Result<List<SchemeDetail>> getSchemeDetails(@RequestParam Long schemeId) {
+        return Result.ok(schemeService.getSchemeDetails(schemeId));
+    }
+
     @PostMapping("/save")
     public Result<?> saveScheme(@RequestBody Scheme scheme) {
         schemeService.saveSchemeAndDetail(scheme);

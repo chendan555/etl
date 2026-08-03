@@ -134,6 +134,19 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
         removeById(id);
     }
 
+    // ========== 方案详细数据 ==========
+
+    /**
+     * 根据方案ID查询方案明细列表（T_SCHEME_DETAIL）
+     */
+    public List<SchemeDetail> getSchemeDetails(Long schemeId) {
+        return schemeDetailMapper.selectList(
+                new LambdaQueryWrapper<SchemeDetail>()
+                        .eq(SchemeDetail::getSchemeId, schemeId)
+                        .orderByAsc(SchemeDetail::getCreateTime)
+        );
+    }
+
     /**
      * 获取方案详细数据（红蓝方/装备/4类信息）。装备树为固定数据，方案头部取自数据库。
      * 方案不存在时返回 null，由 Controller 返回失败。
