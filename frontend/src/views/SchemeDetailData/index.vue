@@ -55,46 +55,15 @@
             </div>
           </div>
 
-          <div class="info-content" v-if="activeCategory">
-            <!-- 基本信息：属性表 -->
-            <table v-if="activeInfoTab === 'basic'" class="info-table">
-              <tr v-for="(item, i) in activeCategory.items" :key="i">
-                <td class="info-label">{{ item.label }}</td>
-                <td class="info-value">
-                  <el-tag v-if="item.tag" :type="item.tag" size="small">{{ item.value }}</el-tag>
-                  <span v-else>{{ item.value }}</span>
-                </td>
-              </tr>
-            </table>
-
-            <!-- 实时状态：卡片 -->
-            <div v-else-if="activeInfoTab === 'status'" class="status-cards">
-              <div v-for="(item, i) in activeCategory.items" :key="i" class="status-card">
-                <div class="status-label">{{ item.label }}</div>
-                <div class="status-value">
-                  <el-tag v-if="item.tag" :type="item.tag" size="small">{{ item.value }}</el-tag>
-                  <span v-else>{{ item.value }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 作战指标：表格 -->
-            <el-table v-else-if="activeInfoTab === 'combat'" :data="activeCategory.items" border size="small" class="info-content-table">
-              <el-table-column prop="label" label="指标" />
-              <el-table-column prop="value" label="数值" />
-            </el-table>
-
-            <!-- 数据记录：表格 -->
-            <el-table v-else-if="activeInfoTab === 'records'" :data="activeCategory.items" border size="small" class="info-content-table">
-              <el-table-column prop="time" label="时间" width="180" />
-              <el-table-column prop="item" label="数据项" />
-              <el-table-column prop="value" label="数值" />
-            </el-table>
-
-            <!-- 未知分类兜底：通用 label/value 表格 -->
-            <el-table v-else :data="activeCategory.items" border size="small" class="info-content-table">
-              <el-table-column prop="label" label="项目" />
-              <el-table-column prop="value" label="数值" />
+          <div class="info-content" v-if="activeCategory && activeCategory.items.length > 0">
+            <!-- 统一表格：表头来自 items 的字段名 -->
+            <el-table :data="activeCategory.items" border size="small" class="info-content-table">
+              <el-table-column
+                v-for="key in infoTableColumns"
+                :key="key"
+                :prop="key"
+                :label="key"
+              />
             </el-table>
           </div>
 
@@ -142,6 +111,10 @@ export default {
     activeCategory() {
       const cat = this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
       return cat ? { ...cat, items: cat.items || [] } : null;
+    },
+    infoTableColumns() {
+      if (!this.activeCategory || this.activeCategory.items.length === 0) return [];
+      return Object.keys(this.activeCategory.items[0]);
     }
   },
   created() {
@@ -315,44 +288,6 @@ export default {
 }
 .info-content-table {
   width: 100%;
-}
-.info-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.info-table td {
-  border: 1px solid #3e524b;
-  padding: 8px 12px;
-  font-size: 13px;
-}
-.info-label {
-  width: 140px;
-  background: #233129;
-  color: #b7c0c7;
-}
-.info-value {
-  color: #ffffff;
-}
-.status-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.status-card {
-  width: 180px;
-  border: 1px solid #3e524b;
-  border-radius: 4px;
-  padding: 12px;
-}
-.status-label {
-  color: #b7c0c7;
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-.status-value {
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 600;
 }
 .empty-tip {
   text-align: center;
