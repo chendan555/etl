@@ -6,6 +6,12 @@ import com.gx.etl.scheme.vo.InfoCategoryVO;
 import com.gx.etl.scheme.vo.SideVO;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,15 +21,22 @@ import java.util.Map;
 
 /**
  * 方案详细数据（红蓝方/装备/信息分类）构建器。
- * 当前为固定数据，接入真实数据源后替换 buildFixedSides() 的实现即可。
+ * 装备数据为固定数据，信息分类从数据库表动态查询。
  */
 @Component
 public class SchemeDetailDataBuilder {
 
-    private static final String KEY_BASIC = "basic";
-    private static final String KEY_STATUS = "status";
-    private static final String KEY_COMBAT = "combat";
-    private static final String KEY_RECORDS = "records";
+    @Resource
+    private DataSource dataSource;
+
+    /** 需要显示的数据库表配置：表名 → 显示名称（Tab 标签） */
+    private static final Map<String, String> TABLE_CONFIG = new LinkedHashMap<>();
+    static {
+        TABLE_CONFIG.put("TABLE_1", "表格1");
+        TABLE_CONFIG.put("TABLE_2", "表格2");
+        TABLE_CONFIG.put("TABLE_3", "表格3");
+        TABLE_CONFIG.put("TABLE_4", "表格4");
+    }
 
     public List<SideVO> buildFixedSides() {
         List<SideVO> sides = new ArrayList<>();
@@ -94,46 +107,62 @@ public class SchemeDetailDataBuilder {
         return vo;
     }
 
-    private static EquipmentVO buildEquip(Long id, String name, String type, Map<String, String> o) {
+    private EquipmentVO buildEquip(Long id, String name, String type, Map<String, String> o) {
         EquipmentVO vo = new EquipmentVO();
         vo.setId(id);
         vo.setName(name);
         vo.setType(type);
 
-        String status = o.getOrDefault("status", "作战中");
-        String tag = o.getOrDefault("tag", "danger");
-        String speed = o.getOrDefault("speed", "60 km/h");
-        String ammo = o.getOrDefault("ammo", "85%");
-
         EquipmentInfoVO info = new EquipmentInfoVO();
-        info.setCategories(Arrays.asList(
-            category(KEY_BASIC, "基本信息", Arrays.asList(
-                item("label", "型号", "value", o.getOrDefault("model", name)),
-                item("label", "类型", "value", type),
-                item("label", "状态", "value", status, "tag", tag),
-                item("label", "位置", "value", o.getOrDefault("pos", "东经120° 北纬35°")),
-                item("label", "速度", "value", speed),
-                item("label", "航向", "value", o.getOrDefault("course", "东北 45°")),
-                item("label", "武器配置", "value", o.getOrDefault("weapon", "制式装备")),
-                item("label", "油弹量", "value", ammo)
-            )),
-            category(KEY_STATUS, "实时状态", Arrays.asList(
-                item("label", "当前状态", "value", status, "tag", tag),
-                item("label", "航速", "value", speed),
-                item("label", "油量", "value", ammo),
-                item("label", "电子系统", "value", "正常", "tag", "success")
-            )),
-            category(KEY_COMBAT, "作战指标", Arrays.asList(
-                item("label", "命中率", "value", "92%"),
-                item("label", "侦测范围", "value", "80 km"),
-                item("label", "载弹量", "value", "42 枚"),
-                item("label", "持续作战时间", "value", "6 h")
-            )),
-            category(KEY_RECORDS, "数据记录", Arrays.asList(
-                item("time", "2026-08-01 10:30:00", "item", "航速", "value", "58 km/h"),
-                item("time", "2026-08-01 10:20:00", "item", "油量", "value", "86%"),
-                item("time", "2026-08-01 10:10:00", "item", "航向", "value", "45°"),
-                item("time", "2026-08-01 10:00:00", "item", "海拔", "value", "320 m"),
+        info.setCategories(buildTableCategories());
+        vo.setInfo(info);
+        return vo;
+    }
+
+    /**
+     * 动态查询配置的数据库表，构建信息分类列表。
+     * 每个表作为一个分类，表头是字段名，数据是行数据。
+     */
+    private List<InfoCategoryVO> buildTableCategories() {
+        List<InfoCategoryVO> categories = new ArrayList<>();
+        for (Map.Entry<String, String> entry : TABLE_CONFIG.entrySet()) {
+            String tableName = entry.getKey();
+            String displayName = entry.getValue();
+            try {
+                List<Map<String, Object>> rows = queryTableData(tableName);
+                categories.add(category(tableName, displayName, rows));
+            } catch (Exception e) {
+                // 查询失败时添加空分类
+                categories.add(category(tableName, displayName, new ArrayList<>()));
+            }
+        }
+        return categories;
+    }
+
+    /**
+     * 查询指定表的所有数据，返回行列表（每行是一个 Map，key 为字段名）
+     */
+    private List<Map<String, Object>> queryTableData(String tableName) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        String sql = "SELECT * FROM " + tableName;
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = meta.getColumnLabel(i);
+                    row.put(columnName, rs.getObject(i));
+                }
+                rows.add(row);
+            }
+        } catch (Exception e) {
+            // 查询失败返回空列表
+        }
+        return rows;
+    }
                 item("time", "2026-08-01 09:50:00", "item", "航速", "value", "55 km/h"),
                 item("time", "2026-08-01 09:40:00", "item", "油量", "value", "88%")
             ))
