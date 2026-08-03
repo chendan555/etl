@@ -126,6 +126,13 @@ export default {
       return API.sampleCascade.getSchemeById(schemeId).then(res => {
         if (res.data && res.data.success) {
           this.schemeDetails = res.data.data.detailList || [];
+          // 默认选中第一个
+          if (this.schemeDetails.length > 0) {
+            const first = this.schemeDetails[0];
+            this.selectedDetailId = first.id;
+            this.selectedYbList = first.ybList;
+            this.loadData(this.schemeId, first.ybList, this.selectedEquipId);
+          }
         }
       }).catch(err => {
         console.error('load scheme details error:', err);
