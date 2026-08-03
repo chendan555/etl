@@ -163,11 +163,4 @@ public class SchemeDetailDataBuilder {
         }
         return rows;
     }
-                item("time", "2026-08-01 09:50:00", "item", "航速", "value", "55 km/h"),
-                item("time", "2026-08-01 09:40:00", "item", "油量", "value", "88%")
-            ))
-        ));
-        vo.setInfo(info);
-        return vo;
-    }
 }
