@@ -15,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -166,34 +168,38 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
     }
 
     /**
-     * 递归构建装备树（使用 pid 字段构建父子关系）
+     * 构建装备树（使用 id 和 pid 构建，非递归方式）
      * 根节点：pid 为空或 "0"
-     * 子节点：pid 等于父节点的 equipId
+     * 子节点：pid 等于父节点的 id
      */
     private List<SchemeEquipVO> buildEquipTree(List<SchemeEquip> allEquips, String parentEquipId) {
-        List<SchemeEquipVO> tree = new ArrayList<>();
+        // 将所有节点转换为 VO，并建立 id -> VO 的映射
+        Map<String, SchemeEquipVO> voMap = new LinkedHashMap<>();
         for (SchemeEquip equip : allEquips) {
-            String pid = equip.getPid();
-            boolean match = false;
-            if (parentEquipId == null) {
-                // 查找根节点：pid 为空或 "0"
-                match = (pid == null || pid.isEmpty() || "0".equals(pid));
+            SchemeEquipVO vo = new SchemeEquipVO();
+            vo.setId(equip.getId());
+            vo.setEquipId(equip.getEquipId());
+            vo.setEquipName(equip.getEquipName());
+            vo.setPid(equip.getPid());
+            vo.setChildren(new ArrayList<>());
+            voMap.put(equip.getId().toString(), vo);
+        }
+
+        List<SchemeEquipVO> roots = new ArrayList<>();
+        for (SchemeEquipVO vo : voMap.values()) {
+            String pid = vo.getPid();
+            if (pid == null || pid.isEmpty() || "0".equals(pid)) {
+                // 根节点
+                roots.add(vo);
             } else {
-                // 查找子节点：pid 等于父节点的 equipId
-                match = parentEquipId.equals(pid);
-            }
-            if (match) {
-                SchemeEquipVO vo = new SchemeEquipVO();
-                vo.setId(equip.getId());
-                vo.setEquipId(equip.getEquipId());
-                vo.setEquipName(equip.getEquipName());
-                vo.setPid(equip.getPid());
-                // 递归查找子节点，使用当前节点的 equipId 作为父节点
-                vo.setChildren(buildEquipTree(allEquips, equip.getEquipId()));
-                tree.add(vo);
+                // 子节点，找到父节点并添加
+                SchemeEquipVO parent = voMap.get(pid);
+                if (parent != null) {
+                    parent.getChildren().add(vo);
+                }
             }
         }
-        return tree;
+        return roots;
     }
 
     /**
