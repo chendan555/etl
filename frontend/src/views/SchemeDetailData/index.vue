@@ -185,9 +185,9 @@ export default {
       this.activeInfoTab = key;
     },
     loadSchemeDetails(schemeId) {
-      return API.sampleCascade.getSchemeDetails(schemeId).then(res => {
+      return API.sampleCascade.getSchemeById(schemeId).then(res => {
         if (res.data && res.data.success) {
-          this.schemeDetails = res.data.data || [];
+          this.schemeDetails = res.data.data.detailList || [];
         }
       }).catch(err => {
         console.error('load scheme details error:', err);
