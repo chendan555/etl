@@ -203,7 +203,7 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
     }
 
     /**
-     * 获取方案详细数据（红蓝方/装备/信息分类）。装备树为固定数据，方案头部取自数据库。
+     * 获取方案详细数据（TABLE 表数据）。方案头部取自数据库，TABLE 数据根据 ybList 和 equipId 过滤。
      * 方案不存在时返回 null，由 Controller 返回失败。
      * @param schemeId 方案ID
      * @param ybList 逗号分隔的 SCHEME_ID 列表，用于 IN 查询过滤
@@ -221,7 +221,8 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
         vo.setCreateTime(scheme.getCreateTime() != null
                 ? scheme.getCreateTime().format(DATE_FORMATTER)
                 : null);
-        vo.setSides(schemeDetailDataBuilder.buildFixedSides(ybList, equipId));
+        // 直接返回 TABLE 数据作为 info
+        vo.setInfo(schemeDetailDataBuilder.buildTableInfo(ybList, equipId));
         return vo;
     }
 }

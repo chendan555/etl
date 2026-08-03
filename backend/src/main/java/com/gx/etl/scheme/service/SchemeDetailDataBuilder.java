@@ -118,6 +118,15 @@ public class SchemeDetailDataBuilder {
     }
 
     /**
+     * 构建 TABLE 信息（直接返回 categories）
+     */
+    public EquipmentInfoVO buildTableInfo(String ybList, String equipId) {
+        EquipmentInfoVO info = new EquipmentInfoVO();
+        info.setCategories(buildTableCategories(ybList, equipId));
+        return info;
+    }
+
+    /**
      * 查询表注释（达梦数据库）
      */
     private String queryTableComment(String tableName) {

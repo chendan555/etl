@@ -101,7 +101,7 @@ export default {
   computed: {
     currentInfoCategories() {
       // 从方案详情数据中获取信息分类（TABLE 表数据）
-      return (this.scheme && this.scheme.sides && this.scheme.sides.length > 0 && this.scheme.sides[0].equipmentList && this.scheme.sides[0].equipmentList[0] && this.scheme.sides[0].equipmentList[0].info && this.scheme.sides[0].equipmentList[0].info.categories) || [];
+      return (this.scheme && this.scheme.info && this.scheme.info.categories) || [];
     },
     activeCategory() {
       const cat = this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
@@ -118,7 +118,6 @@ export default {
       this.$message.warning('缺少方案参数');
       return;
     }
-    this.loadData(this.schemeId, this.selectedYbList, this.selectedEquipId);
     this.loadSchemeDetails(this.schemeId);
     this.loadEquipTree(this.schemeId);
   },
@@ -146,7 +145,6 @@ export default {
       if (detail) {
         this.selectedYbList = detail.ybList;
         this.loadData(this.schemeId, detail.ybList, this.selectedEquipId);
-        this.loadEquipTree(this.schemeId);
       }
     },
     onEquipNodeClick(data) {
@@ -158,8 +156,8 @@ export default {
     loadData(schemeId, ybList, equipId) {
       return API.sampleCascade.getSchemeDetailData(schemeId, ybList, equipId).then(res => {
         if (res.data && res.data.success) {
-          this.scheme = res.data.data || { schemeName: '', status: 0, createTime: '', sides: [] };
-          this.initSelection();
+          this.scheme = res.data.data || { schemeName: '', status: 0, createTime: '', info: null };
+          this.resetInfoTab();
         }
       }).catch(err => {
         console.error('load detail data error:', err);

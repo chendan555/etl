@@ -10,5 +10,5 @@ public class SchemeDetailDataVO {
     private String schemeName;
     private Integer status;
     private String createTime;
-    private List<SideVO> sides;
+    private EquipmentInfoVO info;
 }
