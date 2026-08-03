@@ -210,24 +210,24 @@ export default {
   padding-right: 12px;
   overflow: auto;
 }
-.equip-tree-panel >>> .el-tree {
+.equip-tree-panel ::v-deep .el-tree {
   background: transparent;
 }
-.equip-tree-panel >>> .el-tree-node__content {
+.equip-tree-panel ::v-deep .el-tree-node__content {
   color: #ffffff;
   background: transparent;
 }
-.equip-tree-panel >>> .el-tree-node__content:hover {
+.equip-tree-panel ::v-deep .el-tree-node__content:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-.equip-tree-panel >>> .el-tree-node.is-current > .el-tree-node__content {
+.equip-tree-panel ::v-deep .el-tree-node.is-current > .el-tree-node__content {
   background: #409EFF !important;
   color: #ffffff !important;
 }
-.equip-tree-panel >>> .el-tree-node__expand-icon {
+.equip-tree-panel ::v-deep .el-tree-node__expand-icon {
   color: #ffffff;
 }
-.equip-tree-panel >>> .el-tree-node__expand-icon.is-leaf {
+.equip-tree-panel ::v-deep .el-tree-node__expand-icon.is-leaf {
   color: transparent;
 }
 .panel-title {
