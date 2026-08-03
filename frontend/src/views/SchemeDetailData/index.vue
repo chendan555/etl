@@ -31,7 +31,7 @@
         <el-tree
           :data="equipTree"
           :props="treeProps"
-          node-key="equipId"
+          node-key="id"
           :highlight-current="true"
           :expand-on-click-node="false"
           @node-click="onEquipNodeClick"
