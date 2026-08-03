@@ -7,6 +7,7 @@ import com.gx.etl.flow.entity.Transformation;
 import com.gx.etl.flow.mapper.TransformationMapper;
 import com.gx.etl.scheme.entity.*;
 import com.gx.etl.scheme.mapper.*;
+import com.gx.etl.scheme.vo.SchemeEquipVO;
 import com.gx.etl.scheme.vo.SchemeDetailDataVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,9 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
 
     @Resource
     private SchemeDetailMapper schemeDetailMapper;
+
+    @Resource
+    private SchemeEquipMapper schemeEquipMapper;
 
     @Resource
     private CjConfigMapper cjConfigMapper;
@@ -145,6 +149,37 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
                         .eq(SchemeDetail::getSchemeId, schemeId)
                         .orderByAsc(SchemeDetail::getCreateTime)
         );
+    }
+
+    /**
+     * 根据方案ID查询装备树（T_SCHEME_EQUIP）
+     */
+    public List<SchemeEquipVO> getSchemeEquipTree(String schemeId) {
+        List<SchemeEquip> allEquips = schemeEquipMapper.selectList(
+                new LambdaQueryWrapper<SchemeEquip>()
+                        .eq(SchemeEquip::getSchemeId, schemeId)
+        );
+        return buildEquipTree(allEquips, null);
+    }
+
+    /**
+     * 递归构建装备树
+     */
+    private List<SchemeEquipVO> buildEquipTree(List<SchemeEquip> allEquips, String parentId) {
+        List<SchemeEquipVO> tree = new ArrayList<>();
+        for (SchemeEquip equip : allEquips) {
+            String pid = equip.getPid();
+            if (parentId == null ? (pid == null || pid.isEmpty()) : parentId.equals(pid)) {
+                SchemeEquipVO vo = new SchemeEquipVO();
+                vo.setId(equip.getId());
+                vo.setEquipId(equip.getEquipId());
+                vo.setEquipName(equip.getEquipName());
+                vo.setPid(equip.getPid());
+                vo.setChildren(buildEquipTree(allEquips, equip.getEquipId()));
+                tree.add(vo);
+            }
+        }
+        return tree;
     }
 
     /**

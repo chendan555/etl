@@ -15,6 +15,7 @@ import com.gx.etl.scheme.mapper.TopicConfigMapper;
 import com.gx.etl.scheme.mapper.TopicFieldMapper;
 import com.gx.etl.scheme.service.SchemeService;
 import com.gx.etl.scheme.vo.SchemeDetailDataVO;
+import com.gx.etl.scheme.vo.SchemeEquipVO;
 import com.gx.etl.scheme.service.SchemeProcessService;
 import com.gx.etl.sample.service.SampleCascadeService;
 import org.slf4j.Logger;
@@ -274,6 +275,11 @@ public class SchemeController {
     @GetMapping("/schemeDetails")
     public Result<List<SchemeDetail>> getSchemeDetails(@RequestParam Long schemeId) {
         return Result.ok(schemeService.getSchemeDetails(schemeId));
+    }
+
+    @GetMapping("/equipTree")
+    public Result<List<SchemeEquipVO>> getEquipTree(@RequestParam String schemeId) {
+        return Result.ok(schemeService.getSchemeEquipTree(schemeId));
     }
 
     @PostMapping("/save")

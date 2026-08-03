@@ -120,6 +120,12 @@ export default class SampleCascade extends baseApi {
     });
   }
 
+  getEquipTree(schemeId: string) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/equipTree', { params: { schemeId } }).then(resolve).catch(reject);
+    });
+  }
+
   // ========== 引接处理 ==========
 
   getTransformations() {

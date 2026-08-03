@@ -25,36 +25,21 @@
     </div>
 
     <div class="detail-body">
-      <!-- 左侧阵营 Tab -->
-      <div class="side-tabs">
-        <div
-          v-for="side in scheme.sides"
-          :key="side.side"
-          class="side-tab"
-          :class="{ active: activeSide === side.side }"
-          :style="activeSide === side.side ? { background: side.color, borderColor: side.color } : {}"
-          @click="onSideChange(side.side)"
-        >
-          <span class="side-name">{{ side.name }}</span>
-          <span class="side-count">({{ side.equipmentList.length }})</span>
-        </div>
+      <!-- 左侧装备树 -->
+      <div class="equip-tree-panel">
+        <div class="panel-title">装备列表</div>
+        <el-tree
+          :data="equipTree"
+          :props="treeProps"
+          node-key="equipId"
+          :highlight-current="true"
+          :expand-on-click-node="false"
+          @node-click="onEquipNodeClick"
+        />
       </div>
 
-      <!-- 右侧装备 + 信息 -->
-      <div class="equip-area">
-        <div class="equip-tabs">
-          <div
-            v-for="eq in currentEquips"
-            :key="eq.id"
-            class="equip-tab"
-            :class="{ active: activeEquipId === eq.id }"
-            :style="activeEquipId === eq.id ? { color: currentSideColor, borderColor: currentSideColor } : {}"
-            @click="onEquipChange(eq.id)"
-          >
-            {{ eq.name }}
-          </div>
-        </div>
-
+      <!-- 右侧装备详情 -->
+      <div class="equip-detail-panel">
         <div class="info-panel">
           <div class="info-tabs" v-if="currentInfoCategories.length > 0">
             <div
@@ -62,7 +47,6 @@
               :key="cat.key"
               class="info-tab"
               :class="{ active: activeInfoTab === cat.key }"
-              :style="activeInfoTab === cat.key ? { color: currentSideColor, borderBottomColor: currentSideColor } : {}"
               @click="onInfoTabChange(cat.key)"
             >
               {{ cat.label }}
@@ -82,7 +66,7 @@
           </div>
 
           <!-- 空状态（element-ui 2.8.2 无 el-empty，用纯文本） -->
-          <div v-else class="empty-tip">暂无装备数据</div>
+          <div v-else class="empty-tip">请选择装备查看详情</div>
         </div>
       </div>
     </div>
@@ -101,29 +85,23 @@ export default {
     return {
       schemeId: null,
       scheme: { schemeName: '', status: 0, createTime: '', sides: [] },
-      activeSide: 'red',
-      activeEquipId: null,
-      activeInfoTab: null,
       schemeDetails: [],
       selectedDetailId: null,
-      selectedYbList: null
+      selectedYbList: null,
+      equipTree: [],
+      activeEquipId: null,
+      activeInfoTab: null,
+      treeProps: {
+        children: 'children',
+        label: 'equipName'
+      }
     };
   },
   computed: {
-    currentSide() {
-      return this.scheme.sides.find(s => s.side === this.activeSide) || null;
-    },
-    currentSideColor() {
-      return this.currentSide ? this.currentSide.color : '#409EFF';
-    },
-    currentEquips() {
-      return this.currentSide ? this.currentSide.equipmentList : [];
-    },
-    currentEquip() {
-      return this.currentEquips.find(e => e.id === this.activeEquipId) || null;
-    },
     currentInfoCategories() {
-      return (this.currentEquip && this.currentEquip.info && this.currentEquip.info.categories) || [];
+      // 从后端返回的数据中获取信息分类
+      // 目前后端返回的是固定数据，后续可改为从装备树节点获取
+      return (this.scheme.sides && this.scheme.sides.length > 0 && this.scheme.sides[0].equipmentList && this.scheme.sides[0].equipmentList[0] && this.scheme.sides[0].equipmentList[0].info && this.scheme.sides[0].equipmentList[0].info.categories) || [];
     },
     activeCategory() {
       const cat = this.currentInfoCategories.find(c => c.key === this.activeInfoTab) || null;
@@ -140,51 +118,10 @@ export default {
       this.$message.warning('缺少方案参数');
       return;
     }
-    this.loadData(this.schemeId, this.selectedYbList);
     this.loadSchemeDetails(this.schemeId);
+    this.loadEquipTree(this.schemeId);
   },
   methods: {
-    loadData(schemeId, ybList) {
-      return API.sampleCascade.getSchemeDetailData(schemeId, ybList).then(res => {
-        // 拦截器已保证此处为成功响应（业务失败由拦截器统一提示并 reject）
-        this.scheme = (res.data && res.data.data) || { schemeName: '', status: 0, createTime: '', sides: [] };
-        if (this.$route.query.schemeName) {
-          this.scheme.schemeName = this.$route.query.schemeName;
-        }
-        this.initSelection();
-      }).catch(err => {
-        console.error('load detail data error:', err);
-      });
-    },
-    initSelection() {
-      if (this.scheme.sides.length > 0 && !this.scheme.sides.some(s => s.side === this.activeSide)) {
-        this.activeSide = this.scheme.sides[0].side;
-      }
-      if (this.currentEquips.length > 0) {
-        this.activeEquipId = this.currentEquips[0].id;
-        this.resetInfoTab();
-      }
-    },
-    resetInfoTab() {
-      const cats = this.currentInfoCategories;
-      if (cats.length === 0) {
-        this.activeInfoTab = null;
-      } else if (!cats.some(c => c.key === this.activeInfoTab)) {
-        this.activeInfoTab = cats[0].key;
-      }
-    },
-    onSideChange(side) {
-      this.activeSide = side;
-      this.activeEquipId = this.currentEquips.length > 0 ? this.currentEquips[0].id : null;
-      this.resetInfoTab();
-    },
-    onEquipChange(id) {
-      this.activeEquipId = id;
-      this.resetInfoTab();
-    },
-    onInfoTabChange(key) {
-      this.activeInfoTab = key;
-    },
     loadSchemeDetails(schemeId) {
       return API.sampleCascade.getSchemeById(schemeId).then(res => {
         if (res.data && res.data.success) {
@@ -194,12 +131,36 @@ export default {
         console.error('load scheme details error:', err);
       });
     },
+    loadEquipTree(schemeId) {
+      return API.sampleCascade.getEquipTree(schemeId).then(res => {
+        if (res.data && res.data.success) {
+          this.equipTree = res.data.data || [];
+        }
+      }).catch(err => {
+        console.error('load equip tree error:', err);
+      });
+    },
     onDetailChange(detailId) {
       const detail = this.schemeDetails.find(d => d.id === detailId);
       if (detail) {
         this.selectedYbList = detail.ybList;
-        this.loadData(this.schemeId, detail.ybList);
+        this.loadEquipTree(this.schemeId);
       }
+    },
+    onEquipNodeClick(data) {
+      this.activeEquipId = data.equipId;
+      this.resetInfoTab();
+    },
+    resetInfoTab() {
+      const cats = this.currentInfoCategories;
+      if (cats.length === 0) {
+        this.activeInfoTab = null;
+      } else if (!cats.some(c => c.key === this.activeInfoTab)) {
+        this.activeInfoTab = cats[0].key;
+      }
+    },
+    onInfoTabChange(key) {
+      this.activeInfoTab = key;
     },
     goBack() {
       if (window.history.length > 1) {
@@ -243,56 +204,29 @@ export default {
   margin-top: 12px;
   min-height: 0;
 }
-.side-tabs {
-  width: 120px;
+.equip-tree-panel {
+  width: 240px;
   flex-shrink: 0;
   border-right: 1px solid #3e524b;
   padding-right: 12px;
+  overflow: auto;
 }
-.side-tab {
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border-radius: 4px;
-  border: 1px solid #3e524b;
-  color: #ffffff;
-  cursor: pointer;
-  text-align: center;
+.panel-title {
   font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #3e524b;
+  margin-bottom: 8px;
 }
-.side-tab.active {
-  color: #fff;
-}
-.side-count {
-  font-size: 12px;
-  opacity: 0.9;
-}
-.equip-area {
+.equip-detail-panel {
   flex: 1;
   margin-left: 12px;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.equip-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #3e524b;
-}
-.equip-tab {
-  padding: 8px 14px;
-  border: 1px solid #3e524b;
-  border-radius: 4px;
-  color: #ffffff;
-  cursor: pointer;
-  font-size: 13px;
-}
-.equip-tab.active {
-  font-weight: 600;
-}
 .info-panel {
-  margin-top: 10px;
   border: 1px solid #3e524b;
   border-radius: 4px;
   flex: 1;
@@ -314,6 +248,8 @@ export default {
 }
 .info-tab.active {
   font-weight: 600;
+  border-bottom-color: #409EFF;
+  color: #409EFF;
 }
 .info-content {
   flex: 1;
