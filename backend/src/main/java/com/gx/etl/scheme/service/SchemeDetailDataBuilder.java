@@ -33,10 +33,10 @@ public class SchemeDetailDataBuilder {
         "TABLE_1", "TABLE_2", "TABLE_3", "TABLE_4"
     );
 
-    public List<SideVO> buildFixedSides(String ybList) {
+    public List<SideVO> buildFixedSides(String ybList, String equipId) {
         List<SideVO> sides = new ArrayList<>();
-        sides.add(buildSide("red", "红方", "#E54D42", buildRedEquips(ybList)));
-        sides.add(buildSide("blue", "蓝方", "#2F7DE1", buildBlueEquips(ybList)));
+        sides.add(buildSide("red", "红方", "#E54D42", buildRedEquips(ybList, equipId)));
+        sides.add(buildSide("blue", "蓝方", "#2F7DE1", buildBlueEquips(ybList, equipId)));
         return sides;
     }
 
@@ -49,29 +49,29 @@ public class SchemeDetailDataBuilder {
         return vo;
     }
 
-    private List<EquipmentVO> buildRedEquips(String ybList) {
+    private List<EquipmentVO> buildRedEquips(String ybList, String equipId) {
         return Arrays.asList(
-            buildEquip(1L, "99式主战坦克", "主战坦克", ybList),
-            buildEquip(2L, "歼-20", "隐身战斗机", ybList),
-            buildEquip(3L, "空警-2000", "预警机", ybList),
-            buildEquip(4L, "红旗-9", "防空导弹车", ybList),
-            buildEquip(5L, "东风-17", "弹道导弹车", ybList),
-            buildEquip(6L, "武直-10", "武装直升机", ybList),
-            buildEquip(7L, "山猫侦察车", "侦察车", ybList),
-            buildEquip(8L, "指挥方舱", "指挥车", ybList)
+            buildEquip(1L, "99式主战坦克", "主战坦克", ybList, equipId),
+            buildEquip(2L, "歼-20", "隐身战斗机", ybList, equipId),
+            buildEquip(3L, "空警-2000", "预警机", ybList, equipId),
+            buildEquip(4L, "红旗-9", "防空导弹车", ybList, equipId),
+            buildEquip(5L, "东风-17", "弹道导弹车", ybList, equipId),
+            buildEquip(6L, "武直-10", "武装直升机", ybList, equipId),
+            buildEquip(7L, "山猫侦察车", "侦察车", ybList, equipId),
+            buildEquip(8L, "指挥方舱", "指挥车", ybList, equipId)
         );
     }
 
-    private List<EquipmentVO> buildBlueEquips(String ybList) {
+    private List<EquipmentVO> buildBlueEquips(String ybList, String equipId) {
         return Arrays.asList(
-            buildEquip(11L, "M1A2主战坦克", "主战坦克", ybList),
-            buildEquip(12L, "F-35战机", "隐身战斗机", ybList),
-            buildEquip(13L, "宙斯盾驱逐舰", "驱逐舰", ybList),
-            buildEquip(14L, "全球鹰无人机", "无人机", ybList),
-            buildEquip(15L, "爱国者导弹", "防空导弹车", ybList),
-            buildEquip(16L, "CH-53直升机", "运输直升机", ybList),
-            buildEquip(17L, "斯特赖克装甲车", "装甲运兵车", ybList),
-            buildEquip(18L, "两栖登陆舰", "登陆舰", ybList)
+            buildEquip(11L, "M1A2主战坦克", "主战坦克", ybList, equipId),
+            buildEquip(12L, "F-35战机", "隐身战斗机", ybList, equipId),
+            buildEquip(13L, "宙斯盾驱逐舰", "驱逐舰", ybList, equipId),
+            buildEquip(14L, "全球鹰无人机", "无人机", ybList, equipId),
+            buildEquip(15L, "爱国者导弹", "防空导弹车", ybList, equipId),
+            buildEquip(16L, "CH-53直升机", "运输直升机", ybList, equipId),
+            buildEquip(17L, "斯特赖克装甲车", "装甲运兵车", ybList, equipId),
+            buildEquip(18L, "两栖登陆舰", "登陆舰", ybList, equipId)
         );
     }
 
@@ -84,14 +84,14 @@ public class SchemeDetailDataBuilder {
         return vo;
     }
 
-    private EquipmentVO buildEquip(Long id, String name, String type, String ybList) {
+    private EquipmentVO buildEquip(Long id, String name, String type, String ybList, String equipId) {
         EquipmentVO vo = new EquipmentVO();
         vo.setId(id);
         vo.setName(name);
         vo.setType(type);
 
         EquipmentInfoVO info = new EquipmentInfoVO();
-        info.setCategories(buildTableCategories(ybList));
+        info.setCategories(buildTableCategories(ybList, equipId));
         vo.setInfo(info);
         return vo;
     }
@@ -100,13 +100,14 @@ public class SchemeDetailDataBuilder {
      * 动态查询配置的数据库表，构建信息分类列表。
      * 每个表作为一个分类，表头是字段名，数据是行数据，Tab 标签为表注释。
      * @param ybList 逗号分隔的 SCHEME_ID 列表，用于 IN 查询过滤
+     * @param equipId 装备ID，用于过滤数据
      */
-    private List<InfoCategoryVO> buildTableCategories(String ybList) {
+    private List<InfoCategoryVO> buildTableCategories(String ybList, String equipId) {
         List<InfoCategoryVO> categories = new ArrayList<>();
         for (String tableName : TABLE_NAMES) {
             try {
                 String comment = queryTableComment(tableName);
-                List<Map<String, Object>> rows = queryTableData(tableName, ybList);
+                List<Map<String, Object>> rows = queryTableData(tableName, ybList, equipId);
                 categories.add(category(tableName, comment, rows));
             } catch (Exception e) {
                 // 查询失败时使用表名作为显示名
@@ -137,15 +138,23 @@ public class SchemeDetailDataBuilder {
     }
 
     /**
-     * 查询指定表的数据，根据 ybList 用 IN 查询过滤
+     * 查询指定表的数据，根据 ybList 和 equipId 过滤
      * @param tableName 表名
      * @param ybList 逗号分隔的 SCHEME_ID 列表
+     * @param equipId 装备ID
      */
-    private List<Map<String, Object>> queryTableData(String tableName, String ybList) {
+    private List<Map<String, Object>> queryTableData(String tableName, String ybList, String equipId) {
         List<Map<String, Object>> rows = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM ").append(tableName);
+        List<String> conditions = new ArrayList<>();
         if (ybList != null && !ybList.isEmpty()) {
-            sql.append(" WHERE SCHEME_ID IN (").append(ybList).append(")");
+            conditions.add("SCHEME_ID IN (" + ybList + ")");
+        }
+        if (equipId != null && !equipId.isEmpty()) {
+            conditions.add("EQUIP_ID = '" + equipId + "'");
+        }
+        if (!conditions.isEmpty()) {
+            sql.append(" WHERE ").append(String.join(" AND ", conditions));
         }
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();

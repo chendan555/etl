@@ -88,6 +88,7 @@ export default {
       schemeDetails: [],
       selectedDetailId: null,
       selectedYbList: null,
+      selectedEquipId: null,
       equipTree: [],
       activeEquipId: null,
       activeInfoTab: null,
@@ -117,6 +118,7 @@ export default {
       this.$message.warning('缺少方案参数');
       return;
     }
+    this.loadData(this.schemeId, this.selectedYbList, this.selectedEquipId);
     this.loadSchemeDetails(this.schemeId);
     this.loadEquipTree(this.schemeId);
   },
@@ -143,12 +145,25 @@ export default {
       const detail = this.schemeDetails.find(d => d.id === detailId);
       if (detail) {
         this.selectedYbList = detail.ybList;
+        this.loadData(this.schemeId, detail.ybList, this.selectedEquipId);
         this.loadEquipTree(this.schemeId);
       }
     },
     onEquipNodeClick(data) {
       console.log('clicked equip:', data);
-      this.activeEquipId = data.equipId;
+      this.selectedEquipId = data.equipId;
+      // 重新加载数据，传递 equipId
+      this.loadData(this.schemeId, this.selectedYbList, data.equipId);
+    },
+    loadData(schemeId, ybList, equipId) {
+      return API.sampleCascade.getSchemeDetailData(schemeId, ybList, equipId).then(res => {
+        if (res.data && res.data.success) {
+          this.scheme = res.data.data || { schemeName: '', status: 0, createTime: '', sides: [] };
+          this.initSelection();
+        }
+      }).catch(err => {
+        console.error('load detail data error:', err);
+      });
     },
     resetInfoTab() {
       const cats = this.currentInfoCategories;

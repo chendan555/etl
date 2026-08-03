@@ -264,8 +264,9 @@ public class SchemeController {
     @GetMapping("/detailData")
     public Result<SchemeDetailDataVO> getSchemeDetailData(
             @RequestParam Long schemeId,
-            @RequestParam(required = false) String ybList) {
-        SchemeDetailDataVO data = schemeService.getSchemeDetailData(schemeId, ybList);
+            @RequestParam(required = false) String ybList,
+            @RequestParam(required = false) String equipId) {
+        SchemeDetailDataVO data = schemeService.getSchemeDetailData(schemeId, ybList, equipId);
         if (data == null) {
             return Result.fail("方案不存在");
         }

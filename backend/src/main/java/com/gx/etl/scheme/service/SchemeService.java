@@ -207,8 +207,9 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
      * 方案不存在时返回 null，由 Controller 返回失败。
      * @param schemeId 方案ID
      * @param ybList 逗号分隔的 SCHEME_ID 列表，用于 IN 查询过滤
+     * @param equipId 装备ID，用于过滤 TABLE 数据
      */
-    public SchemeDetailDataVO getSchemeDetailData(Long schemeId, String ybList) {
+    public SchemeDetailDataVO getSchemeDetailData(Long schemeId, String ybList, String equipId) {
         Scheme scheme = getById(schemeId);
         if (scheme == null) {
             return null;
@@ -220,7 +221,7 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
         vo.setCreateTime(scheme.getCreateTime() != null
                 ? scheme.getCreateTime().format(DATE_FORMATTER)
                 : null);
-        vo.setSides(schemeDetailDataBuilder.buildFixedSides(ybList));
+        vo.setSides(schemeDetailDataBuilder.buildFixedSides(ybList, equipId));
         return vo;
     }
 }
