@@ -216,7 +216,7 @@ export default {
           }
         }
         if (config.isHttpGetTreeData) {
-          config.treeData = reqUrl[config.httpUrl].res;
+          config.treeData = this.extractArray(reqUrl[config.httpUrl].res);
         }
       }
     },

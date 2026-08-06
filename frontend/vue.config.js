@@ -12,6 +12,10 @@ module.exports = {
   lintOnSave: false,
   devServer: {
     proxy: {
+      '/v1/network': {
+        target: `http://${apiUrl}:9056`,
+        changeOrigin: true
+      },
       '/v1/center': {
         target: `http://${apiUrl}:9056`,
         changeOrigin: true
@@ -48,6 +52,9 @@ module.exports = {
   configureWebpack: webpackConfig,
   chainWebpack: config => {
     config.resolve.alias.set('@', resolve('src'));
+    // panzoom 通过 require() 导入 ngraph.events，但该包是 ESM-first，
+    // 需要强制指向 CJS 入口以避免 eventify is not a function
+    config.resolve.alias.set('ngraph.events', resolve('node_modules/ngraph.events/dist/ngraph.events.cjs'));
     // 跳过TS类型检查，加速开发构建
     config.module.rule('ts').use('ts-loader').tap(options => {
       options.transpileOnly = true;

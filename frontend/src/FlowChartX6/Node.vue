@@ -79,6 +79,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/theme.scss';
 .x6_node {
   position: relative;
   width: 100%;
@@ -89,7 +90,7 @@ export default {
   cursor: move;
   box-sizing: border-box;
   overflow: hidden;
-  background: #fff;
+  background: $contBg;
 }
 .x6_node .blue_line {
   position: absolute;
@@ -112,7 +113,7 @@ export default {
 }
 .x6_node .content .text {
   margin-left: 5px;
-  color: #000;
+  color: $normalWordsClr;
   max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;

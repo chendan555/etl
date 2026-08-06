@@ -205,7 +205,7 @@ function blingConnectors(type) {
  * @returns {Element} 返回生成的节点
  */
 function generateNode(left, top, id, nodeData) {
-  console.log(nodeData);
+  console.log('[old FlowChart] generateNode called:', id, nodeData.text || (nodeData.data && nodeData.data.text));
   // 节点最外层div
   const newNode = document.createElement('div');
   newNode.classList.add('fy_node');
@@ -218,11 +218,11 @@ function generateNode(left, top, id, nodeData) {
   let icon = '';
   let text = '';
   if (nodeData.hasOwnProperty('data')) {
-    icon = nodeData.data.icon;
-    text = nodeData.properties.ruleForm.stepName;
+    icon = nodeData.data.icon || '';
+    text = (nodeData.data.properties && nodeData.data.properties.ruleForm) ? nodeData.data.properties.ruleForm.stepName : (nodeData.data.text || '');
   } else {
-    icon = nodeData.icon;
-    text = nodeData.text;
+    icon = nodeData.icon || '';
+    text = nodeData.text || '';
   }
 
   // 右键菜单
@@ -402,7 +402,9 @@ function addNodeByCopy(position, nodeData) {
  */
 function addNodeByData(nodeData) {
   const { endpoints } = model.getData();
-  generateNode(nodeData.position.left, nodeData.position.top, nodeData.id, nodeData);
+  // 合并 data 属性到顶层，确保 properties、text、pluginId 等字段可被 Vue 组件访问
+  const merged = Object.assign({}, nodeData, nodeData.data || {});
+  generateNode(nodeData.position.left, nodeData.position.top, nodeData.id, merged);
   const { targets, sources } = nodeData.points;
   const targetsData = endpoints.filter(item => targets.indexOf(item.id) > -1);
   const sourcesData = endpoints.filter(item => sources.indexOf(item.id) > -1);
@@ -511,8 +513,10 @@ function renameNode(nodeId, value) {
     if (node.data) {
       node.data.text = value;
     }
-    if (node.properties && node.properties.ruleForm) {
-      node.properties.ruleForm.stepName = value;
+    // 兼容两种数据格式
+    let props = node.data && node.data.properties ? node.data.properties : node.properties;
+    if (props && props.ruleForm) {
+      props.ruleForm.stepName = value;
     }
   }
 }

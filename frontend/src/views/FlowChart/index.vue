@@ -654,8 +654,10 @@ export default Vue.extend({
     },
     submitForm(view?: boolean) {
       let currentNodeMsg = FlowChart.getNodeDataByNodeId(this.$store.state.nodeId);
-      currentNodeMsg.properties.ruleForm = this.$utils.deepClone(this.$refs.ComponentsPreview.submit());
-      let stepName = currentNodeMsg.properties.ruleForm.stepName;
+      // 兼容两种数据格式
+      let props = currentNodeMsg.data && currentNodeMsg.data.properties ? currentNodeMsg.data.properties : currentNodeMsg.properties;
+      props.ruleForm = this.$utils.deepClone(this.$refs.ComponentsPreview.submit());
+      let stepName = props.ruleForm.stepName;
       FlowChart.setData(FlowChart.getData());
 
       return API.updateStepName({
@@ -871,7 +873,6 @@ export default Vue.extend({
       }
     },
     init() {
-      console.log(this.$route.query.path);
       let path = typeof this.$route.query.path === 'string' ? this.$route.query.path : '';
       sessionStorage.setItem('path', path);
       this.getData(path.split('/')[1]);
@@ -938,9 +939,6 @@ export default Vue.extend({
       });
       API.getMenuData({ type: 1 }).then((data: any) => {
         let content = data.data && data.data.data && data.data.data.content ? data.data.data.content : (data.data && data.data.content ? data.data.content : null);
-        console.log('getMenuData response:', data);
-        console.log('content:', content);
-        console.log('procType:', this.procType);
         if (content && Array.isArray(content)) {
           if (this.procType) {
             // 数据引接流程配置菜单
@@ -1021,8 +1019,16 @@ export default Vue.extend({
       this.$nextTick(() => {
         let currentNodeMsg = FlowChart.getNodeDataByNodeId(nodeData.nodeId);
         this.$store.dispatch('setNodeId', nodeData.nodeId);
-        if (currentNodeMsg && currentNodeMsg.properties.ruleForm) {
-          this.previewDialog.ruleForm = currentNodeMsg.properties.ruleForm;
+        let ruleForm = null;
+        if (currentNodeMsg) {
+          if (currentNodeMsg.data && currentNodeMsg.data.properties && currentNodeMsg.data.properties.ruleForm) {
+            ruleForm = currentNodeMsg.data.properties.ruleForm;
+          } else if (currentNodeMsg.properties && currentNodeMsg.properties.ruleForm) {
+            ruleForm = currentNodeMsg.properties.ruleForm;
+          }
+        }
+        if (ruleForm) {
+          this.previewDialog.ruleForm = ruleForm;
         } else {
           this.previewDialog.ruleForm = { stepName: this.previewDialog.title };
         }
@@ -1288,14 +1294,16 @@ export default Vue.extend({
         let nowFlowChart = FlowChart.getData();
         nowFlowChart.nodes.forEach((item: any) => {
           if (item.id === this.$store.state.nodeId) {
-            item.properties.ruleForm = this.$utils.deepClone(this.ruleForm);
-            item.properties.tableData = this.$utils.deepClone(this.tableData);
-            item.properties.tabList = this.tabList;
-            item.data.text = this.ruleForm.stepName;
+            // 兼容两种数据格式
+            let props = item.data && item.data.properties ? item.data.properties : item.properties;
+            props.ruleForm = this.$utils.deepClone(this.ruleForm);
+            props.tableData = this.$utils.deepClone(this.tableData);
+            props.tabList = this.tabList;
+            if (item.data) item.data.text = this.ruleForm.stepName;
             if (this.tabList && this.tabList.length) {
               this.tabList.forEach((ele: any) => {
                 if (ele.hasOwnProperty('alias') && ele.alias) {
-                  item.properties.ruleForm[ele.alias] = this.$utils.deepClone(ele.tableData);
+                  props.ruleForm[ele.alias] = this.$utils.deepClone(ele.tableData);
                 }
                 // ruleForm最后合并
                 Object.assign(item.properties.ruleForm, this.$utils.deepClone(ele.ruleForm));

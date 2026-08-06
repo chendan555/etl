@@ -277,7 +277,7 @@
             <el-cascader
               v-model="formList.groupId"
               :options="treeData"
-              :props="{label: 'name', value: 'id'}"
+              :props="{label: 'name', value: 'id', checkStrictly: true}"
               filterable
               clearable
               :disabled="showCase"
@@ -820,12 +820,14 @@ export default {
   },
   methods: {
     /**
-     * 获取批次号列表
+     * 获取批次号列表（前端生成时间戳作为批次号）
      */
     getBatchNumList() {
-      this.$API.getBatchNumList().then(({ data }) => {
-        this.batchNumberList = data.data;
-      });
+      const now = Date.now();
+      this.batchNumberList = [
+        { NAME: now, VALUE: now }
+      ];
+      this.formList.batchNumber = now;
     },
     /**
      * 关闭弹框
@@ -928,9 +930,9 @@ export default {
           if (this.chsdProcList.length !== 0 || this.yjdata.length !== 0) {
             this.chsdProcList.forEach(item => {
               item['groupName'] = item.belongToTaskGroup;
-              item['type'] = 5;
+              item['type'] = '5';
               item['remark'] = item.describe;
-              item['souceId'] = item.transformationId;
+              item['sourceId'] = item.transformationId;
               item['kettleName'] = item.url;
             });
             this.yjdata.forEach(item => {
@@ -939,7 +941,8 @@ export default {
               } else {
                 item['agreementName'] = '';
               }
-              item['souceId'] = item['souceId'] || item.id;
+              item['sourceId'] = item['sourceId'] || item.id;
+              item['type'] = String(item['type'] || '');
             });
             let params = {};
             if (this.procDialog.data.id == undefined) {
@@ -1022,37 +1025,35 @@ export default {
     editProc(scope, index, a) {
       this.FAtitle = '修改方案';
       this.procDialog.isNew = false;
+      // 先用行数据初始化，确保 id 等基础字段存在
       this.procDialog.data = { ...scope };
-      // let dataProcDialog = {};
       a == 1 ? (this.showCase = false) : (this.showCase = true);
       this.$API.getTransByPlanId({ transPlanId: scope.id }).then(res => {
         if (res.data.success) {
           let data = res.data.data;
           if (data !== null) {
-            for (let pr in this.procDialog.data) {
-              this.procDialog.data[pr] = data[pr];
-            }
-            // this.chsdProcList = [];
-            if (data.clList.length !== 0) {
+            // 用 API 返回的数据覆盖，确保 name、groupId 等字段正确回显
+            this.procDialog.data = { ...this.procDialog.data, ...data };
+            if (data.clList && data.clList.length !== 0) {
               data.clList.forEach(item => {
                 item['belongToTaskGroup'] = item.groupName;
                 item['url'] = item.kettleName;
-                item['transformationId'] = item.souceId;
+                item['transformationId'] = item.sourceId;
                 item['describe'] = item.remark;
               });
             }
-            if (data.yjList.length !== 0) {
+            if (data.yjList && data.yjList.length !== 0) {
               data.yjList.forEach(item => {
                 item['analysisProtocolName'] = item.agreementName;
                 item['valueType'] = this.datashow(this.options, item.type);
               });
             }
-            this.yjdata = data.yjList;
-            this.chsdProcList = data.clList;
-            // data.children.forEach(item => {
-            //   let proc = this.procListDialog.procListData.find(ele => ele.transformationId.toString() === item.transId.toString());
-            //   proc && this.chsdProcList.push(proc);
-            // });
+            this.yjdata = data.yjList || [];
+            this.chsdProcList = data.clList || [];
+          }
+          // 执行模式下，数据加载完成后生成批次号
+          if (a !== 1) {
+            this.getBatchNumList();
           }
         }
       });
@@ -1249,7 +1250,6 @@ export default {
     },
     // 执行
     runStop(scope, index, a) {
-      this.getBatchNumList();
       this.editProc(scope, index, a);
       this.FAtitle = '执行方案';
     },

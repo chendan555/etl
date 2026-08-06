@@ -218,7 +218,7 @@
 
 // 表格
 .el-table {
-  // @include bc($conterBg);
+  background-color: $contBg !important;
   // border: 1px solid $currentRow;
   // 滚动条
   ::-webkit-scrollbar-thumb {
@@ -227,13 +227,13 @@
   thead {
     @include color($tableHeaderClr);
     tr {
-      @include bc($tableHeaderBg);
+      background-color: $tableHeaderBg !important;
       @include bimPosition(center);
       @include bimSize(100% 100%);
     }
     th {
       // background: repeating-linear-gradient(310deg, #001c30, #001c30 2px, #003a64 2px, #003a64 5px);
-      @include bc(transparent);
+      background-color: transparent !important;
       &.is-leaf {
         border-bottom: 1px solid $tableBorderClr;
         border-left: 1px solid $tableBorderClr;
@@ -254,18 +254,18 @@
         }
         &:nth-child(odd) {
           td {
-            @include bc($tableOddBgClr, 0.00001);
+            background-color: rgba($tableOddBgClr, 0.00001) !important;
           }
         }
         &:nth-child(even) {
           td {
-            @include bc($tableEvenBg, 1);
+            background-color: $tableEvenBg !important;
             border-bottom: 1px solid $tableBorderClr;
           }
         }
         &:hover {
           td {
-            @include bc($navBg);
+            background-color: $navBg !important;
             @include color($whiteWordClr);
           }
           .el-table__expand-icon {
@@ -493,4 +493,36 @@
 .el-picker-panel .el-input__inner,
 .el-picker-panel .el-textarea__inner {
   @include color(#fff);
+}
+
+// ====== dark mode ======
+// 分页组件
+.el-pagination {
+  @include color($normalWordsClr);
+  button {
+    @include color($normalWordsClr);
+  }
+  .el-pager li {
+    @include color($normalWordsClr);
+    @include bc($tableEvenBg);
+    &.active {
+      @include color(#fff);
+      @include bc($primaryBtnBg);
+    }
+  }
+}
+// 表单标签
+.el-form-item__label {
+  @include color($formLabelClr);
+}
+// 表格无数据提示
+.el-table__empty-block {
+  @include bc($contBg);
+}
+.el-table__empty-text {
+  @include color($formLabelClr);
+}
+// 面包屑/地址栏文字
+.address span {
+  @include color($tableHeaderClr);
 }

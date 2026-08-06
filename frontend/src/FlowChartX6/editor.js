@@ -54,17 +54,17 @@ function getPortsByPluginId(pluginId) {
 
   if (isMultiInput) {
     ports.push(
-      { id: `target-${createUuid()}`, group: 'in', attrs: { circle: { r: 6, magnet: true, stroke: 'transparent', fill: 'transparent', strokeWidth: 1 } } },
-      { id: `target-${createUuid()}`, group: 'in', attrs: { circle: { r: 6, magnet: true, stroke: 'transparent', fill: 'transparent', strokeWidth: 1 } } }
+      { id: `target-${createUuid()}`, group: 'in', magnet: true, attrs: { circle: { r: 6, stroke: '#107eef', fill: '#0b2244', strokeWidth: 2 } } },
+      { id: `target-${createUuid()}`, group: 'in', magnet: true, attrs: { circle: { r: 6, stroke: '#107eef', fill: '#0b2244', strokeWidth: 2 } } }
     );
   } else {
     ports.push(
-      { id: `target-${createUuid()}`, group: 'in', attrs: { circle: { r: 6, magnet: true, stroke: 'transparent', fill: 'transparent', strokeWidth: 1 } } }
+      { id: `target-${createUuid()}`, group: 'in', magnet: true, attrs: { circle: { r: 6, stroke: '#107eef', fill: '#0b2244', strokeWidth: 2 } } }
     );
   }
 
   ports.push(
-    { id: `source-${createUuid()}`, group: 'out', attrs: { circle: { r: 4, magnet: true, stroke: '#00cdea', fill: '#fff', strokeWidth: 2 } } }
+    { id: `source-${createUuid()}`, group: 'out', magnet: true, attrs: { circle: { r: 4, stroke: '#00cdea', fill: '#fff', strokeWidth: 2 } } }
   );
 
   return ports;
@@ -169,7 +169,9 @@ function addNodeByCopy(position, nodeData) {
  * 根据数据渲染节点（已有端点数据，不调用 API）
  */
 function addNodeByData(nodeData) {
-  generateNode(nodeData.position.left, nodeData.position.top, nodeData.id, nodeData);
+  // 合并 data 属性到顶层，确保 pluginId、text 等字段可被 generateNode 访问
+  const merged = { ...nodeData, ...(nodeData.data || {}) };
+  generateNode(nodeData.position.left, nodeData.position.top, nodeData.id, merged);
 }
 
 function addNodeByExtraData(nodeData, nodeEdgesData, nodeEndpointsData) {

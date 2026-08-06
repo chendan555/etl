@@ -1346,10 +1346,9 @@ function getCreatePlanEdit(params: any) {
  * params：参数
  */
 function getCreatePlanRemove(params: any) {
-  let newConfig = transferToFormData(params);
   return new Promise((resolve, reject) => {
     axios
-      .post('/api/trans/plan/deletePlanAndDetail', newConfig.formData, newConfig.config)
+      .post('/api/trans/plan/deletePlanAndDetail', params)
       .then(resolve)
       .catch(reject);
   });
@@ -2120,6 +2119,18 @@ function updateBindTables(params: any) {
   });
 }
 
+/**
+ * 一键生成所有算法模型算子的处理流程
+ */
+function initAlgorithmFlows() {
+  return new Promise((resolve, reject) => {
+    axios
+      .post('/api/transNew/initAlgorithmFlows')
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
 export default {
   getTypeInputHis,
   downloadFileToServer,
@@ -2275,6 +2286,7 @@ export default {
   getBindTables,
   getBindTableColumns,
   updateBindTables,
+  initAlgorithmFlows,
   sampleCascade
 };
 

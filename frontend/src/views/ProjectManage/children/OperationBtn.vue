@@ -4,6 +4,9 @@
       <el-button type="text" @click.stop="editProc(projectItem)">修改</el-button>
       <!-- icon="el-icon-edit-outline" -->
     </el-tooltip>
+    <el-tooltip content="X6编辑" placement="top">
+      <el-button type="text" @click.stop="editProcX6(projectItem)">X6</el-button>
+    </el-tooltip>
     <!-- <el-tooltip content="设置模板" placement="top">
       <el-button
         size="mini"
@@ -60,6 +63,9 @@ export default {
     },
     editProc(item) {
       this.$emit('editProc', item);
+    },
+    editProcX6(item) {
+      this.$emit('editProcX6', item);
     }
   }
 };

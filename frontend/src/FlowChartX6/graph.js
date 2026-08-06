@@ -32,6 +32,16 @@ export function createGraph(container) {
       allowBlank: false,
       allowLoop: false,
       allowMulti: true,
+      highlight: true,
+      validateConnection({ sourceCell, targetCell, sourceMagnet, targetMagnet }) {
+        // 不允许连接到自身
+        if (sourceCell === targetCell) return false;
+        // 必须有目标端口
+        if (!targetMagnet) return false;
+        // 必须有源端口
+        if (!sourceMagnet) return false;
+        return true;
+      },
       connectionEdgeAttr: {
         stroke: '#b4bdc5',
         strokeWidth: 2,
@@ -45,6 +55,7 @@ export function createGraph(container) {
     selecting: {
       enabled: true,
       showNodeSelectionBox: true,
+      rubberband: false,
     },
     keyboard: {
       enabled: true,
@@ -54,14 +65,14 @@ export function createGraph(container) {
       height: 34,
       attrs: {
         body: {
-          fill: '#fff',
+          fill: '#0b2244',
           stroke: '#107eef',
           strokeWidth: 1,
           rx: 4,
           ry: 4,
         },
         label: {
-          fill: '#000',
+          fill: '#c8ddf0',
           fontSize: 14,
           refX: 0.5,
           refY: 0.5,

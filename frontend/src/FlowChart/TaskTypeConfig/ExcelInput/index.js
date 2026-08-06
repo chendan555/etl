@@ -304,8 +304,12 @@ const config = {
       type: 'upload',
       span: 24,
       watch: function(val, res) {
-        val.filefield = res.path;
-        optionsParams.fileName = res.path;
+        // res = {code: 200, data: {path: "...", name: "...", size: N}}
+        var filePath = res && res.data ? res.data.path : (res ? res.path : '');
+        if (filePath) {
+          val.filefield = filePath;
+          optionsParams.fileName = filePath;
+        }
       },
       disabled: disableType.accept_filenames,
       showCondition: {

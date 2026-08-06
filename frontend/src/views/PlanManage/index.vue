@@ -33,7 +33,7 @@ export default {
   },
   data() {
     return {
-      treeData: {} // 树状图方案管理的的数据
+      treeData: [] // 方案分组列表（flat）
     };
   },
   methods: {

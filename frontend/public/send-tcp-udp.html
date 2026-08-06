@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCP/UDP 发送客户端</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: #01162D;
+      min-height: 100vh;
+      color: #c8ddf0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      width: 420px;
+      background: #0b2244;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: #02346E;
+    }
+    .header h3 {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 600;
+    }
+    .close-btn {
+      color: #8ab4d8;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+    .body { padding: 20px; }
+    .form-item {
+      margin-bottom: 16px;
+    }
+    .form-item label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: #8ab4d8;
+    }
+    .proto-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .proto-btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: #082b5f;
+      color: #8ab4d8;
+      border: 1px solid #1a3a6a;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .proto-btn:hover {
+      color: #fff;
+      border-color: #4da6ff;
+    }
+    .proto-btn.active {
+      color: #fff;
+      background: #1c5dbf;
+      border-color: #1c5dbf;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #082b5f;
+      border: 1px solid #1a3a6a;
+      border-radius: 4px;
+      color: #c8ddf0;
+      font-size: 14px;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+    }
+    textarea:focus { border-color: #4da6ff; }
+    textarea::placeholder { color: #4a6a8a; }
+    .quick-label {
+      font-size: 12px;
+      color: #6a8aaa;
+      margin-bottom: 6px;
+    }
+    .quick-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .quick-btn {
+      padding: 5px 12px;
+      background: #082b5f;
+      border: 1px solid #1a3a6a;
+      border-radius: 3px;
+      color: #8ab4d8;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-btn:hover {
+      color: #fff;
+      border-color: #4da6ff;
+    }
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid #1a3a6a;
+    }
+    .btn {
+      padding: 8px 24px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-cancel {
+      background: #082b5f;
+      color: #8ab4d8;
+    }
+    .btn-cancel:hover { color: #fff; }
+    .btn-submit {
+      background: #1c5dbf;
+      color: #fff;
+    }
+    .btn-submit:hover { opacity: 0.85; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result {
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: #082b5f;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+    }
+    .result.show { display: block; }
+    .result.success { border-left: 3px solid #67C23A; }
+    .result.error { border-left: 3px solid #F56C6C; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h3>📤 TCP/UDP 发送客户端</h3>
+      <span class="close-btn" onclick="window.close()">✕</span>
+    </div>
+    <div class="body">
+      <!-- 协议选择 -->
+      <div class="form-item">
+        <label>协议类型</label>
+        <div class="proto-btns">
+          <div class="proto-btn active" id="btnTCP" onclick="selectProto('TCP')">TCP (9090)</div>
+          <div class="proto-btn" id="btnUDP" onclick="selectProto('UDP')">UDP (9091)</div>
+        </div>
+      </div>
+      <!-- 消息输入 -->
+      <div class="form-item">
+        <label>消息内容</label>
+        <textarea id="message" rows="3" placeholder="输入要发送的消息..."></textarea>
+      </div>
+      <!-- 快捷按钮 -->
+      <div class="form-item">
+        <div class="quick-label">快捷发送</div>
+        <div class="quick-btns">
+          <span class="quick-btn" onclick="setMsg('设备上线: 设备-001')">设备上线</span>
+          <span class="quick-btn" onclick="setMsg('传感器: 25.5℃')">传感器</span>
+          <span class="quick-btn" onclick="setMsg('告警: 温度过高')">告警</span>
+          <span class="quick-btn" onclick="setMsg('心跳: ' + Date.now())">心跳</span>
+          <span class="quick-btn" onclick="setMsg('用户登录成功')">登录</span>
+          <span class="quick-btn" onclick="setMsg('订单创建完成')">订单</span>
+          <span class="quick-btn" onclick="setMsg('数据库连接成功')">数据库</span>
+          <span class="quick-btn" onclick="setMsg('系统启动完成')">启动</span>
+        </div>
+      </div>
+      <!-- 按钮 -->
+      <div class="footer">
+        <button class="btn btn-cancel" onclick="window.close()">取消</button>
+        <button class="btn btn-submit" id="submitBtn" onclick="sendMsg()">发送</button>
+      </div>
+      <!-- 结果 -->
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    let protocol = 'TCP';
+    const API = 'http://127.0.0.1:9056';
+
+    function selectProto(proto) {
+      protocol = proto;
+      document.getElementById('btnTCP').className = proto === 'TCP' ? 'proto-btn active' : 'proto-btn';
+      document.getElementById('btnUDP').className = proto === 'UDP' ? 'proto-btn active' : 'proto-btn';
+    }
+
+    function setMsg(msg) {
+      document.getElementById('message').value = msg;
+    }
+
+    async function sendMsg() {
+      const message = document.getElementById('message').value.trim();
+      if (!message) {
+        showResult('请输入消息内容', false);
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '发送中...';
+
+      try {
+        const res = await fetch(`${API}/v1/network/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ protocol, message })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const response = data.data ? data.data.response : 'OK';
+          showResult(`✓ ${protocol} 发送成功\n响应: ${response}`, true);
+          document.getElementById('message').value = '';
+        } else {
+          showResult(`✗ 发送失败: ${data.error}`, false);
+        }
+      } catch (err) {
+        showResult(`✗ 网络错误: ${err.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '发送';
+      }
+    }
+
+    function showResult(text, success) {
+      const el = document.getElementById('result');
+      el.textContent = text;
+      el.className = 'result show ' + (success ? 'success' : 'error');
+    }
+  </script>
+</body>
+</html>

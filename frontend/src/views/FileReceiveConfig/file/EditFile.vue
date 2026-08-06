@@ -336,13 +336,15 @@ export default Vue.extend({
         if (valid) {
           // 获取创建人
           let createName = JSON.parse(sessionStorage.getItem('user') || '').name;
-          let params = {
+          let params: any = {
             ...this.formConfig.ruleForm,
             jumpRow: this.formConfig.ruleForm.jumpRow.toString(),
             createName,
-            createTime: this.$utils.setTimeType(),
-            taskNodeId: this.formConfig.ruleForm.taskNodePath[this.formConfig.ruleForm.taskNodePath.length - 1]
+            createTime: this.$utils.setTimeType()
           };
+          if (this.formConfig.ruleForm.taskNodePath && this.formConfig.ruleForm.taskNodePath.length) {
+            params.taskNodeId = this.formConfig.ruleForm.taskNodePath[this.formConfig.ruleForm.taskNodePath.length - 1];
+          }
           // id无值时为新增，删除该接口参数，不予传递
           if (!params.id) {
             delete params.id;
@@ -388,15 +390,13 @@ export default Vue.extend({
                   type: res.data.success ? 'success' : 'warning',
                   message: res.data.success ? '文件上传成功！' : (res.data && res.data.result) || '文件上传失败!'
                 });
-                console.log(res.data.data);
-                // this.fileUrl = [];
-                // this.formUrl = [];
-                res.data.data.forEach((file: any) => {
-                  let fileItem = this.localFileList.find((item: any) => item.url === file.fileFullName);
-                  fileItem.url = file.filePath;
-                });
-                this.formConfig.ruleForm.filePath = res.data.data[0].filePath;
-                // this.formConfig.ruleForm.filePath = res.data.data.filePath;
+                if (res.data.data && res.data.data.length) {
+                  res.data.data.forEach((file: any) => {
+                    let fileItem = this.localFileList.find((item: any) => item.url === file.fileFullName);
+                    if (fileItem) fileItem.url = file.filePath;
+                  });
+                  this.formConfig.ruleForm.filePath = res.data.data[0].filePath;
+                }
                 this.saveData();
               })
               .catch(err => {
@@ -452,7 +452,7 @@ export default Vue.extend({
   width: 100%;
 }
 .fileList {
-  color: #fff;
+  color: #333;
   line-height: 20px;
 }
 .addRowNum {
@@ -468,7 +468,7 @@ export default Vue.extend({
   .rowNum {
     width: calc(100% - 190px);
     margin-left: 10px;
-    color: #fff;
+    color: #333;
   }
 }
 </style>

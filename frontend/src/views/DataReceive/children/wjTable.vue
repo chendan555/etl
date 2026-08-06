@@ -124,6 +124,7 @@ export default {
     },
     // 展示批次配置弹框
     showBatchConfigDialog() {
+      console.log('[wjTable] selections:', this.selections);
       if (this.selections.length) {
         this.dialogConfig.title = '设置引接批次';
         this.dialogConfig.currentComp = 'batchConfig';
@@ -184,6 +185,7 @@ export default {
     },
     // 多选
     selectionChange(data) {
+      console.log('[wjTable] selectionChange:', data);
       this.selections = [...data];
     },
     //查询表格的数据
@@ -193,6 +195,7 @@ export default {
       this.$API.dataReceive
         .getFileReceiveList(params)
         .then(({ data }) => {
+          console.log('[wjTable] getList response:', data);
           this.tableData = data.data.records;
           this.page.total = data.data.total;
         })

@@ -306,7 +306,7 @@ export default class DataRules extends BaseApi {
   apiDelFormatTree(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/trans/plan/categroy/tree/delete', { params })
+        .post('/api/trans/plan/categroy/tree/delete', null, { params })
         .then(resolve)
         .catch(reject);
     });
@@ -318,7 +318,7 @@ export default class DataRules extends BaseApi {
   apiSaveFormatTree(params: any) {
     return new Promise((resolve, reject) => {
       this.$http
-        .get('/api/trans/plan/categroy/tree/save', { params })
+        .post('/api/trans/plan/categroy/tree/save', params)
         .then(resolve)
         .catch(reject);
     });

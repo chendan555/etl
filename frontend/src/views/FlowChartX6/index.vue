@@ -343,9 +343,7 @@ export default Vue.extend({
   name: 'FlowChartX6',
   meta: {
     title: '流程设计(X6)',
-    pageType: 'mainNav',
-    belongTo: 'process',
-    hidden: false
+    hidden: true
   },
   components: {
     ProgressEle,
@@ -526,6 +524,12 @@ export default Vue.extend({
       this.$refs.filterTree.filter(val);
     },
     eleList(val: object) {
+    },
+    '$route'(to, from) {
+      if (to.query.path && to.query.path !== from.query.path) {
+        editor.clearAll();
+        this.init();
+      }
     }
   },
   mounted() {
@@ -554,6 +558,12 @@ export default Vue.extend({
 
   // },
   beforeRouteLeave(to, from, next) {
+    // 如果目标也是 FlowChartX6（切换流程），不保存直接离开
+    if (to.name === 'FlowChartX6') {
+      window.onbeforeunload = null;
+      next();
+      return;
+    }
     this.$confirm('您还有数据未保存, 是否保存?', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',

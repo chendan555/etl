@@ -1,59 +1,36 @@
 <template>
   <div class="navPage">
     <SideFrame :headTitle="headTitle">
-      <!-- <el-button
-        size="mini"
-        type="text"
-        icon="el-icon-circle-plus-outline"
-        @click="addRoot"
-        title="添加根级目录"
-        slot="titleButton"
-      ></el-button>-->
-      <p class="addRoot" title="添加根级目录" slot="titleButton" @click="addRoot">
+      <p class="addRoot" title="添加分组" slot="titleButton" @click="addRoot">
         <i class="el-icon-circle-plus-outline"></i>
       </p>
       <div class="sideContent" slot="sideContent">
         <div class="searchdiv">
           <el-input placeholder="请输入内容" v-model="searchVal" size="mini">
-            <!-- <el-button slot="append" icon="el-icon-search"></el-button> -->
           </el-input>
         </div>
         <div class="navdiv">
-          <el-tree
-            ref="tree"
-            :data="navTree"
-            node-key="id"
-            :props="{
-              label: 'name'
-            }"
-            @node-click="showProj"
-            :filter-node-method="filterNode"
-          >
-            <!-- :expand-on-click-node="false" -->
-            <!-- default-expand-all -->
-            <span class="custom-tree-node" slot-scope="{ node, data }">
-              <span :title="node.label">
+          <div class="flat-list">
+            <div
+              v-for="item in filteredNavList"
+              :key="item.id"
+              class="flat-item"
+              @click="showProj(item)"
+            >
+              <span class="item-label" :title="item.name">
                 <i class="el-icon-s-home"></i>
-                {{ node.label.length>8?node.label.slice(0, 7)+'...' : node.label }}
+                {{ item.name && item.name.length > 8 ? item.name.slice(0, 7) + '...' : item.name }}
               </span>
-              <span>
-                <!-- <el-button type="text" size="mini" class="addNode" @click="handleAdd(node)">
-                  <i class="el-icon-circle-plus-outline"></i>
-                </el-button>-->
-                <el-button type="text" size="mini" class="editNode" @click="handleEdit(node)">
+              <span class="item-actions">
+                <el-button type="text" size="mini" class="editNode" @click.stop="handleEdit(item)">
                   <i class="el-icon-edit-outline"></i>
                 </el-button>
-                <el-button
-                  type="text"
-                  size="mini"
-                  class="removeNode"
-                  @click="() => removeNode(node, data)"
-                >
+                <el-button type="text" size="mini" class="removeNode" @click.stop="removeNode(item)">
                   <i class="el-icon-delete"></i>
                 </el-button>
               </span>
-            </span>
-          </el-tree>
+            </div>
+          </div>
         </div>
       </div>
     </SideFrame>
@@ -87,7 +64,6 @@
 <script>
 import SideFrame from '@/components/SideFrame/index.vue';
 import AddTag from '@/components/AddTag';
-// import axios from '@/api/base/http';
 import { dataRules } from '@/api/';
 export default {
   name: 'navPage',
@@ -114,43 +90,20 @@ export default {
       },
       tagList: [],
       searchVal: '',
-      newTagName: '',
-      chsTagName: '',
-      targetNode: {},
-      showNavList: [
-        {
-          label: '数据预处理方案',
-          children: []
-        }
-      ],
-      ruleForm: this.createEmptyForm()
+      ruleForm: { name: '', descs: '', id: '', parentId: -1 }
     };
   },
   computed: {
-    formList() {
-      return this.projDialog.data;
-    },
-    // 添加根级数据
-    navTree() {
-      if (this.navListData.length === 0) return [];
-      // const treeData = [{
-      //   id: '',
-      //   name: '全部',
-      //   children: this.navListData
-      // }];
-      return this.navListData;
-    }
-  },
-  watch: {
-    searchVal(val) {
-      this.$refs.tree.filter(val);
+    filteredNavList() {
+      if (!this.searchVal) return this.navListData;
+      return this.navListData.filter(item => item.name && item.name.indexOf(this.searchVal) !== -1);
     }
   },
   mounted() {
     this.getNavTree();
   },
   methods: {
-    showProj(data, node) {
+    showProj(data) {
       this.$eventBus.$emit('filterPlanList', data.id || '', data.name);
     },
     createEmptyForm() {
@@ -158,76 +111,54 @@ export default {
         name: '',
         descs: '',
         id: '',
-        parentId: []
+        parentId: -1
       };
     },
-    /**
-     * 数据菜单树列表
-     */
     getNavTree() {
-      this.$API.getPlanNavTree().then(({ data }) => {
-        const { code } = data;
-        if (code === 200) {
-          const { data: list } = data;
+      this.$API.getPlanNavTree().then(res => {
+        // 兼容不同响应结构：axios拦截器可能已解包或未解包
+        const result = res.data || res;
+        const list = result.data || result;
+        console.log('[getNavTree] result:', result, 'list:', list);
+        if (Array.isArray(list)) {
           this.navListData = [...list];
           this.$emit('navListTree', this.navListData);
-          // console.log(this.navListData);
         }
       });
     },
-    // 查询树状图列表
-    filterNode(value, data) {
-      if (!value) return true;
-      return data.name.indexOf(value) !== -1;
-    },
-    removeNode(node, data) {
-      if (Array.isArray(node.childNodes) && node.childNodes.length) {
-        this.$message.warning('请先删除子节点！');
-      } else {
-        this.$confirm('确认删除当前节点吗？', '系统提示')
-          .then(() => {
-            dataRules.apiDelFormatTree({ ids: node.data.id }).then(res => {
-              this.$message({
-                type: res.data.success ? 'success' : 'warning',
-                message: res.data.success ? '删除成功！' : res.data.message
-              });
-              if (res.data.success) {
-                this.getNavTree();
-              }
+    removeNode(item) {
+      this.$confirm('确认删除当前分组吗？', '系统提示')
+        .then(() => {
+          dataRules.apiDelFormatTree({ ids: item.id }).then(res => {
+            this.$message({
+              type: res.data.success ? 'success' : 'warning',
+              message: res.data.success ? '删除成功！' : res.data.message
             });
-          })
-          .catch(() => {});
-      }
+            if (res.data.success) {
+              this.getNavTree();
+            }
+          });
+        })
+        .catch(() => {});
     },
     addRoot() {
       this.projDialog.visible = true;
       this.projDialog.title = '新建方案分组';
       this.ruleForm = this.createEmptyForm();
-      this.ruleForm.parentId = 0;
     },
-    handleAdd(node) {
-      this.projDialog.visible = true;
-      this.projDialog.title = '新建方案分组';
-      this.ruleForm = this.createEmptyForm();
-      this.ruleForm.parentId = node.data.id;
-    },
-    handleEdit(node) {
+    handleEdit(item) {
       this.projDialog.visible = true;
       this.projDialog.title = '修改方案分组';
-      this.ruleForm = Object.assign(this.createEmptyForm(), node.data);
-      this.ruleForm.parentId = node.parent.data.id; // 父级ID
+      this.ruleForm = Object.assign(this.createEmptyForm(), item);
     },
-
     closeProjDialog() {
       this.projDialog.visible = false;
       this.ruleForm = this.createEmptyForm();
       this.$refs['form'].clearValidate();
     },
-
-    formValidate(valid) {
+    formValidate() {
       this.$refs['form'].validate(valid => {
         if (valid) {
-          console.log(this.ruleForm);
           dataRules.apiSaveFormatTree(this.ruleForm).then(res => {
             this.$message({
               type: res.data.success ? 'success' : 'warning',
@@ -236,9 +167,6 @@ export default {
             this.getNavTree();
             this.closeProjDialog();
           });
-        } else {
-          console.log('error submit!!');
-          return false;
         }
       });
     }
@@ -272,6 +200,36 @@ export default {
       ::v-deep .el-button--mini,
       ::v-deep .el-button--small {
         font-size: 14px;
+      }
+      .flat-list {
+        .flat-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 6px 12px;
+          cursor: pointer;
+          &:hover {
+            background: #f0f2f5;
+          }
+          .item-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #333;
+            i {
+              margin-right: 4px;
+            }
+          }
+          .item-actions {
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+          }
+          &:hover .item-actions {
+            opacity: 1;
+          }
+        }
       }
     }
   }

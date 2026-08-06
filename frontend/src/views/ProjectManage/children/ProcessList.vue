@@ -80,6 +80,7 @@
               @setItemModel="setItemModel"
               @setProjectToModel="setProjectToModel"
               @editProc="editProc"
+              @editProcX6="editProcContX6"
             ></operation-btn>
           </div>
         </div>
@@ -106,6 +107,7 @@
                 @setItemModel="setItemModel"
                 @setProjectToModel="setProjectToModel"
                 @editProc="editProc"
+                @editProcX6="editProcContX6"
               ></operation-btn>
             </div>
           </div>
@@ -170,6 +172,7 @@
                   @setItemModel="setItemModel"
                   @setProjectToModel="setProjectToModel"
                   @editProc="editProc"
+                  @editProcX6="editProcContX6"
                 ></operation-btn>
               </div>
             </template>
@@ -748,6 +751,30 @@ export default {
       // sessionStorage.setItem('type', this.type);
 
       // this.$eventBus.$emit('setNavIndex', 0);
+    },
+    /**
+     * 跳转X6流程编辑页面
+     */
+    editProcContX6(scope) {
+      sessionStorage.setItem('backPage', '/ProjectManage');
+      this.$API.projectManage.setTransEditing(scope.transformationId).then(({ data }) => {
+        if (data.success) {
+          this.$router.push({
+            path: '/FlowChartX6',
+            query: {
+              path: scope.directoryName,
+              transName: scope.name,
+              taskGroupName: scope.belongToTaskGroup,
+              transformationId: scope.transformationId
+            }
+          });
+          const _this = this;
+          window.onbeforeunload = function() {
+            _this.$API.projectManage.setTransEditable(scope.transformationId).then(({ data }) => {});
+            return '退出？';
+          };
+        }
+      });
     },
     /**
      * 编辑流程基本信息

@@ -51,7 +51,7 @@ export default Vue.extend({
   created() {
     // todo 下拉树功能待配置优化
     this.config.optionsConfig.isLeaf = function(data, node) {
-      return node.data.fileType === 'FILE';
+      return data.isDir === false || data.fileType === 'FILE';
     };
   },
   methods: {
@@ -77,13 +77,39 @@ export default Vue.extend({
     },
     loadNode(node, resolve) {
       if (node.level === 0) {
-        resolve(node.data);
+        // 懒加载时从 API 获取根节点数据（文件/盘符列表），不走 demo treeData
+        if (this.config.httpUrl && this.config.isLazyLoad) {
+          // 解析初始参数（如 { path: '/' }）
+          let initParams = {};
+          try {
+            initParams = JSON.parse(this.config.params || '{}');
+          } catch (e) { /* ignore */ }
+          this.http(this.config.httpUrl, initParams).then(res => {
+            const data = res.data;
+            if (Array.isArray(data)) {
+              resolve(data);
+            } else if (data && Array.isArray(data.data)) {
+              resolve(data.data);
+            } else {
+              resolve([]);
+            }
+          }).catch(() => resolve([]));
+        } else {
+          resolve(node.data || []);
+        }
         return;
       }
-      if (node.data.fileType !== 'FILE') {
+      if (node.data.isDir !== false) {
         this.http(this.config.httpUrl, node.data).then(res => {
-          resolve(res.data);
-        });
+          const data = res.data;
+          if (Array.isArray(data)) {
+            resolve(data);
+          } else if (data && Array.isArray(data.data)) {
+            resolve(data.data);
+          } else {
+            resolve([]);
+          }
+        }).catch(() => resolve([]));
       } else {
         resolve([]);
       }

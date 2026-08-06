@@ -38,9 +38,11 @@ export default {
    * @param nodeData
    */
   addNode(nodeData) {
-    if (!nodeData.properties.ruleForm) {
-      nodeData.properties.ruleForm = {
-        stepName: nodeData.data.text
+    // 兼容两种数据格式
+    let props = nodeData.data && nodeData.data.properties ? nodeData.data.properties : nodeData.properties;
+    if (props && !props.ruleForm) {
+      props.ruleForm = {
+        stepName: nodeData.data ? nodeData.data.text : nodeData.text
       };
     }
     FlowChartJson.nodes.push(nodeData);

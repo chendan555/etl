@@ -36,6 +36,14 @@
           >
             <span>示例算子文件</span>
           </el-button>
+          <el-button
+            size="mini"
+            type="warning"
+            @click="generateAlgorithmFlows"
+            v-if="showCompHandle"
+          >
+            <span>生成算法流程</span>
+          </el-button>
         </div>
         <div class="rightdiv">
           <el-select
@@ -1067,6 +1075,26 @@ public class AddFieldsOperator extends AbstractOperator {
       a.download = 'AddFieldsOperator.java';
       a.click();
       URL.revokeObjectURL(url);
+    },
+    /**
+     * 一键生成所有算法模型算子的处理流程
+     */
+    generateAlgorithmFlows() {
+      this.$confirm('将为所有算法模型算子创建处理流程（表输入→算法→表输出），是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }).then(() => {
+        this.$API.initAlgorithmFlows().then(({ data }) => {
+          if (data.code === 200) {
+            this.$message.success(data.data.message || '生成成功');
+          } else {
+            this.$message.error(data.message || '生成失败');
+          }
+        }).catch(() => {
+          this.$message.error('生成失败，请检查后端服务');
+        });
+      }).catch(() => {});
     },
     /**
      * 触发重新上传

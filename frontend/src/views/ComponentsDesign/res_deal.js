@@ -43,23 +43,26 @@ const resDeal = {
   },
   getExcelSheet(res, targetEle, event) {
     let addRowArr = [];
-    Array.isArray(res.data) &&
-      res.data.forEach(data => {
-        let addRow = {};
-        targetEle.tableColumnConfig.forEach(config => {
-          if (config.prop === event.eventParamsConfig.column) {
-            addRow[config.prop] = data.name;
-          } else {
-            addRow[config.prop] = config.defaultValue;
-          }
-        });
-        addRowArr.push(addRow);
+    // 解包后端 Result 包装
+    let dataList = Array.isArray(res.data) ? res.data : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
+    dataList.forEach(data => {
+      let addRow = {};
+      targetEle.tableColumnConfig.forEach(config => {
+        if (config.prop === event.eventParamsConfig.column) {
+          addRow[config.prop] = data.name;
+        } else {
+          addRow[config.prop] = config.defaultValue;
+        }
       });
+      addRowArr.push(addRow);
+    });
     return addRowArr;
   },
   getExcelFields(res, targetEle, event) {
     let addRowArr = [];
-    res.data.forEach(data => {
+    // 解包后端 Result 包装：{code:200, data:[...], msg:"success"}
+    let dataList = Array.isArray(res.data) ? res.data : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
+    dataList.forEach(data => {
       let addRow = {};
       targetEle.tableColumnConfig.forEach(config => {
         if (config.prop.indexOf('name') > -1) {
@@ -74,7 +77,8 @@ const resDeal = {
   },
   getFileFields(res, targetEle, event) {
     let addRowArr = [];
-    res.data.forEach(data => {
+    let dataList = Array.isArray(res.data) ? res.data : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
+    dataList.forEach(data => {
       let addRow = {};
       targetEle.tableColumnConfig.forEach(config => {
         let colNameArr = config.prop.split('.');
@@ -90,7 +94,8 @@ const resDeal = {
   },
   getXMLFields(res, targetEle, event) {
     let addRowArr = [];
-    res.data.forEach(data => {
+    let dataList = Array.isArray(res.data) ? res.data : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
+    dataList.forEach(data => {
       let addRow = {};
       targetEle.tableColumnConfig.forEach(config => {
         let colNameArr = config.prop.split('.');
