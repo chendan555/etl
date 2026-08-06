@@ -146,9 +146,11 @@ public class DynamicDataSourceManager {
             // DM数据库 meta.getColumns 可能因 SF_GET_OCT_LENGTH 报错，先尝试用 ResultSetMetaData
             if ("DM".equalsIgnoreCase(dbType)) {
                 String actualSchema = (schema != null && !schema.isEmpty()) ? schema : getSchema(dbType, databaseName, username);
-                String fullTable = actualSchema + "." + tableName;
+                String fullTable = buildFullTableName(actualSchema, tableName, dbType);
+                String sql = "SELECT * FROM " + fullTable + " WHERE 1=0";
+                System.out.println("[getColumns] SQL: " + sql);
                 try (java.sql.Statement stmt = conn.createStatement();
-                     ResultSet rs = stmt.executeQuery("SELECT * FROM " + fullTable + " WHERE 1=0")) {
+                     ResultSet rs = stmt.executeQuery(sql)) {
                     java.sql.ResultSetMetaData rsMeta = rs.getMetaData();
                     for (int i = 1; i <= rsMeta.getColumnCount(); i++) {
                         Map<String, Object> col = new LinkedHashMap<>();
@@ -230,6 +232,20 @@ public class DynamicDataSourceManager {
             }
         }
         return true;
+    }
+
+    /**
+     * 构建完整的表名引用，处理表名已包含 schema 前缀的情况，并对 DM/Oracle 加引号
+     */
+    private String buildFullTableName(String schema, String tableName, String dbType) {
+        // 如果表名已包含 schema 前缀（含点号），直接使用，避免重复拼接
+        if (tableName != null && tableName.contains(".")) {
+            return tableName;
+        }
+        if (schema == null || schema.isEmpty()) {
+            return tableName;
+        }
+        return schema + "." + tableName;
     }
 
     private String getDriverClass(String dbType) {
@@ -349,7 +365,7 @@ public class DynamicDataSourceManager {
         if ("MYSQL".equalsIgnoreCase(dbType)) {
             fullTableName = tableName;
         } else {
-            fullTableName = actualSchema + "." + tableName;
+            fullTableName = buildFullTableName(actualSchema, tableName, dbType);
         }
 
         System.out.println("[getTableData] dbType=" + dbType + ", databaseName=" + databaseName + ", schema=" + schema + ", fullTableName=" + fullTableName);

@@ -74,6 +74,7 @@ public class PlanService extends ServiceImpl<TransPlanMapper, TransPlan> {
                     .eq(PlanDetail::getPlanId, plan.getId()));
         } else {
             // 新建方案
+            plan.setId(null);
             plan.setCreateTime(now);
             plan.setUpdateTime(now);
             plan.setStatus("1");
@@ -85,6 +86,7 @@ public class PlanService extends ServiceImpl<TransPlanMapper, TransPlan> {
         if (plan.getClList() != null) {
             for (int i = 0; i < plan.getClList().size(); i++) {
                 PlanDetail detail = plan.getClList().get(i);
+                detail.setId(null);
                 detail.setPlanId(plan.getId());
                 detail.setDetailType("cl");
                 detail.setSortOrder(i);
@@ -98,6 +100,7 @@ public class PlanService extends ServiceImpl<TransPlanMapper, TransPlan> {
         if (plan.getYjList() != null) {
             for (int i = 0; i < plan.getYjList().size(); i++) {
                 PlanDetail detail = plan.getYjList().get(i);
+                detail.setId(null);
                 detail.setPlanId(plan.getId());
                 detail.setDetailType("yj");
                 detail.setSortOrder(i);
@@ -192,23 +195,12 @@ public class PlanService extends ServiceImpl<TransPlanMapper, TransPlan> {
     // ========== 方案分组相关 ==========
 
     /**
-     * 获取方案分组树
+     * 获取方案分组列表（平铺，不构建树）
      */
     public List<PlanCategory> getCategoryTree() {
-        List<PlanCategory> allCategories = planCategoryMapper.selectList(
+        return planCategoryMapper.selectList(
                 new LambdaQueryWrapper<PlanCategory>()
                         .orderByAsc(PlanCategory::getSortOrder));
-        Set<Long> visited = new HashSet<>();
-        visited.add(-1L);
-        return buildCategoryTree(allCategories, -1L, visited);
-    }
-
-    private List<PlanCategory> buildCategoryTree(List<PlanCategory> allCategories, Long parentId, Set<Long> visited) {
-        return allCategories.stream()
-                .filter(c -> parentId.equals(c.getParentId()))
-                .filter(c -> visited.add(c.getId()))
-                .peek(c -> c.setChildren(buildCategoryTree(allCategories, c.getId(), visited)))
-                .collect(Collectors.toList());
     }
 
     /**
@@ -221,9 +213,7 @@ public class PlanService extends ServiceImpl<TransPlanMapper, TransPlan> {
         } else {
             category.setCreateTime(LocalDateTime.now());
             category.setUpdateTime(LocalDateTime.now());
-            if (category.getParentId() == null) {
-                category.setParentId(-1L);
-            }
+            category.setParentId(-1L);
             planCategoryMapper.insert(category);
         }
     }

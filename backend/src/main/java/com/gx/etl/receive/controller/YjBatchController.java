@@ -6,6 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/yj/batch")
 public class YjBatchController {
@@ -19,5 +24,11 @@ public class YjBatchController {
     @GetMapping("/num/generate")
     public Result<?> generateBatchNum() {
         return Result.ok(yjExecService.generateBatchNumber());
+    }
+
+    @GetMapping("/num/list")
+    public Result<?> getBatchNumList() {
+        List<Map<String, Object>> list = new ArrayList<>();
+        return Result.ok(list);
     }
 }

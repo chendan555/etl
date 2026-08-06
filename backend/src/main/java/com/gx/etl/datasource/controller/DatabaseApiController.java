@@ -116,6 +116,9 @@ public class DatabaseApiController {
             }
             String tbl = (tableName != null && !tableName.isEmpty()) ? tableName : table;
             System.out.println("[getColumnsByTable] actual table=" + tbl);
+            if (tbl == null || tbl.isEmpty()) {
+                return Result.ok(new ArrayList<>());
+            }
             List<Map<String, Object>> columns = databaseSourceService.getColumns(ds.getId(), tbl, schema);
             return Result.ok(columns);
         } catch (Exception e) {
@@ -162,7 +165,15 @@ public class DatabaseApiController {
             if (ds == null) {
                 return Result.fail("数据源不存在: " + connection);
             }
-
+            if (tableName == null || tableName.isEmpty()) {
+                Map<String, Object> empty = new HashMap<>();
+                empty.put("column", new ArrayList<>());
+                Map<String, Object> page = new HashMap<>();
+                page.put("total", 0);
+                page.put("records", new ArrayList<>());
+                empty.put("page", page);
+                return Result.ok(empty);
+            }
             Map<String, Object> result = databaseSourceService.getTableData(ds.getId(), tableName, pageIndex, pageSize, schema);
             return Result.ok(result);
         } catch (Exception e) {

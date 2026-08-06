@@ -7,13 +7,14 @@ import com.gx.etl.flow.entity.TaskGroup;
 import com.gx.etl.flow.entity.Transformation;
 import com.gx.etl.flow.service.TaskGroupService;
 import com.gx.etl.flow.service.TransformationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/task")
@@ -24,6 +25,9 @@ public class TaskController {
 
     @Resource
     private TransformationService transformationService;
+
+    @Value("${file.upload.dir:./uploads}")
+    private String uploadDir;
 
     // ========== 项目分组相关接口 ==========
 
@@ -229,8 +233,31 @@ public class TaskController {
     }
 
     @PostMapping("/plan/upload/file")
-    public Result<?> uploadFile() {
-        return Result.ok();
+    public Result<?> uploadFile(@RequestParam("file") MultipartFile[] files) {
+        try {
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            List<Map<String, Object>> fileList = new ArrayList<>();
+            for (MultipartFile file : files) {
+                if (file.isEmpty()) continue;
+
+                String originalName = file.getOriginalFilename();
+                String savedName = UUID.randomUUID() + "_" + originalName;
+                File dest = new File(dir, savedName);
+                file.transferTo(dest);
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("fileFullName", originalName);
+                item.put("filePath", dest.getAbsolutePath());
+                fileList.add(item);
+            }
+            return Result.ok(fileList);
+        } catch (IOException e) {
+            return Result.fail("文件上传失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/plan/node/data/sourceAndFile/save")

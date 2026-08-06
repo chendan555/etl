@@ -36,12 +36,16 @@ public class PlanController {
 
     @PostMapping("/categroy/tree/save")
     public Result<?> saveCategoryTree(@RequestBody PlanCategory category) {
+        // 前端可能传空字符串id，需转为null以触发新建逻辑
+        if (category.getId() != null && category.getId() <= 0) {
+            category.setId(null);
+        }
         planService.saveCategory(category);
         return Result.ok();
     }
 
     @PostMapping("/categroy/tree/delete")
-    public Result<?> deleteCategoryTree(@RequestParam Long id) {
+    public Result<?> deleteCategoryTree(@RequestParam("ids") Long id) {
         planService.deleteCategory(id);
         return Result.ok();
     }

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -560,11 +561,94 @@ public class FlowController {
     }
 
     /**
-     * 获取文件列表
+     * 获取文件/目录树列表（用于前端文件选择树）
+     * 前端 req_config.js: 文件目录 treeConfig { label: 'path', isLazyLoad: true }
+     * 前端 api/index.ts: getFilesName() 调用 GET /api/transNew/files?path=/
+     *
+     * @param path 目录路径；Windows 下传入 "/" 或空时返回盘符列表
      */
-    @PostMapping("/files")
-    public Result<?> files() {
-        return Result.ok(new ArrayList<>());
+    @RequestMapping(value = "/files", method = {RequestMethod.GET, RequestMethod.POST})
+    public Result<?> files(@RequestParam(required = false) String path) {
+        try {
+            // 判断是否为 Windows 系统
+            boolean isWindows = File.separatorChar == '\\';
+
+            // path 为空或 "/" 时，返回根目录级别
+            if (path == null || path.isEmpty() || "/".equals(path) || "\\".equals(path)) {
+                if (isWindows) {
+                    // Windows: 返回盘符列表
+                    return Result.ok(getWindowsDriveRoots());
+                } else {
+                    // Linux/Mac: 返回根目录 "/"
+                    return Result.ok(listFiles("/"));
+                }
+            }
+
+            // 指定路径：列出该目录下的子文件和子目录
+            return Result.ok(listFiles(path));
+        } catch (Exception e) {
+            return Result.ok(new ArrayList<>());
+        }
+    }
+
+    /**
+     * 获取 Windows 盘符列表（C:\, D:\, ...）
+     */
+    private List<Map<String, Object>> getWindowsDriveRoots() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        File[] roots = File.listRoots();
+        if (roots != null) {
+            for (File root : roots) {
+                String path = root.getAbsolutePath(); // e.g. "C:\"
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("path", path);
+                item.put("name", path);
+                item.put("isDir", true);
+                item.put("children", true); // has children (for lazy loading)
+                result.add(item);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 列出指定目录下的文件和子目录
+     */
+    private List<Map<String, Object>> listFiles(String dirPath) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        File dir = new File(dirPath);
+        if (!dir.exists() || !dir.isDirectory()) {
+            return result;
+        }
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return result;
+        }
+        // 排序：目录在前，文件在后；各自按名称排序
+        Arrays.sort(files, (a, b) -> {
+            if (a.isDirectory() != b.isDirectory()) {
+                return a.isDirectory() ? -1 : 1;
+            }
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+        for (File f : files) {
+            // 排除隐藏文件和系统文件（Windows 下排除 $Recycle.Bin, System Volume Information 等）
+            if (f.isHidden()) continue;
+            String name = f.getName();
+            if (name.startsWith("$")) continue;
+
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("path", f.getAbsolutePath());
+            item.put("name", name);
+            item.put("isDir", f.isDirectory());
+            item.put("children", f.isDirectory()); // directory can be expanded
+            if (!f.isDirectory()) {
+                item.put("size", f.length());
+                item.put("lastModified", f.lastModified());
+            }
+            result.add(item);
+        }
+        return result;
     }
 
     /**
@@ -930,6 +1014,149 @@ public class FlowController {
                                        @RequestParam String bindTableNames) {
         transformationService.updateTransformation(transformationId.longValue(), null, null, null, null, bindTableNames);
         return Result.ok();
+    }
+
+    /**
+     * 一键生成所有算法模型算子的处理流程
+     * 参考 GXETL_R_TRANSFORMATION.sql 中的命名规范
+     * 每个流程：表输入 → [预处理] → 算法算子 → 表输出
+     */
+    @PostMapping("/initAlgorithmFlows")
+    public Result<?> initAlgorithmFlows() {
+        // 流程定义：name, pluginId, 是否需要预处理(字段选择)
+        Object[][] algorithms = {
+            // 逻辑回归系列
+            {"模型-测试3-逻辑回归", "LogisticsRegression", true},
+            {"模型-测试3-逻辑回归训练", "LogisticsRegressionTrain", true},
+            {"模型-测试3-逻辑回归集成", "TopNJC", true},
+            {"模型-测试3-多元逻辑回归", "ManyTopN", true},
+            // 朴素贝叶斯系列
+            {"模型-测试4-朴素贝叶斯", "NativeBayes", true},
+            {"模型-测试4-朴素贝叶斯训练", "NativeBayesTrain", true},
+            // 随机森林系列
+            {"模型-测试5-随机森林", "RandomForest", true},
+            {"模型-测试5-随机森林训练", "RandomForestTrain", true},
+            {"模型-测试5-多元随机森林", "ManyRandomForest", true},
+            // 线性回归系列
+            {"模型-测试6-线性回归", "线性回归", true},
+            {"模型-测试6-线性回归训练", "线性回归(训练)", true},
+            // 决策树系列
+            {"模型-测试7-决策树", "决策树", true},
+            {"模型-测试7-决策树训练", "决策树(训练)", true},
+            // SVM系列
+            {"模型-测试5-SVM", "SVM", true},
+            {"模型-测试5-SVM训练", "SVM（训练）", true},
+            {"模型-测试5-SVM集成", "SVM（集成）", true},
+            // 聚类算法
+            {"模型-测试8-KMeans聚类", "K-Means", true},
+            {"模型-测试8-DBScan聚类", "DBScan密度聚类算法", true},
+            // 数据融合
+            {"模型-测试9-多源数据融合", "多源数据融合", false},
+            {"模型-测试9-多阶段数据融合", "多阶段数据融合", false},
+            {"模型-测试9-多源多阶段融合", "多源多阶段数据融合", false},
+            // 数值离散化
+            {"模型-测试10-数值离散化", "数值离散化处理", true}
+        };
+
+        List<Long> createdIds = new ArrayList<>();
+        int index = 0;
+        for (Object[] algo : algorithms) {
+            String flowName = (String) algo[0];
+            String pluginId = (String) algo[1];
+            boolean needPreprocess = (Boolean) algo[2];
+            index++;
+
+            // 生成所有节点和端口ID
+            String inputNodeId = "node-in-" + UUID.randomUUID().toString().substring(0, 8);
+            String algoNodeId = "node-algo-" + UUID.randomUUID().toString().substring(0, 8);
+            String outputNodeId = "node-out-" + UUID.randomUUID().toString().substring(0, 8);
+
+            String srcPort1 = "sp-" + UUID.randomUUID().toString().substring(0, 8);
+            String tgtPort1 = "tp-" + UUID.randomUUID().toString().substring(0, 8);
+            String srcPort2 = "sp-" + UUID.randomUUID().toString().substring(0, 8);
+            String tgtPort2 = "tp-" + UUID.randomUUID().toString().substring(0, 8);
+
+            // 表输入节点 - 从TEST表读取数据（旧版格式：属性在顶层）
+            String inputNode = "{\"id\":\"" + inputNodeId + "\",\"position\":{\"left\":80,\"top\":180},"
+                + "\"text\":\"表输入\",\"pluginId\":\"TableInput\",\"nodeId\":\"" + inputNodeId + "\","
+                + "\"points\":{\"targets\":[],\"sources\":[\"" + srcPort1 + "\"]},"
+                + "\"properties\":{\"ruleForm\":{\"stepName\":\"表输入\",\"connection\":\"2\","
+                + "\"sql\":\"SELECT ID, NAME, AGE FROM TEST\"}}}";
+
+            // 算法节点
+            String algoNode = "{\"id\":\"" + algoNodeId + "\",\"position\":{\"left\":420,\"top\":180},"
+                + "\"text\":\"" + flowName.substring(flowName.lastIndexOf("-") + 1) + "\",\"pluginId\":\"" + pluginId + "\","
+                + "\"nodeId\":\"" + algoNodeId + "\","
+                + "\"points\":{\"targets\":[\"" + tgtPort1 + "\"],\"sources\":[\"" + srcPort2 + "\"]},"
+                + "\"properties\":{\"ruleForm\":{\"stepName\":\"" + flowName.substring(flowName.lastIndexOf("-") + 1) + "\"}}}";
+
+            // 表输出节点
+            String outputNode = "{\"id\":\"" + outputNodeId + "\",\"position\":{\"left\":760,\"top\":180},"
+                + "\"text\":\"表输出\",\"pluginId\":\"TableOutput\",\"nodeId\":\"" + outputNodeId + "\","
+                + "\"points\":{\"targets\":[\"" + tgtPort2 + "\"],\"sources\":[]},"
+                + "\"properties\":{\"ruleForm\":{\"stepName\":\"表输出\",\"connection\":\"2\","
+                + "\"table\":\"RESULT_" + pluginId.replaceAll("[^a-zA-Z0-9]", "_").toUpperCase() + "\"}}}";
+
+            // 如果需要预处理，插入字段选择节点
+            String nodesJson;
+            String endpointsJson;
+            String edgesJson;
+
+            if (needPreprocess) {
+                String preprocessNodeId = "node-prep-" + UUID.randomUUID().toString().substring(0, 8);
+                String srcPortPrep = "sp-" + UUID.randomUUID().toString().substring(0, 8);
+                String tgtPortPrep = "tp-" + UUID.randomUUID().toString().substring(0, 8);
+
+                String preprocessNode = "{\"id\":\"" + preprocessNodeId + "\",\"position\":{\"left\":250,\"top\":180},"
+                    + "\"text\":\"字段选择\",\"pluginId\":\"SelectValues\",\"nodeId\":\"" + preprocessNodeId + "\","
+                    + "\"points\":{\"targets\":[\"" + tgtPortPrep + "\"],\"sources\":[\"" + srcPortPrep + "\"]},"
+                    + "\"properties\":{\"ruleForm\":{\"stepName\":\"字段选择\"}}}";
+
+                nodesJson = "[" + inputNode + "," + preprocessNode + "," + algoNode + "," + outputNode + "]";
+                endpointsJson = "["
+                    + "{\"id\":\"" + srcPort1 + "\",\"data\":{\"value\":\"输出\"}},"
+                    + "{\"id\":\"" + tgtPortPrep + "\",\"data\":{\"value\":\"输入\"}},"
+                    + "{\"id\":\"" + srcPortPrep + "\",\"data\":{\"value\":\"输出\"}},"
+                    + "{\"id\":\"" + tgtPort1 + "\",\"data\":{\"value\":\"输入\"}},"
+                    + "{\"id\":\"" + srcPort2 + "\",\"data\":{\"value\":\"输出\"}},"
+                    + "{\"id\":\"" + tgtPort2 + "\",\"data\":{\"value\":\"输入\"}}"
+                    + "]";
+                edgesJson = "["
+                    + "\"" + srcPort1 + "&&" + tgtPortPrep + "\","
+                    + "\"" + srcPortPrep + "&&" + tgtPort1 + "\","
+                    + "\"" + srcPort2 + "&&" + tgtPort2 + "\""
+                    + "]";
+            } else {
+                nodesJson = "[" + inputNode + "," + algoNode + "," + outputNode + "]";
+                endpointsJson = "["
+                    + "{\"id\":\"" + srcPort1 + "\",\"data\":{\"value\":\"输出\"}},"
+                    + "{\"id\":\"" + tgtPort1 + "\",\"data\":{\"value\":\"输入\"}},"
+                    + "{\"id\":\"" + srcPort2 + "\",\"data\":{\"value\":\"输出\"}},"
+                    + "{\"id\":\"" + tgtPort2 + "\",\"data\":{\"value\":\"输入\"}}"
+                    + "]";
+                edgesJson = "["
+                    + "\"" + srcPort1 + "&&" + tgtPort1 + "\","
+                    + "\"" + srcPort2 + "&&" + tgtPort2 + "\""
+                    + "]";
+            }
+
+            // 组装完整 flowJson
+            Map<String, Object> flowJson = new LinkedHashMap<>();
+            flowJson.put("nodes", JSON.parseArray(nodesJson));
+            flowJson.put("endpoints", JSON.parseArray(endpointsJson));
+            flowJson.put("edges", JSON.parseArray(edgesJson));
+            flowJson.put("head", "");
+            String flowJsonStr = JSON.toJSONString(flowJson);
+
+            Long id = transformationService.saveTransformation(flowName, null, flowJsonStr, null, null);
+            createdIds.add(id);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("count", createdIds.size());
+        result.put("ids", createdIds);
+        result.put("message", "成功创建 " + createdIds.size() + " 个算法处理流程");
+        return Result.ok(result);
     }
 
     // Helper methods

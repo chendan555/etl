@@ -63,6 +63,17 @@ public class OperatorContext {
         return Boolean.parseBoolean(v.toString());
     }
 
+    public Double getDouble(String key) {
+        Object v = config.get(key);
+        if (v == null) return null;
+        if (v instanceof Number) return ((Number) v).doubleValue();
+        try {
+            return Double.parseDouble(v.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     public Map<String, Object> getConfig() {
         return config;
     }
