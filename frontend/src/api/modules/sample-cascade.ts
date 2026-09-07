@@ -32,6 +32,59 @@ export default class SampleCascade extends baseApi {
     });
   }
 
+  // ========== 详细数据查询 ==========
+  getTopicData(params: { schemeId: number; instanceId: number; pageIndex?: number; pageSize?: number }) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/topicData', { params }).then(resolve).catch(reject);
+    });
+  }
+
+  // ========== 从MySQL查仿真方案 ==========
+  getExperimentDesignList(params: { dbId: number; dbName?: string }) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/experimentDesign/list', { params }).then(resolve).catch(reject);
+    });
+  }
+
+  getBigSampleList(params: { dbId: number; dbName?: string; experimentDesignId: number }) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/bigSample/list', { params }).then(resolve).catch(reject);
+    });
+  }
+
+  getTaskDesignExampleList(params: { dbId: number; dbName?: string; deduceConfigId: number }) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/taskDesignExample/list', { params }).then(resolve).catch(reject);
+    });
+  }
+
+  getDeduceTaskList(params: { dbId: number; dbName?: string; taskDesignExampleId: number }) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/deduceTask/list', { params }).then(resolve).catch(reject);
+    });
+  }
+
+  // ========== 从MySQL模型库导入主题 ==========
+  previewMysqlTopics(params: {
+    dbId: number;
+    modelDb: string;
+    addPrefix: boolean;
+    stripPrefix: boolean;
+    keyword?: string;
+    pageIndex?: number;
+    pageSize?: number;
+  }) {
+    return new Promise((resolve, reject) => {
+      this.$http.get('/api/scheme/topic/mysql/preview', { params }).then(resolve).catch(reject);
+    });
+  }
+
+  importMysqlTopics(params: { dbId: number; modelDb: string; addPrefix: boolean; stripPrefix: boolean; topicNames?: string[] }) {
+    return new Promise((resolve, reject) => {
+      this.$http.post('/api/scheme/topic/mysql/import', params).then(resolve).catch(reject);
+    });
+  }
+
   // ========== 数据采集配置 CRUD ==========
   getCjConfigs() {
     return new Promise((resolve, reject) => {
@@ -133,9 +186,11 @@ export default class SampleCascade extends baseApi {
       this.$http.get('/api/scheme/transformations').then(resolve).catch(reject);
     });
   }
-  processScheme(schemeId: number) {
+  processScheme(schemeId: number, reprocess?: boolean) {
     return new Promise((resolve, reject) => {
-      this.$http.post('/api/scheme/process', null, { params: { schemeId } }).then(resolve).catch(reject);
+      this.$http.post('/api/scheme/process', null, {
+        params: { schemeId, reprocess: reprocess ? 'true' : 'false' }
+      }).then(resolve).catch(reject);
     });
   }
 

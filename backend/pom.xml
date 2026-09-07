@@ -109,6 +109,13 @@
             <version>2.0.32</version>
         </dependency>
 
+        <!-- MessagePack for msg_info unpacking -->
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>msgpack-core</artifactId>
+            <version>0.8.20</version>
+        </dependency>
+
         <!-- Netty for high-performance networking -->
         <dependency>
             <groupId>io.netty</groupId>
@@ -138,6 +145,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- system 作用域的依赖（达梦驱动 lib/DmJdbcDriver18.jar）默认不会打进 fat jar，必须显式包含 -->
+                    <includeSystemScope>true</includeSystemScope>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

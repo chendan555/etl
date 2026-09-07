@@ -78,6 +78,10 @@ public class DatabaseController {
 
     @PostMapping("/del")
     public Result<?> delete(@RequestParam Long idDatabase) {
+        // 禁止删除核心数据源（id=1 达梦, id=2 MySQL），避免引接功能失效
+        if (idDatabase != null && (idDatabase == 1L || idDatabase == 2L)) {
+            return Result.fail("该数据源为系统核心连接，不允许删除");
+        }
         databaseSourceService.removeDataSourceCache(idDatabase);
         databaseSourceService.removeById(idDatabase);
         return Result.ok();

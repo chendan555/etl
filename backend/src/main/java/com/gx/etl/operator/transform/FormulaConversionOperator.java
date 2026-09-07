@@ -44,10 +44,21 @@ public class FormulaConversionOperator extends AbstractOperator {
                 for (String col : mapFields) {
                     Object val = row.get(col);
                     String numStr = val != null ? val.toString() : "0";
+                    System.out.println("[FormulaConversion] 字段=" + col + ", 原始值=" + val + ", 类型=" + (val != null ? val.getClass().getName() : "null"));
                     expr = expr.replaceFirst("\\?", numStr);
                 }
-                newRow.put(resultField, evaluate(expr));
+                System.out.println("[FormulaConversion] 替换后表达式=" + expr);
+                double result = evaluate(expr);
+                System.out.println("[FormulaConversion] 计算结果=" + result);
+                // 整数结果去掉小数点
+                if (result == Math.floor(result) && !Double.isInfinite(result)) {
+                    newRow.put(resultField, (long) result);
+                } else {
+                    newRow.put(resultField, result);
+                }
             } catch (Exception e) {
+                System.out.println("[FormulaConversion] 异常: " + e.getMessage());
+                e.printStackTrace();
                 newRow.put(resultField, null);
             }
             rows.add(newRow);
@@ -88,6 +99,13 @@ public class FormulaConversionOperator extends AbstractOperator {
     }
 
     private double parseFactor() {
+        // 处理绝对值 |...|
+        if (expr.charAt(pos) == '|') {
+            pos++; // skip opening |
+            double result = parseExpr();
+            pos++; // skip closing |
+            return Math.abs(result);
+        }
         if (expr.charAt(pos) == '(') {
             pos++;
             double result = parseExpr();

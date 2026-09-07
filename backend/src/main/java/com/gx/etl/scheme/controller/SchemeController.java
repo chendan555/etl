@@ -11,9 +11,12 @@ import com.gx.etl.flow.entity.Transformation;
 import com.gx.etl.flow.mapper.TransformationMapper;
 import com.gx.etl.scheme.entity.*;
 import com.gx.etl.scheme.mapper.CjConfigMapper;
+import com.gx.etl.scheme.mapper.SchemeMapper;
 import com.gx.etl.scheme.mapper.TopicConfigMapper;
 import com.gx.etl.scheme.mapper.TopicFieldMapper;
+import com.gx.etl.datasource.mapper.DatabaseSourceMapper;
 import com.gx.etl.scheme.service.SchemeService;
+import com.gx.etl.scheme.service.TopicImportService;
 import com.gx.etl.scheme.vo.SchemeDetailDataVO;
 import com.gx.etl.scheme.vo.SchemeEquipVO;
 import com.gx.etl.scheme.service.SchemeProcessService;
@@ -22,10 +25,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import com.gx.etl.datasource.entity.DatabaseSource;
+import com.gx.etl.datasource.mapper.DatabaseSourceMapper;
+import com.gx.etl.config.DynamicDataSourceManager;
+
 import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +48,15 @@ public class SchemeController {
 
     @Resource
     private SchemeService schemeService;
+
+    @Resource
+    private SchemeMapper schemeMapper;
+
+    @Resource
+    private TopicImportService topicImportService;
+
+    @Resource
+    private DatabaseSourceMapper databaseSourceMapper;
 
     @Resource
     private SampleCascadeService sampleCascadeService;
@@ -194,6 +213,58 @@ public class SchemeController {
         return Result.ok();
     }
 
+    // ========== 从MySQL模型库导入主题 ==========
+
+    /**
+     * 预览MySQL模型库主题清单（不落库）。
+     * 逻辑移植自 DataCollectWeb：查模型库 topic 表 + simulatmutual/dataitem 字段结构。
+     * 主题名称取备注汉字，主题别名为技术名（可加/去前缀）。
+     */
+    @GetMapping("/topic/mysql/preview")
+    public Result<?> previewMysqlTopics(@RequestParam Long dbId, @RequestParam String modelDb,
+                                        @RequestParam(required = false, defaultValue = "true") boolean addPrefix,
+                                        @RequestParam(required = false, defaultValue = "true") boolean stripPrefix,
+                                        @RequestParam(required = false) String keyword,
+                                        @RequestParam(required = false, defaultValue = "1") Integer pageIndex,
+                                        @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
+        try {
+            return Result.ok(topicImportService.preview(dbId, modelDb, addPrefix, stripPrefix, keyword, pageIndex, pageSize));
+        } catch (IllegalArgumentException e) {
+            return Result.fail(e.getMessage());
+        } catch (Exception e) {
+            log.error("预览MySQL主题失败: dbId=" + dbId + ", modelDb=" + modelDb, e);
+            return Result.fail("获取MySQL主题失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 导入MySQL模型库主题到主题库（按主题名去重更新，字段结构一并写入）。
+     * body: {dbId, modelDb, addPrefix?, stripPrefix?, topicNames?: string[]}，topicNames 为 MySQL 原始主题名，空=全部。
+     */
+    @PostMapping("/topic/mysql/import")
+    public Result<?> importMysqlTopics(@RequestBody Map<String, Object> body) {
+        try {
+            Long dbId = null;
+            Object dbIdObj = body.get("dbId");
+            if (dbIdObj instanceof Number) {
+                dbId = ((Number) dbIdObj).longValue();
+            } else if (dbIdObj != null) {
+                dbId = Long.parseLong(dbIdObj.toString());
+            }
+            String modelDb = body.get("modelDb") != null ? body.get("modelDb").toString() : null;
+            boolean addPrefix = !Boolean.FALSE.equals(body.get("addPrefix"));
+            boolean stripPrefix = !Boolean.FALSE.equals(body.get("stripPrefix"));
+            @SuppressWarnings("unchecked")
+            List<String> topicNames = (List<String>) body.get("topicNames");
+            return Result.ok(topicImportService.importTopics(dbId, modelDb, addPrefix, stripPrefix, topicNames));
+        } catch (IllegalArgumentException e) {
+            return Result.fail(e.getMessage());
+        } catch (Exception e) {
+            log.error("导入MySQL主题失败: {}", body, e);
+            return Result.fail("导入MySQL主题失败: " + e.getMessage());
+        }
+    }
+
     // ========== 数据采集配置 CRUD ==========
 
     @GetMapping("/cjConfigs")
@@ -297,9 +368,178 @@ public class SchemeController {
 
     // ========== 样本三级联动 ==========
 
+    // ========== 仿真方案（本地） ==========
+
     @GetMapping("/sample/plans")
-    public Result<List<SamplePlan>> getSamplePlans() {
+    public Result<?> getSamplePlans() {
         return Result.ok(sampleCascadeService.getAllPlans());
+    }
+
+    // ========== 从MySQL数据库查仿真方案（实验设计） ==========
+
+    /**
+     * 从 MySQL 查询 big_sample_db.experiment_design 表，
+     * 按 ctime 排序，返回 [{id, planName}] 供仿真方案下拉使用。
+     */
+    @GetMapping("/experimentDesign/list")
+    public Result<?> getExperimentDesignList(
+            @RequestParam Long dbId,
+            @RequestParam(defaultValue = "big_sample_db") String dbName) {
+        try {
+            DatabaseSource ds = databaseSourceMapper.selectById(dbId);
+            if (ds == null) return Result.fail("数据源不存在: " + dbId);
+            if (!"MYSQL".equalsIgnoreCase(ds.getDbType())) return Result.fail("仅支持MySQL数据源");
+
+            int port = ds.getPort() != null ? ds.getPort() : 3306;
+            String url = "jdbc:mysql://" + ds.getHost() + ":" + port + "/" + dbName
+                    + "?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai";
+            java.util.List<Map<String, Object>> list = new ArrayList<>();
+            java.sql.Connection conn = java.sql.DriverManager.getConnection(url, ds.getUsername(), ds.getPassword());
+            try {
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT id, experiment_design_name FROM experiment_design ORDER BY ctime DESC");
+                java.sql.ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("planName", rs.getString("experiment_design_name"));
+                    list.add(row);
+                }
+                rs.close();
+                ps.close();
+            } finally {
+                conn.close();
+            }
+            return Result.ok(list);
+        } catch (Exception e) {
+            log.error("查询实验设计失败: dbId=" + dbId + ", dbName=" + dbName, e);
+            return Result.fail("查询实验设计失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据 experiment_design_id 查询 big_sample 表，返回 [{id, dataName}]
+     */
+    @GetMapping("/bigSample/list")
+    public Result<?> getBigSampleList(
+            @RequestParam Long dbId,
+            @RequestParam(defaultValue = "big_sample_db") String dbName,
+            @RequestParam Integer experimentDesignId) {
+        try {
+            DatabaseSource ds = databaseSourceMapper.selectById(dbId);
+            if (ds == null) return Result.fail("数据源不存在: " + dbId);
+            if (!"MYSQL".equalsIgnoreCase(ds.getDbType())) return Result.fail("仅支持MySQL数据源");
+
+            int port = ds.getPort() != null ? ds.getPort() : 3306;
+            String jdbcUrl = "jdbc:mysql://" + ds.getHost() + ":" + port + "/" + dbName
+                    + "?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai";
+            java.util.List<Map<String, Object>> list = new ArrayList<>();
+            java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, ds.getUsername(), ds.getPassword());
+            try {
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT id, name FROM big_sample WHERE experiment_design_id = ? ORDER BY id");
+                ps.setInt(1, experimentDesignId);
+                java.sql.ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("dataName", rs.getString("name"));
+                    list.add(row);
+                }
+                rs.close();
+                ps.close();
+            } finally {
+                conn.close();
+            }
+            return Result.ok(list);
+        } catch (Exception e) {
+            log.error("查询大样本失败: dbId=" + dbId + ", designId=" + experimentDesignId, e);
+            return Result.fail("查询大样本失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据 deduce_config_id（即 big_sample.id）查询 task_design_example 表
+     * 返回 [{id, dataName}]（id = task_design_example.id，dataName = task_design_example.name）
+     */
+    @GetMapping("/taskDesignExample/list")
+    public Result<?> getTaskDesignExampleList(
+            @RequestParam Long dbId,
+            @RequestParam(defaultValue = "sim_control_db_copy") String dbName,
+            @RequestParam Integer deduceConfigId) {
+        try {
+            DatabaseSource ds = databaseSourceMapper.selectById(dbId);
+            if (ds == null) return Result.fail("数据源不存在: " + dbId);
+            if (!"MYSQL".equalsIgnoreCase(ds.getDbType())) return Result.fail("仅支持MySQL数据源");
+
+            int port = ds.getPort() != null ? ds.getPort() : 3306;
+            String jdbcUrl = "jdbc:mysql://" + ds.getHost() + ":" + port + "/" + dbName
+                    + "?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai";
+            java.util.List<Map<String, Object>> list = new ArrayList<>();
+            java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, ds.getUsername(), ds.getPassword());
+            try {
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT id, name FROM task_design_example WHERE deduce_config_id = ? ORDER BY id");
+                ps.setInt(1, deduceConfigId);
+                java.sql.ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("subName", rs.getString("name"));
+                    list.add(row);
+                }
+                rs.close();
+                ps.close();
+            } finally {
+                conn.close();
+            }
+            return Result.ok(list);
+        } catch (Exception e) {
+            log.error("查询样本子集失败: dbId=" + dbId + ", deduceConfigId=" + deduceConfigId, e);
+            return Result.fail("查询样本子集失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据 task_design_example_id 查询 task_design_example_id 表
+     * 返回 [{id, dataName, deduceTaskId}]（id = 表主键，dataName = deduce_task_id，deduceTaskId = deduce_task_id）
+     */
+    @GetMapping("/deduceTask/list")
+    public Result<?> getDeduceTaskList(
+            @RequestParam Long dbId,
+            @RequestParam(defaultValue = "sim_control_db_copy") String dbName,
+            @RequestParam Integer taskDesignExampleId) {
+        try {
+            DatabaseSource ds = databaseSourceMapper.selectById(dbId);
+            if (ds == null) return Result.fail("数据源不存在: " + dbId);
+            if (!"MYSQL".equalsIgnoreCase(ds.getDbType())) return Result.fail("仅支持MySQL数据源");
+
+            int port = ds.getPort() != null ? ds.getPort() : 3306;
+            String jdbcUrl = "jdbc:mysql://" + ds.getHost() + ":" + port + "/" + dbName
+                    + "?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai";
+            java.util.List<Map<String, Object>> list = new ArrayList<>();
+            java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, ds.getUsername(), ds.getPassword());
+            try {
+                java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT id, deduce_task_id FROM task_design_example_id WHERE task_design_example_id = ? ORDER BY id");
+                ps.setInt(1, taskDesignExampleId);
+                java.sql.ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("dataName", rs.getString("deduce_task_id"));
+                    list.add(row);
+                }
+                rs.close();
+                ps.close();
+            } finally {
+                conn.close();
+            }
+            return Result.ok(list);
+        } catch (Exception e) {
+            log.error("查询实例失败: dbId=" + dbId + ", taskDesignExampleId=" + taskDesignExampleId, e);
+            return Result.fail("查询实例失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/sample/data")
@@ -317,13 +557,124 @@ public class SchemeController {
         return Result.ok(sampleCascadeService.getDetailBySubDataId(subDataId));
     }
 
+    // ========== 详细数据查询 ==========
+
+    /**
+     * 查询某个实例的主题数据（分页）。
+     * 返回 [{topicName, columns:[{name,alias}], rows:[[val,...]], total:N}]
+     */
+    @GetMapping("/topicData")
+    public Result<?> getTopicData(@RequestParam Long schemeId, @RequestParam Long instanceId,
+                                  @RequestParam(required = false, defaultValue = "1") Integer pageIndex,
+                                  @RequestParam(required = false, defaultValue = "20") Integer pageSize,
+                                  @RequestParam(required = false) Integer topicIndex) {
+        try {
+            Scheme scheme = schemeMapper.selectById(schemeId);
+            if (scheme == null || scheme.getCjListId() == null) {
+                return Result.fail("方案或采集配置不存在");
+            }
+            CjConfig cjConfig = cjConfigMapper.selectById(scheme.getCjListId());
+            if (cjConfig == null || cjConfig.getYbList() == null || cjConfig.getYbList().isEmpty()) {
+                return Result.fail("采集配置的YB_LIST为空");
+            }
+
+            List<Long> topicIds = new ArrayList<>();
+            for (String s : cjConfig.getYbList().split(",")) {
+                s = s.trim();
+                if (!s.isEmpty()) {
+                    try { topicIds.add(Long.parseLong(s)); } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (topicIds.isEmpty()) return Result.ok(new ArrayList<>());
+
+            List<TopicConfig> topics = topicConfigMapper.selectBatchIds(topicIds);
+            List<Map<String, Object>> result = new ArrayList<>();
+
+            DataSource dmDataSource = schemeProcessService.getDmDataSource();
+            try (Connection conn = dmDataSource.getConnection()) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.execute("SET SCHEMA ETL");
+                }
+                int topicIdx = 0;
+                for (TopicConfig topic : topics) {
+                    // 如果指定了 topicIndex，只处理该索引的主题
+                    if (topicIndex != null && topicIdx != topicIndex) {
+                        topicIdx++;
+                        continue;
+                    }
+                    topicIdx++;
+                    String tableName = topic.getTableName();
+                    if (tableName == null || tableName.isEmpty()) continue;
+                    List<TopicField> fields = topicFieldMapper.selectList(
+                            new LambdaQueryWrapper<TopicField>()
+                                    .eq(TopicField::getTopicId, topic.getId())
+                                    .orderByAsc(TopicField::getSortOrder));
+                    if (fields.isEmpty()) continue;
+
+                    Map<String, Object> topicData = new HashMap<>();
+                    topicData.put("topicName", topic.getTopicName());
+                    topicData.put("topicCode", topic.getTopicCode());
+
+                    // 列定义
+                    List<Map<String, String>> columns = new ArrayList<>();
+                    for (TopicField f : fields) {
+                        Map<String, String> col = new HashMap<>();
+                        col.put("name", f.getFieldName());
+                        col.put("alias", f.getFieldAlias() != null ? f.getFieldAlias() : f.getFieldName());
+                        columns.add(col);
+                    }
+                    topicData.put("columns", columns);
+
+                    String colNames = columns.stream().map(c -> c.get("name")).reduce((a, b) -> a + ", " + b).orElse("");
+                    String baseSql = " FROM ETL." + tableName + " WHERE SCHEME_ID = " + instanceId;
+
+                    // 先查总数
+                    int total = 0;
+                    try (PreparedStatement countPs = conn.prepareStatement("SELECT COUNT(*)" + baseSql)) {
+                        try (ResultSet rs = countPs.executeQuery()) {
+                            if (rs.next()) total = rs.getInt(1);
+                        }
+                    }
+                    topicData.put("total", total);
+
+                    // 分页查数据
+                    int offset = (pageIndex - 1) * pageSize;
+                    List<List<Object>> rows = new ArrayList<>();
+                    String querySql = "SELECT " + colNames + baseSql + " ORDER BY ROWNUM OFFSET " + offset + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
+                    try (PreparedStatement ps = conn.prepareStatement(querySql)) {
+                        try (ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) {
+                                List<Object> row = new ArrayList<>();
+                                for (Map<String, String> col : columns) {
+                                    row.add(rs.getObject(col.get("name")));
+                                }
+                                rows.add(row);
+                            }
+                        }
+                    }
+                    topicData.put("rows", rows);
+                    result.add(topicData);
+                }
+            }
+            return Result.ok(result);
+        } catch (Exception e) {
+            log.error("查询主题数据失败: schemeId=" + schemeId + ", instanceId=" + instanceId, e);
+            return Result.fail("查询失败: " + e.getMessage());
+        }
+    }
+
     // ========== 引接处理 ==========
 
     @PostMapping("/process")
-    public Result<?> processScheme(@RequestParam Long schemeId) {
+    public Result<?> processScheme(@RequestParam Long schemeId,
+                                   @RequestParam(required = false, defaultValue = "false") boolean reprocess) {
         SchemeProcessService.ProcessProgress progress = schemeProcessService.getProgress(schemeId);
         if (progress != null && progress.isRunning()) {
             return Result.fail("该方案正在处理中");
+        }
+        // 重新引接：先删除之前写入的数据，再重置状态
+        if (reprocess) {
+            schemeProcessService.deleteExistingData(schemeId);
         }
         schemeProcessService.initProgress(schemeId);
         schemeProcessService.processScheme(schemeId);

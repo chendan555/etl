@@ -91,7 +91,7 @@
 // 覆盖表单样式
 .el-form {
   .el-form-item__label {
-    // @include color($normalWordsClr);
+    @include color($formLabelClr);
   }
   .el-input.is-disabled .el-input__inner {
     @include bc(rgba(255, 255, 255, 0.26));
@@ -124,7 +124,7 @@
   @at-root .el-checkbox {
     @at-root .el-checkbox__input {
       @at-root .el-checkbox__label {
-        // @include color($normalWordsClr);
+        @include color($normalWordsClr);
       }
       // 浮选框内部样式
       @at-root .el-checkbox__inner {
@@ -201,6 +201,19 @@
 }
 // 树状图
 .el-tree {
+  // 树节点文字：默认 #606266 灰色在暗色背景下看不清
+  @include color($normalWordsClr);
+  // element-ui 默认白底，统一透明以跟随各页面面板底色
+  background: transparent;
+  .el-tree__empty-block {
+    @include color($normalWordsClr);
+  }
+  .el-tree-node__content:hover {
+    @include bc($currentRow);
+  }
+  &.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+    @include bc($currentRow);
+  }
   // @include bc($conterBg);
   .is-current > .el-tree-node__content,
   .el-tree-node:focus > .el-tree-node__content,
@@ -219,6 +232,8 @@
 // 表格
 .el-table {
   background-color: $contBg !important;
+  // 表格整体文字：element-ui 默认 #606266 灰色在暗色下看不清
+  @include color($tableWordClr);
   // border: 1px solid $currentRow;
   // 滚动条
   ::-webkit-scrollbar-thumb {
@@ -305,6 +320,20 @@
 .el-table--enable-row-transition .el-table__body td {
   @include bc($tableEvenBg);
 }
+// 状态标签（如"未完成"），element-ui 默认浅灰底灰字在暗色下刺眼
+.el-tag.el-tag--info {
+  background-color: transparent;
+  border-color: $tableBorderClr;
+  @include color($normalWordsClr);
+}
+// 分页文字（"共 x 条"、前往 x 页）
+.el-pagination {
+  @include color($normalWordsClr);
+  .el-pagination__total,
+  .el-pagination__jump {
+    @include color($normalWordsClr);
+  }
+}
 // tab页面
 .el-tabs {
   &.flex-tab {
@@ -314,7 +343,7 @@
   }
 
   &__item {
-    // @include color($tableWordClr);
+    @include color($tableWordClr);
     border-radius: 6px;
     &:hover {
       @include color($whiteWordClr);
@@ -330,6 +359,7 @@
 // 弹窗
 .el-dialog {
   @include bc($dialogContBgClr);
+  @include color($normalWordsClr);
   &__header {
     height: $dialogHeaderHei;
     background: linear-gradient($dialogTtlBgClr, $dialogTtlBgClr);

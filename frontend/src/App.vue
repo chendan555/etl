@@ -798,8 +798,8 @@ html {
       > .navdiv {
         width: 240px;
         height: 100%;
-        background: url('~@/assets/mainPage/navBg.png') no-repeat center;
-        background-size: 100% 100%;
+        /* 原为浅色渐变图 navBg.png，暗色主题下左侧菜单发白、文字对比度不足，改用主题色渐变 */
+        background: linear-gradient(180deg, var(--headerBg, #061730), var(--mainPageItemBgClr, #0a3577));
         // border: 1px solid $currentRow;
         margin-right: 10px;
         position: relative;
@@ -820,7 +820,7 @@ html {
         .centerdiv {
           height: 100%;
           // background: #11243d;
-          box-shadow: 0px 0px 5px #fff;
+          box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
           > p {
             cursor: pointer;
             // padding: 10px 10px 10px 20%;

@@ -209,14 +209,15 @@ export default {
           padding: 6px 12px;
           cursor: pointer;
           &:hover {
-            background: #f0f2f5;
+            background: var(--currentRow, #186097);
           }
           .item-label {
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #333;
+            // 原为 #333，暗色背景下看不清，跟随主题文字色
+            color: $normalWordsClr;
             i {
               margin-right: 4px;
             }

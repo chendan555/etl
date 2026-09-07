@@ -56,4 +56,4 @@ file:
 batch:
   execution:
     # 并行执行的线程数
-    parallel-size: 1
+    parallel-size: 2

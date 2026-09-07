@@ -25,7 +25,6 @@ public class OperatorRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(OperatorRegistry.class);
     private static final String CUSTOM_PACKAGE = "com.gx.etl.operators.custom";
-    private static final String CUSTOM_DIR = "operators/custom";
 
     private final Map<String, AbstractOperator> operatorMap = new LinkedHashMap<>();
     private final List<AbstractOperator> operatorList;
@@ -59,7 +58,8 @@ public class OperatorRegistry {
                             .ne(OperatorType::getImplementation, "")
                             .ne(OperatorType::getImplementation, "null"));
 
-            Path classesDir = Paths.get(CUSTOM_DIR, "classes");
+            // 与 DynamicOperatorCompiler 的输出目录保持一致（绝对路径，锚定 user.dir）
+            Path classesDir = DynamicOperatorCompiler.getCustomDir().resolve("classes");
             if (!Files.exists(classesDir)) {
                 return;
             }

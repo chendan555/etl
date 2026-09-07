@@ -1150,6 +1150,21 @@ export default Vue.extend({
           params.index = this.ruleForm.sheetName;
           params.fileName = this.ruleForm.filefield;
           params.spreadsheet_type = this.ruleForm.spreadsheet_type;
+          break;
+        case 'getTextFileFields': {
+          // 文件选择保存在"文件"标签页表格数据里（alias: file），ruleForm.fileName 为空
+          // 文件选择保存在"文件"标签页表格数据里（alias: file），ruleForm.fileName 为空；
+          // treeSelect 的值是数组，需取第一个元素，否则 transferToFormData 会 JSON.stringify 成 ["..."]
+          const fileRow = (this.ruleForm.file || [])[0] || {};
+          const rawPath = fileRow.fileName;
+          const filePath = (Array.isArray(rawPath) ? rawPath[0] : rawPath) || this.ruleForm['inputFiles.fileName'] || this.ruleForm.filefield;
+          if (filePath) params.fileName = filePath;
+          params['content.separator'] = this.ruleForm['content.separator'] || this.ruleForm.separator;
+          params['content.header'] = this.ruleForm['content.header'] || (this.ruleForm.header ? 'Y' : 'N');
+          params['content.nrHeaderLines'] = this.ruleForm['content.nrHeaderLines'] || this.ruleForm.nrHeaderLines;
+          params['content.encoding'] = this.ruleForm['content.encoding'] || this.ruleForm.encoding;
+          break;
+        }
         default:
           break;
       }
@@ -1961,7 +1976,8 @@ export default Vue.extend({
 /* 算子弹窗标题栏样式 - 深蓝渐变 */
 #previewDialog {
   ::v-deep .el-dialog {
-    background-color: #fff;
+    /* 跟随主题弹窗内容区配色，保持与全局弹窗一致 */
+    background-color: var(--dialogContBgClr, #0b1a2e);
     .el-dialog__header {
       padding: 0 15px !important;
       margin: 0;
@@ -1989,7 +2005,7 @@ export default Vue.extend({
 }
 /* 参数执行/批量处理弹窗标题栏样式 */
 ::v-deep .dialogModel1 .el-dialog {
-  background-color: #fff;
+  background-color: var(--dialogContBgClr, #0b1a2e);
 }
 ::v-deep .dialogModel1 .el-dialog__header {
   padding: 0 15px !important;
@@ -2022,27 +2038,27 @@ export default Vue.extend({
     }
   }
 }
-/* 修复白色弹窗内表格悬浮文字颜色 */
+/* 暗色弹窗内表格文字与悬浮行配色（原为白底设计的 #333/#ecf5ff） */
 ::v-deep .dialogModel1 .el-table__body tr.hover-row > td,
 ::v-deep .dialogModel1 .el-table__body tr.el-table__row--striped.hover-row > td {
-  color: #333 !important;
-  background-color: #ecf5ff !important;
+  color: var(--tableWordClr, #c8ddf0) !important;
+  background-color: var(--currentRow, #186097) !important;
 }
 ::v-deep .dialogModel1 .el-table__body tr:hover > td {
-  color: #333 !important;
-  background-color: #ecf5ff !important;
+  color: var(--tableWordClr, #c8ddf0) !important;
+  background-color: var(--currentRow, #186097) !important;
 }
 ::v-deep .dialogModel1 .el-table .cell {
-  color: #333;
+  color: var(--tableWordClr, #c8ddf0);
 }
 ::v-deep .dialogModel1 .el-table th .cell {
-  color: #333;
+  color: var(--tableHeaderClr, #a0c4e8);
 }
 ::v-deep .dialogModel1 .el-table td,
 ::v-deep .dialogModel1 .el-table th {
-  border-color: #ebeef5;
+  border-color: var(--tableBorderClr, #1a3a6a);
 }
 ::v-deep .dialogModel1 .el-table td .el-input__inner {
-  color: #333;
+  color: var(--tableWordClr, #c8ddf0);
 }
 </style>

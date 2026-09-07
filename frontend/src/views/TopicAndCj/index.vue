@@ -60,6 +60,7 @@
             @keyup.enter.native="loadTopics"
           />
           <el-button type="primary" size="small" style="margin-left: 5px" @click="loadTopics">搜索</el-button>
+          <el-button type="primary" size="small" style="margin-left: 5px" @click="openImportDialog">从数据库获取</el-button>
           <el-button type="primary" size="small" style="margin-left: 5px" @click="openTopicDialog()">新增</el-button>
         </div>
       </div>
@@ -124,6 +125,82 @@
       <div slot="footer">
         <el-button size="small" @click="topic.dialogVisible = false">取消</el-button>
         <el-button type="primary" size="small" @click="saveTopic">保存</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 从MySQL模型库导入主题弹窗 -->
+    <el-dialog title="从数据库获取主题" :visible.sync="importDialog.visible" width="780px" :close-on-click-modal="false">
+      <el-form inline size="small" label-width="90px">
+        <el-form-item label="数据源">
+          <el-select v-model="importDialog.dbId" placeholder="请选择MySQL数据源" style="width: 200px" filterable>
+            <el-option v-for="item in importDialog.mysqlDatabases" :key="item.value" :label="item.name" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模型库名">
+          <el-input v-model="importDialog.modelDb" placeholder="如 modelmanager" style="width: 160px" />
+        </el-form-item>
+        <el-form-item>
+          <el-checkbox v-model="importDialog.addPrefix" @change="repreviewIfNeeded">添加前缀 TOPIC_MSG_</el-checkbox>
+          <el-checkbox v-model="importDialog.stripPrefix" @change="repreviewIfNeeded">去掉原前缀</el-checkbox>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="small" :loading="importDialog.previewing" @click="reconnectAndPreview">连接并预览</el-button>
+        </el-form-item>
+      </el-form>
+      <div style="display: flex; align-items: center; margin-bottom: 8px">
+        <el-input
+          v-model="importDialog.keyword"
+          placeholder="搜索主题名称/备注"
+          size="small"
+          style="width: 220px"
+          clearable
+          @clear="searchMysqlTopics"
+          @keyup.enter.native="searchMysqlTopics"
+        />
+        <el-button type="primary" size="small" style="margin-left: 5px" @click="searchMysqlTopics">搜索</el-button>
+        <span v-if="importDialog.selectedNames.length" style="margin-left: auto; color: #909399; font-size: 12px">
+          已选 {{ importDialog.selectedNames.length }} 个（可跨页累计）
+        </span>
+      </div>
+      <el-table
+        ref="previewTable"
+        :data="importDialog.previewList"
+        border
+        size="mini"
+        max-height="320"
+        row-key="rawName"
+        style="width: 100%"
+        @selection-change="onPreviewSelectionChange"
+      >
+        <el-table-column type="selection" width="45" reserve-selection />
+        <el-table-column prop="topicName" label="主题名称" show-overflow-tooltip />
+        <el-table-column prop="topicCode" label="主题别名" show-overflow-tooltip />
+        <el-table-column prop="remark" label="备注" show-overflow-tooltip />
+        <el-table-column prop="fieldCount" label="字段数" width="70" />
+      </el-table>
+      <el-pagination
+        v-if="importDialog.total > 0"
+        layout="total, prev, pager, next"
+        :total="importDialog.total"
+        :page-size="importDialog.pageSize"
+        :current-page="importDialog.pageIndex"
+        small
+        style="margin-top: 5px; text-align: right"
+        @current-change="onPreviewPageChange"
+      />
+      <div style="margin-top: 8px; color: #909399; font-size: 12px">
+        主题名称取 MySQL 主题的备注（汉字，为空时用别名）；主题别名为技术名，可勾选"去掉原前缀"（去除 TOPIC_XX_）和"添加前缀 TOPIC_MSG_"。按主题名称去重：已存在的主题只更新别名与字段。
+      </div>
+      <div slot="footer">
+        <el-button size="small" @click="clearSelected">清空选择</el-button>
+        <el-button size="small" @click="importDialog.visible = false">取消</el-button>
+        <el-button
+          type="primary"
+          size="small"
+          :loading="importDialog.importing"
+          :disabled="importDialog.selectedNames.length === 0"
+          @click="doImport"
+        >导入所选（{{ importDialog.selectedNames.length }}）</el-button>
       </div>
     </el-dialog>
 
@@ -192,6 +269,22 @@ export default {
         },
         topicList: [],
         selectedTopicIds: []
+      },
+      importDialog: {
+        visible: false,
+        dbId: null,
+        modelDb: 'modelmanager',
+        addPrefix: true,
+        stripPrefix: true,
+        keyword: '',
+        pageIndex: 1,
+        pageSize: 20,
+        total: 0,
+        mysqlDatabases: [],
+        previewing: false,
+        importing: false,
+        previewList: [],
+        selectedNames: []
       }
     };
   },
@@ -270,6 +363,121 @@ export default {
           }
         });
       }).catch(() => {});
+    },
+
+    // ========== 从MySQL模型库导入主题 ==========
+    openImportDialog() {
+      this.importDialog.visible = true;
+      this.importDialog.keyword = '';
+      this.importDialog.pageIndex = 1;
+      this.importDialog.total = 0;
+      this.importDialog.previewList = [];
+      this.importDialog.selectedNames = [];
+      if (this.$refs.previewTable) this.$refs.previewTable.clearSelection();
+      if (!this.importDialog.mysqlDatabases.length) {
+        this.loadMysqlDatabases();
+      }
+    },
+    loadMysqlDatabases() {
+      API.getDatabases().then(res => {
+        if (res.data && res.data.success) {
+          const list = res.data.data || [];
+          this.importDialog.mysqlDatabases = list.filter(d => (d.dbType || '').toUpperCase() === 'MYSQL');
+          if (!this.importDialog.mysqlDatabases.length) {
+            this.$message.warning('数据源管理中没有启用的MySQL数据源，请先到数据源管理新增');
+          } else if (!this.importDialog.dbId) {
+            this.importDialog.dbId = this.importDialog.mysqlDatabases[0].value;
+          }
+        }
+      });
+    },
+    // 连接并预览：重置回第一页并清空跨页勾选（换连接了）
+    reconnectAndPreview() {
+      this.importDialog.pageIndex = 1;
+      if (this.$refs.previewTable) this.$refs.previewTable.clearSelection();
+      this.previewMysqlTopics();
+    },
+    searchMysqlTopics() {
+      this.importDialog.pageIndex = 1;
+      this.previewMysqlTopics();
+    },
+    previewMysqlTopics() {
+      if (!this.importDialog.dbId) {
+        this.$message.warning('请选择MySQL数据源');
+        return;
+      }
+      if (!this.importDialog.modelDb || !this.importDialog.modelDb.trim()) {
+        this.$message.warning('请填写模型库名');
+        return;
+      }
+      this.importDialog.previewing = true;
+      API.sampleCascade.previewMysqlTopics({
+        dbId: this.importDialog.dbId,
+        modelDb: this.importDialog.modelDb.trim(),
+        addPrefix: this.importDialog.addPrefix,
+        stripPrefix: this.importDialog.stripPrefix,
+        keyword: this.importDialog.keyword,
+        pageIndex: this.importDialog.pageIndex,
+        pageSize: this.importDialog.pageSize
+      }).then(res => {
+        if (res.data && res.data.success) {
+          const d = res.data.data || {};
+          this.importDialog.previewList = d.records || [];
+          this.importDialog.total = d.total || 0;
+        } else {
+          this.$message.error(res.data.msg || '获取MySQL主题失败');
+        }
+      }).catch(() => {
+        this.$message.error('连接失败，请确认后端服务已更新重启且数据源可达');
+      }).finally(() => {
+        this.importDialog.previewing = false;
+      });
+    },
+    // 勾选前缀选项后，如果已经预览过就自动重新预览（保留当前页与勾选）
+    reprviewIfNeeded() {
+      if (this.importDialog.previewList.length || this.importDialog.total) {
+        this.previewMysqlTopics();
+      }
+    },
+    onPreviewPageChange(page) {
+      this.importDialog.pageIndex = page;
+      this.previewMysqlTopics();
+    },
+    onPreviewSelectionChange(selection) {
+      this.importDialog.selectedNames = selection.map(item => item.rawName);
+    },
+    clearSelected() {
+      if (this.$refs.previewTable) this.$refs.previewTable.clearSelection();
+      this.importDialog.selectedNames = [];
+    },
+    doImport() {
+      this.importDialog.importing = true;
+      API.sampleCascade.importMysqlTopics({
+        dbId: this.importDialog.dbId,
+        modelDb: this.importDialog.modelDb.trim(),
+        addPrefix: this.importDialog.addPrefix,
+        stripPrefix: this.importDialog.stripPrefix,
+        topicNames: this.importDialog.selectedNames
+      }).then(res => {
+        if (res.data && res.data.success) {
+          const d = res.data.data || {};
+          const failCount = (d.failed || []).length;
+          this.$message.success(`导入完成：新增 ${d.imported || 0} 个，更新 ${d.updated || 0} 个` +
+            (failCount ? `，失败 ${failCount} 个` : ''));
+          (d.failed || []).forEach(f => {
+            this.$message.error(`主题 ${f.topicName} 导入失败：${f.error}`);
+          });
+          this.importDialog.visible = false;
+          this.loadTopics();
+          this.loadAllTopics();
+        } else {
+          this.$message.error(res.data.msg || '导入失败');
+        }
+      }).catch(() => {
+        this.$message.error('连接失败，请确认后端服务已更新重启且数据源可达');
+      }).finally(() => {
+        this.importDialog.importing = false;
+      });
     },
 
     // ========== 采集配置 ==========
@@ -378,7 +586,7 @@ export default {
 .panel-title {
   font-size: 15px;
   font-weight: bold;
-  color: #303133;
+  color: var(--normalWordsClr, #303133);
   white-space: nowrap;
 }
 .topic-name-cell {

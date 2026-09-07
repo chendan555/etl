@@ -5,6 +5,8 @@ import com.gx.etl.datasource.service.DatabaseSourceService;
 import com.gx.etl.operator.core.*;
 import org.springframework.stereotype.Service;
 
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -142,6 +144,10 @@ public class FlowExecutionEngine {
             String status = "完成";
             try {
                 output = operator.execute(ctx, input);
+                // 统一处理特殊类型：将 Clob/NClob 等转换为 String
+                if (output != null) {
+                    output = normalizeDataSet(output);
+                }
                 // 传播字段注释：如果算子没有自己设置注释，从输入继承
                 if (output != null && (output.getColumnComments() == null || output.getColumnComments().isEmpty())
                         && input.getColumnComments() != null && !input.getColumnComments().isEmpty()) {
@@ -167,8 +173,10 @@ public class FlowExecutionEngine {
             totalRows += rowCount;
 
             // 记录成功步骤的指标
+            long readCount = input != null && !input.isEmpty() ? input.count() : rowCount;
+            long inputCount = input != null && !input.isEmpty() ? input.count() : 0;
             long speed = elapsed > 0 ? rowCount * 1000 / elapsed : 0;
-            stepMetrics.add(buildStepMetric(node.getName(), 0, rowCount, 0, rowCount, 0, 0, 0, status, elapsed, speed));
+            stepMetrics.add(buildStepMetric(node.getName(), readCount, rowCount, inputCount, rowCount, 0, 0, 0, status, elapsed, speed));
             Map<String, String> statusItem = new HashMap<>();
             statusItem.put("stepName", node.getName());
             statusItem.put("stepStatus", "success");
@@ -267,6 +275,56 @@ public class FlowExecutionEngine {
         DataSet result = DataSet.of(allColumns, allRows);
         result.setColumnComments(mergedComments);
         return result;
+    }
+
+    /**
+     * 规范化 DataSet：将所有行中的 Clob/NClob 等数据库特殊类型转换为 String
+     * 这样算子中就可以直接使用 toString() 或转型为 String
+     */
+    private DataSet normalizeDataSet(DataSet ds) {
+        List<String> columns = ds.getColumnNames();
+        List<DataRow> normalizedRows = new ArrayList<>();
+        for (DataRow row : ds) {
+            DataRow newRow = new DataRow();
+            for (String col : columns) {
+                Object val = row.get(col);
+                newRow.put(col, convertValue(val));
+            }
+            normalizedRows.add(newRow);
+        }
+        DataSet result = DataSet.of(columns, normalizedRows);
+        result.setColumnComments(ds.getColumnComments());
+        return result;
+    }
+
+    /**
+     * 将单个值转换为合适的 Java 类型
+     * 主要处理数据库返回的 Clob/NClob 类型
+     */
+    private Object convertValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        // 处理 Clob 类型（MySQL TEXT、Oracle CLOB、DM CLOB 等）
+        if (value instanceof Clob) {
+            try {
+                Clob clob = (Clob) value;
+                return clob.getSubString(1, (int) clob.length());
+            } catch (Exception e) {
+                return value.toString();
+            }
+        }
+        // 处理 NClob 类型
+        if (value instanceof NClob) {
+            try {
+                NClob nclob = (NClob) value;
+                return nclob.getSubString(1, (int) nclob.length());
+            } catch (Exception e) {
+                return value.toString();
+            }
+        }
+        // 其他类型直接返回
+        return value;
     }
 
     private Map<Long, DatabaseSource> loadDataSources() {

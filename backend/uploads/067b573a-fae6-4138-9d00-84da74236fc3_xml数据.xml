@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <record>
+        <name>张三</name>
+        <age>1</age>
+    </record>
+    <record>
+        <name>李四</name>
+        <age>1</age>       
+    </record>
+    <record>
+        <name>王五</name>
+        <age>1</age>        
+    </record>
+</data>

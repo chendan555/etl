@@ -12,9 +12,17 @@ import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -469,10 +477,12 @@ public class YjExecService {
                 protocol = yjProtocolService.getById(config.getAnalysisProtocolId());
             }
 
-            // 确定分隔符
+            // 确定分隔符：协议显式配置优先，否则按文件内容自动探测（逗号/制表符/分号/竖线）
             String separator = "\t"; // 默认制表符
             if (protocol != null && protocol.getSeparator() != null && !protocol.getSeparator().isEmpty()) {
                 separator = protocol.getSeparator();
+            } else {
+                separator = detectSeparator(file, config.getJumpRow());
             }
 
             // 确定目标表名
@@ -507,14 +517,22 @@ public class YjExecService {
             // 判断文件类型并解析
             String fileType = protocol != null ? protocol.getFileType() : null;
             List<String[]> fileRows;
+            List<String> xmlColumnNames = null;
             if ("XML".equalsIgnoreCase(fileType)) {
-                fileRows = parseXmlFile(file);
+                XmlParseResult xmlResult = parseXmlFile(file);
+                xmlColumnNames = xmlResult.getColumnNames();
+                fileRows = xmlResult.getRows();
             } else {
                 fileRows = parseTextFile(file, separator, config.getJumpRow());
             }
 
             if (fileRows.isEmpty()) {
                 throw new RuntimeException("文件内容为空");
+            }
+
+            // 列名优先级：解析协议列定义 > XML 字段名 > 默认 COL_n
+            if (columnNames.isEmpty() && xmlColumnNames != null && !xmlColumnNames.isEmpty()) {
+                columnNames = xmlColumnNames;
             }
 
             // 写入目标库
@@ -531,7 +549,7 @@ public class YjExecService {
                     boolean tableExists = checkTableExists(tgtConn, targetDs.getDbType(), tgtSchema, tableName);
                     if (!tableExists) {
                         StringBuilder createSql = new StringBuilder("CREATE TABLE " + fullTgtTable + " (");
-                        if (protocol != null && !columnNames.isEmpty()) {
+                        if (!columnNames.isEmpty()) {
                             for (int i = 0; i < columnNames.size(); i++) {
                                 if (i > 0) createSql.append(", ");
                                 createSql.append(columnNames.get(i) + " VARCHAR(2000)");
@@ -559,8 +577,9 @@ public class YjExecService {
 
                     try (PreparedStatement pstmt = tgtConn.prepareStatement(insertSql.toString())) {
                         for (String[] row : fileRows) {
-                            for (int i = 0; i < colCount && i < row.length; i++) {
-                                pstmt.setString(i + 1, row[i]);
+                            // 补齐缺失字段为 null，避免达梦等驱动对未绑定占位符报错（有参数未绑定）
+                            for (int i = 0; i < colCount; i++) {
+                                pstmt.setString(i + 1, i < row.length ? row[i] : null);
                             }
                             pstmt.addBatch();
                             rowCount++;
@@ -603,20 +622,19 @@ public class YjExecService {
     }
 
     /**
-     * 解析文本文件（TXT/CSV/DAT），按分隔符拆分
+     * 解析文本文件（TXT/CSV/DAT），按分隔符拆分。
+     * 编码优先 UTF-8（含 BOM），UTF-8 严格解码失败则回退 GBK。
      */
     private List<String[]> parseTextFile(File file, String separator, String jumpRow) throws IOException {
         List<String[]> rows = new ArrayList<>();
-        List<Integer> jumpRows = new ArrayList<>();
-        if (jumpRow != null && !jumpRow.isEmpty()) {
-            for (String s : jumpRow.split(",")) {
-                jumpRows.add(Integer.parseInt(s.trim()));
-            }
-        }
+        List<Integer> jumpRows = parseJumpRows(jumpRow);
         // Java regex 需要转义特殊字符
         String regex = "\t".equals(separator) ? "\t" : java.util.regex.Pattern.quote(separator);
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        Charset charset = detectCharset(bytes);
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new ByteArrayInputStream(bytes), charset))) {
             String line;
             int lineNum = 0;
             while ((line = reader.readLine()) != null) {
@@ -634,37 +652,144 @@ public class YjExecService {
     }
 
     /**
-     * 解析扁平 XML 文件，<record> 下 <key>value</key> 拍平成行
+     * 解析跳行配置："1,2" → [1, 2]
      */
-    private List<String[]> parseXmlFile(File file) throws Exception {
-        List<String[]> rows = new ArrayList<>();
+    private List<Integer> parseJumpRows(String jumpRow) {
+        List<Integer> jumpRows = new ArrayList<>();
+        if (jumpRow != null && !jumpRow.isEmpty()) {
+            for (String s : jumpRow.split(",")) {
+                jumpRows.add(Integer.parseInt(s.trim()));
+            }
+        }
+        return jumpRows;
+    }
+
+    /**
+     * 自动探测文本分隔符：对样例行按候选分隔符（逗号/制表符/分号/竖线）拆分，
+     * 选取拆分列数一致且最多的分隔符；无法判定时回退制表符。
+     */
+    private String detectSeparator(File file, String jumpRow) throws IOException {
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        Charset charset = detectCharset(bytes);
+        List<String> samples = new ArrayList<>();
+        List<Integer> jumpRows = parseJumpRows(jumpRow);
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new ByteArrayInputStream(bytes), charset))) {
+            String line;
+            int lineNum = 0;
+            while ((line = reader.readLine()) != null && samples.size() < 20) {
+                lineNum++;
+                if (jumpRows.contains(lineNum)) continue;
+                if (line.trim().isEmpty()) continue;
+                if (line.length() > 500) line = line.substring(0, 500);
+                samples.add(line);
+            }
+        }
+        if (samples.isEmpty()) return "\t";
+
+        String[] candidates = {",", "\t", ";", "|"};
+        String best = "\t";
+        int bestCount = 0;
+        for (String cand : candidates) {
+            int count = -1;
+            boolean consistent = true;
+            for (String sample : samples) {
+                int parts = sample.split(java.util.regex.Pattern.quote(cand), -1).length;
+                if (count == -1) {
+                    count = parts;
+                } else if (count != parts) {
+                    consistent = false;
+                    break;
+                }
+            }
+            // 取拆分列数一致且至少 2 列的分隔符中列数最多的
+            if (consistent && count > 1 && count > bestCount) {
+                best = cand;
+                bestCount = count;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 探测文本编码：UTF-8 BOM → UTF-8；UTF-8 可严格解码 → UTF-8；否则回退 GBK。
+     */
+    private Charset detectCharset(byte[] bytes) {
+        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xEF && (bytes[1] & 0xFF) == 0xBB && (bytes[2] & 0xFF) == 0xBF) {
+            return StandardCharsets.UTF_8;
+        }
+        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try {
+            decoder.decode(ByteBuffer.wrap(bytes));
+            return StandardCharsets.UTF_8;
+        } catch (CharacterCodingException e) {
+            return Charset.forName("GBK");
+        }
+    }
+
+    /**
+     * 解析扁平 XML 文件，<record> 下 <key>value</key> 拍平成行。
+     * 返回字段名 + 数据行（表头不入库），字段名用于无协议列定义时建表。
+     */
+    private XmlParseResult parseXmlFile(File file) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            // XXE 防护：禁止 DOCTYPE 声明与外部实体
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        } catch (Exception e) {
+            log.warn("XML 解析安全特性设置失败，按默认配置解析: {}", e.getMessage());
+        }
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(file);
         doc.getDocumentElement().normalize();
 
+        List<String> columnNames = new ArrayList<>();
+        List<String[]> rows = new ArrayList<>();
         // 找到所有 record 节点
         NodeList recordNodes = doc.getElementsByTagName("record");
         for (int i = 0; i < recordNodes.getLength(); i++) {
             Element record = (Element) recordNodes.item(i);
             NodeList fields = record.getChildNodes();
             List<String> values = new ArrayList<>();
-            List<String> colNames = new ArrayList<>();
             for (int j = 0; j < fields.getLength(); j++) {
                 if (fields.item(j) instanceof Element) {
                     Element field = (Element) fields.item(j);
-                    colNames.add(field.getTagName());
+                    if (i == 0) {
+                        columnNames.add(field.getTagName());
+                    }
                     values.add(field.getTextContent().trim());
                 }
-            }
-            if (i == 0 && !colNames.isEmpty()) {
-                rows.add(colNames.toArray(new String[0]));
             }
             if (!values.isEmpty()) {
                 rows.add(values.toArray(new String[0]));
             }
         }
-        return rows;
+        return new XmlParseResult(columnNames, rows);
+    }
+
+    /**
+     * XML 解析结果：字段名（用于建表列）+ 数据行（不含表头）
+     */
+    private static class XmlParseResult {
+        private final List<String> columnNames;
+        private final List<String[]> rows;
+
+        XmlParseResult(List<String> columnNames, List<String[]> rows) {
+            this.columnNames = columnNames;
+            this.rows = rows;
+        }
+
+        List<String> getColumnNames() {
+            return columnNames;
+        }
+
+        List<String[]> getRows() {
+            return rows;
+        }
     }
 
     /**

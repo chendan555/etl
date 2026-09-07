@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <record>
+        <id>1001</id>
+        <name>张三</name>
+        <sex>M</sex>
+        <birthday>1990-01-01</birthday>
+    </record>
+    <record>
+        <id>1002</id>
+        <name>李四</name>
+        <sex>F</sex>
+        <birthday>1992-02-02</birthday>
+    </record>
+</data>

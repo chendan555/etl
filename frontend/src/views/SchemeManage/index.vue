@@ -143,6 +143,23 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="实例" v-if="!form.id && cascade.subDataIds.length > 0">
+          <el-select
+            v-model="cascade.instanceIds"
+            placeholder="请选择实例（可多选，不选则保存全部）"
+            style="width: 100%"
+            multiple
+            collapse-tags
+            clearable
+          >
+            <el-option
+              v-for="item in allInstances"
+              :key="item.id"
+              :label="item.dataName"
+              :value="item.dataName"
+            />
+          </el-select>
+        </el-form-item>
       </el-form>
 
       <div slot="footer">
@@ -219,7 +236,7 @@
           :stroke-width="20"
           text-inside
         />
-        <p style="margin-top: 15px; color: #606266;">
+        <p style="margin-top: 15px; color: var(--normalWordsClr, #c8ddf0);">
           {{ progressFinished ? '处理完成' : '处理中...' }} {{ progressCompleted }} / {{ progressTotal }}
         </p>
       </div>
@@ -274,10 +291,12 @@ export default {
       sampleDataList: [],
       sampleSubDataList: [],
       sampleDetailMap: {},
+      instanceListMap: {},
       cascade: {
         planId: null,
         dataId: null,
-        subDataIds: []
+        subDataIds: [],
+        instanceIds: []
       },
 
       // 详情弹窗
@@ -303,6 +322,9 @@ export default {
       if (!this.detailData || !this.detailData.detailList) return [];
       const start = (this.detailPage - 1) * this.detailPageSize;
       return this.detailData.detailList.slice(start, start + this.detailPageSize);
+    },
+    allInstances() {
+      return (this.instanceListMap._all || []);
     }
   },
   mounted() {
@@ -357,10 +379,15 @@ export default {
       });
     },
     loadSamplePlans() {
-      API.sampleCascade.getSamplePlans().then(res => {
+      // 从 MySQL big_sample_db.experiment_design 查仿真方案（按 ctime 排序）
+      API.sampleCascade.getExperimentDesignList({ dbId: 2, dbName: 'big_sample_db' }).then(res => {
         if (res.data && res.data.success) {
           this.samplePlans = res.data.data || [];
+        } else {
+          this.$message.warning('获取实验设计失败: ' + (res.data.msg || ''));
         }
+      }).catch(() => {
+        this.$message.warning('获取实验设计失败，请确认MySQL数据源连接正常');
       });
     },
 
@@ -368,21 +395,32 @@ export default {
     onPlanChange(planId) {
       this.cascade.dataId = null;
       this.cascade.subDataIds = [];
+      this.cascade.instanceIds = [];
       this.sampleDataList = [];
       this.sampleSubDataList = [];
+      this.sampleDetailMap = {};
+      this.instanceListMap = {};
       if (!planId) return;
-      API.sampleCascade.getSampleDataByPlanId(planId).then(res => {
+      // 从 MySQL big_sample_db.big_sample 按 experiment_design_id 查大样本
+      API.sampleCascade.getBigSampleList({ dbId: 2, dbName: 'big_sample_db', experimentDesignId: planId }).then(res => {
         if (res.data && res.data.success) {
           this.sampleDataList = res.data.data || [];
+        } else {
+          this.$message.warning('获取大样本失败: ' + (res.data.msg || ''));
         }
+      }).catch(() => {
+        this.$message.warning('获取大样本失败，请确认MySQL连接正常');
       });
     },
     onDataChange(dataId) {
       this.cascade.subDataIds = [];
+      this.cascade.instanceIds = [];
       this.sampleSubDataList = [];
       this.sampleDetailMap = {};
+      this.instanceListMap = {};
       if (!dataId) return;
-      API.sampleCascade.getSampleSubDataByDataId(dataId).then(res => {
+      // 大样本选中 → 查 sim_control_db_copy.task_design_example（按 deduce_config_id = big_sample.id 过滤）
+      API.sampleCascade.getTaskDesignExampleList({ dbId: 2, dbName: 'sim_control_db_copy', deduceConfigId: dataId }).then(res => {
         if (res.data && res.data.success) {
           this.sampleSubDataList = res.data.data || [];
         }
@@ -390,15 +428,33 @@ export default {
     },
     onSubDataChange(subDataIds) {
       this.sampleDetailMap = {};
+      this.instanceListMap = {};
+      this.cascade.instanceIds = [];
       if (!subDataIds || subDataIds.length === 0) return;
-      // 获取每个选中三级下的四级数据
-      subDataIds.forEach(id => {
-        API.sampleCascade.getSampleDetailBySubDataId(id).then(res => {
+      // 样本子集选中 → 查 sim_control_db_copy.task_design_example_id（按 task_design_example_id = subId 过滤）
+      const promises = subDataIds.map(id => {
+        return API.sampleCascade.getDeduceTaskList({ dbId: 2, dbName: 'sim_control_db_copy', taskDesignExampleId: id }).then(res => {
           if (res.data && res.data.success) {
-            const ids = (res.data.data || []).map(item => item.id);
-            this.sampleDetailMap[id] = ids;
+            const instances = (res.data.data || []);
+            this.sampleDetailMap[id] = instances.map(i => i.dataName); // deduce_task_id 列表
+            return { id, instances };
           }
+          return { id, instances: [] };
         });
+      });
+      Promise.all(promises).then(results => {
+        // 合并所有子集下的实例，去重
+        const allInstances = [];
+        const seen = new Set();
+        results.forEach(r => {
+          r.instances.forEach(inst => {
+            if (!seen.has(inst.id)) {
+              seen.add(inst.id);
+              allInstances.push(inst);
+            }
+          });
+        });
+        this.instanceListMap = { _all: allInstances };
       });
     },
 
@@ -440,10 +496,11 @@ export default {
         transId: null,
         status: 0
       };
-      this.cascade = { planId: null, dataId: null, subDataIds: [] };
+      this.cascade = { planId: null, dataId: null, subDataIds: [], instanceIds: [] };
       this.sampleDataList = [];
       this.sampleSubDataList = [];
       this.sampleDetailMap = {};
+      this.instanceListMap = {};
       this.$nextTick(() => {
         if (this.$refs.schemeForm) {
           this.$refs.schemeForm.clearValidate();
@@ -469,7 +526,7 @@ export default {
           return;
         }
 
-        // 选了二级，确定要处理的三级列表
+        // 选了大样本，确定要处理的样本子集列表
         const subIds = this.cascade.subDataIds.length > 0
           ? this.cascade.subDataIds
           : this.sampleSubDataList.map(item => item.id);
@@ -479,22 +536,39 @@ export default {
           return;
         }
 
-        // 获取每个三级下的四级数据
+        // 对每个子集，确保有实例数据：没有就现场查一次 MySQL
         const promises = subIds.map(subId => {
           const subItem = this.sampleSubDataList.find(s => s.id === subId);
-          return API.sampleCascade.getSampleDetailBySubDataId(subId).then(res => {
+          const cached = this.sampleDetailMap[subId];
+          if (cached && cached.length > 0) {
+            return Promise.resolve(cached);
+          }
+          // 现场查 task_design_example_id 表
+          return API.sampleCascade.getDeduceTaskList({
+            dbId: 2,
+            dbName: 'sim_control_db_copy',
+            taskDesignExampleId: subId
+          }).then(res => {
             if (res.data && res.data.success) {
-              return (res.data.data || []).map(item => item.id);
+              return (res.data.data || []).map(i => i.dataName);
             }
             return [];
-          }).then(detailIds => ({
-            ybId: subId,
-            ybName: subItem ? subItem.subName : '',
-            ybList: detailIds.join(',')
-          }));
+          });
         });
 
-        Promise.all(promises).then(details => {
+        Promise.all(promises).then(results => {
+          const details = subIds.map((subId, idx) => {
+            let deduceTaskIds = results[idx];
+            if (this.cascade.instanceIds.length > 0) {
+              deduceTaskIds = deduceTaskIds.filter(tid => this.cascade.instanceIds.includes(String(tid)));
+            }
+            const subItem = this.sampleSubDataList.find(s => s.id === subId);
+            return {
+              ybId: subId,
+              ybName: subItem ? subItem.subName : '',
+              ybList: deduceTaskIds.join(',')
+            };
+          });
           params.detailList = details;
           this.doSave(params);
         });
@@ -585,28 +659,37 @@ export default {
     // ========== 引接处理 ==========
     startProcess(row) {
       if (row.status === 1) {
-        this.$message.info('该方案已完成');
+        this.$confirm('该方案已完成，是否重新引接？重新引接将删除之前的数据。', '确认重新引接', {
+          type: 'warning',
+          confirmButtonText: '重新引接',
+          cancelButtonText: '取消'
+        }).then(() => {
+          this.doStartProcess(row, true);
+        }).catch(() => {});
         return;
       }
       this.$confirm('确定开始引接处理？', '提示', { type: 'info' }).then(() => {
-        this.progressVisible = true;
-        this.progressFinished = false;
-        this.progressTotal = 0;
-        this.progressCompleted = 0;
-
-        API.sampleCascade.processScheme(row.id).then(res => {
-          if (res.data && res.data.success) {
-            this.pollProgress(row.id);
-          } else {
-            this.$message.error(res.data.msg || '启动失败');
-            this.progressVisible = false;
-          }
-        }).catch(err => {
-          console.error('processScheme error:', err);
-          this.$message.error('启动失败');
-          this.progressVisible = false;
-        });
+        this.doStartProcess(row, false);
       }).catch(() => {});
+    },
+    doStartProcess(row, reprocess) {
+      this.progressVisible = true;
+      this.progressFinished = false;
+      this.progressTotal = 0;
+      this.progressCompleted = 0;
+
+      API.sampleCascade.processScheme(row.id, reprocess).then(res => {
+        if (res.data && res.data.success) {
+          this.pollProgress(row.id);
+        } else {
+          this.$message.error(res.data.msg || '启动失败');
+          this.progressVisible = false;
+        }
+      }).catch(err => {
+        console.error('processScheme error:', err);
+        this.$message.error('启动失败');
+        this.progressVisible = false;
+      });
     },
     pollProgress(schemeId) {
       if (this.progressTimer) clearInterval(this.progressTimer);
@@ -642,7 +725,7 @@ export default {
   align-items: center;
 }
 .detail-table td {
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--tableBorderClr, #1a3a6a);
   padding: 8px 12px;
 }
 .detail-table tr:hover td {
@@ -650,24 +733,24 @@ export default {
   color: inherit;
 }
 .detail-label {
-  background: #f5f7fa;
+  background: var(--tableHeaderBg, #0b2d5e);
   width: 100px;
-  color: #909399;
+  color: var(--tableHeaderClr, #a0c4e8);
   font-size: 13px;
 }
 .detail-value {
-  color: #606266;
+  color: var(--tableWordClr, #c8ddf0);
   font-size: 13px;
 }
 .scheme-manage >>> .el-table__body tr:hover > td {
-  background-color: #f5f7fa !important;
-  color: #606266 !important;
+  background-color: var(--currentRow, #186097) !important;
+  color: var(--tableWordClr, #c8ddf0) !important;
 }
 .scheme-manage >>> .el-table__body tr.current-row > td {
-  background-color: #ecf5ff !important;
-  color: #606266 !important;
+  background-color: var(--currentRow, #186097) !important;
+  color: var(--tableWordClr, #c8ddf0) !important;
 }
 .scheme-manage >>> .el-table__body tr > td {
-  color: #606266 !important;
+  color: var(--tableWordClr, #c8ddf0) !important;
 }
 </style>

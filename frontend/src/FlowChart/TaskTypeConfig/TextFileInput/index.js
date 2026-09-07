@@ -255,9 +255,20 @@ const config = {
         },
         {
           label: '分隔符',
-          type: 'input',
+          type: 'select',
           valueKey: 'separator',
-          span: 24
+          span: 24,
+          options: [
+            { name: '分号（;）', value: ';' },
+            { name: '逗号（,）', value: ',' },
+            { name: '制表符（Tab）', value: '\t' },
+            { name: '空格', value: ' ' },
+            { name: '竖线（|）', value: '|' }
+          ],
+          optionsConfig: {
+            name: 'name',
+            value: 'value'
+          }
         },
         {
           label: '文本限定符',
@@ -649,6 +660,9 @@ const config = {
       formPreview: false,
       isShowNewBtn: true,
       isHasGetFieldBtn: true,
+      otherConfig: {
+        getFieldsInterface: 'getTextFileFields'
+      },
       tableColumnConfig: [{
           label: '名称',
           prop: 'name',

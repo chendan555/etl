@@ -1138,6 +1138,21 @@ function getExcelFields(params: any) {
 }
 
 /**
+ * 获取文本文件字段
+ * params：参数
+ */
+function getTextFileFields(params: any) {
+  params = { ...getFlowChart(), ...params };
+  let newConfig = transferToFormData(params);
+  return new Promise((resolve, reject) => {
+    axios
+      .post('/api/textFileInputController/getFields', newConfig.formData, newConfig.config)
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
  * 文件上传
  * params：参数
  */
@@ -2242,6 +2257,7 @@ export default {
   getTaskGroupList,
   getExcelSheet,
   getExcelFields,
+  getTextFileFields,
   getFileUpload,
   getDatabaseManageList,
   getDatabaseCreate,

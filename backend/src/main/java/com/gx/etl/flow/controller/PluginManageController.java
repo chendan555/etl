@@ -245,8 +245,8 @@ public class PluginManageController {
                 return Result.fail("算子不存在");
             }
 
-            // 读取文件内容
-            String sourceCode = new String(file.getBytes(), "UTF-8");
+            // 读取文件内容（UTF-8 优先，GBK 回退）
+            String sourceCode = DynamicOperatorCompiler.decodeSourceCode(file.getBytes());
 
             // 编译并注册
             DynamicOperatorCompiler.CompileResult result = dynamicOperatorCompiler.compileAndRegister(sourceCode);
@@ -289,8 +289,8 @@ public class PluginManageController {
                 return Result.fail("请上传 .java 文件");
             }
 
-            // 读取文件内容
-            String sourceCode = new String(file.getBytes(), "UTF-8");
+            // 读取文件内容（UTF-8 优先，GBK 回退）
+            String sourceCode = DynamicOperatorCompiler.decodeSourceCode(file.getBytes());
 
             // 编译并注册
             DynamicOperatorCompiler.CompileResult result = dynamicOperatorCompiler.compileAndRegister(sourceCode);

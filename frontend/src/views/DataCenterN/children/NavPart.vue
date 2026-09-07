@@ -571,6 +571,7 @@ export default Vue.extend({
         // background: $conterBg;
         border-bottom: 1px solid $currentRow;
         font-size: 16px;
+        color: $normalWordsClr;
         .siderBox {
           display: flex;
           .siderDiv {
@@ -590,7 +591,8 @@ export default Vue.extend({
         width: 100%;
         ::v-deep .el-tree {
           background: transparent;
-          color: #666666;
+          // 原为 #666666，暗色背景下看不清，跟随主题文字色
+          color: $normalWordsClr;
           .custom-tree-node {
             display: flex;
             justify-content: space-between;
