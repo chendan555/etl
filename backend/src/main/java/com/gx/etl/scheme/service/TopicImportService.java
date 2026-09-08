@@ -175,6 +175,15 @@ public class TopicImportService {
                         field.setFieldName((String) f.get("fieldName"));
                         field.setFieldAlias((String) f.get("fieldAlias"));
                         field.setSortOrder(i);
+                        // 存 fieldType 和 complexType 标记
+                        field.setFieldType((String) f.getOrDefault("fieldType", "VARCHAR"));
+                        Boolean isComplex = (Boolean) f.get("complexType");
+                        field.setComplexType(Boolean.TRUE.equals(isComplex) ? "Y" : "N");
+                        // 记录字段在 msgpack 根数组/嵌套数组中的位置引用，供引接时取值
+                        Object arrIdx = f.get("arrayIndex");
+                        Object subIdx = f.get("subIndex");
+                        field.setArrayIndex(arrIdx instanceof Number ? ((Number) arrIdx).intValue() : null);
+                        field.setSubIndex(subIdx instanceof Number ? ((Number) subIdx).intValue() : null);
                         topicFieldMapper.insert(field);
                     }
 
@@ -254,14 +263,19 @@ public class TopicImportService {
         return list;
     }
 
-    /** 字段结构：topic.type → simulatmutual.name → dataitem（name/meaning/type） */
+    /**
+     * 字段结构：topic.type → simulatmutual.name → dataitem
+     * 区分 simpleType（直接字段）和 complexType（嵌套对象，需通过 compdataitem 展开子字段）
+     */
     private List<Map<String, Object>> fetchStructure(Connection conn, String modelDb, String type)
             throws java.sql.SQLException {
         List<Map<String, Object>> fields = new ArrayList<>();
         if (type == null || type.isEmpty()) {
             return fields;
         }
-        String sql = "SELECT b.name, b.meaning, b.type FROM `" + modelDb + "`.simulatmutual a "
+        // 查询 dataitem 时带出 instruction_type 和 compdata_id
+        String sql = "SELECT b.name, b.meaning, b.type, b.instruction_type, b.compdata_id "
+                + "FROM `" + modelDb + "`.simulatmutual a "
                 + "LEFT JOIN `" + modelDb + "`.dataitem b ON a.id = b.simulatmutual_id "
                 + "WHERE a.name = ?";
         Set<String> usedNames = new HashSet<>();
@@ -269,32 +283,111 @@ public class TopicImportService {
             ps.setString(1, type);
             try (ResultSet rs = ps.executeQuery()) {
                 int index = 0;
+                int parentIndex = 0; // 父字段在 msgpack 根数组中的位置（simpleType 与 complexType 父字段各占一位）
                 while (rs.next()) {
                     String name = rs.getString(1);
                     String meaning = rs.getString(2);
                     String fieldType = rs.getString(3);
-                    // 字段名取技术名 name（回退 meaning），别名取含义 meaning（回退 name）
+                    String instrType = rs.getString(4);
+                    String compdataId = rs.getString(5);
+
                     String fieldName = (name != null && !name.trim().isEmpty()) ? name.trim()
                             : ((meaning != null && !meaning.trim().isEmpty()) ? meaning.trim() : "field_" + index);
                     String fieldAlias = (meaning != null && !meaning.trim().isEmpty()) ? meaning.trim()
                             : (name == null ? "" : name.trim());
-                    // 同主题内重名去重
-                    String unique = fieldName;
-                    int suffix = 2;
-                    while (usedNames.contains(unique)) {
-                        unique = fieldName + "_" + suffix++;
+
+                    if ("complexType".equalsIgnoreCase(instrType)
+                            && fieldType != null && !fieldType.trim().isEmpty()) {
+                        // complexType：通过 compdataitem 展开子字段
+                        // 注意：父字段（instruction_type='complexType'）自身的 compdata_id 为空，
+                        // 子字段才有 compdata_id；因此此处只判断 instruction_type 与 type。
+                        // msgpack 中该父字段位置是一个嵌套数组，展开的子字段共享父位置
+                        // （arrayIndex=父位置），按在嵌套数组中的顺序记 subIndex。
+                        int parentPos = parentIndex;
+                        List<Map<String, Object>> subFields = fetchComplexSubFields(conn, modelDb, fieldType.trim());
+                        int subIndex = 0;
+                        for (Map<String, Object> sub : subFields) {
+                            String subFieldName = fieldName + "_" + sub.get("fieldName");
+                            String subFieldAlias = fieldAlias + "/" + sub.get("fieldAlias");
+                            String unique = subFieldName;
+                            int suffix = 2;
+                            while (usedNames.contains(unique)) {
+                                unique = subFieldName + "_" + suffix++;
+                            }
+                            usedNames.add(unique);
+                            Map<String, Object> f = new LinkedHashMap<>();
+                            f.put("fieldName", unique);
+                            f.put("fieldAlias", subFieldAlias);
+                            f.put("fieldType", sub.get("fieldType"));
+                            f.put("complexType", true);
+                            f.put("parentFieldName", fieldName);
+                            f.put("arrayIndex", parentPos);
+                            f.put("subIndex", subIndex++);
+                            fields.add(f);
+                            index++;
+                        }
+                    } else {
+                        // simpleType：直接字段，值在 msgpack 根数组的 parentIndex 位置
+                        String unique = fieldName;
+                        int suffix = 2;
+                        while (usedNames.contains(unique)) {
+                            unique = fieldName + "_" + suffix++;
+                        }
+                        usedNames.add(unique);
+                        Map<String, Object> f = new LinkedHashMap<>();
+                        f.put("fieldName", unique);
+                        f.put("fieldAlias", fieldAlias);
+                        f.put("fieldType", fieldType);
+                        f.put("complexType", false);
+                        f.put("arrayIndex", parentIndex);
+                        f.put("subIndex", null);
+                        fields.add(f);
+                        index++;
                     }
-                    usedNames.add(unique);
-                    Map<String, Object> f = new LinkedHashMap<>();
-                    f.put("fieldName", unique);
-                    f.put("fieldAlias", fieldAlias);
-                    f.put("fieldType", fieldType);
-                    fields.add(f);
-                    index++;
+                    parentIndex++;
                 }
             }
         }
         return fields;
+    }
+
+    /**
+     * complexType 子字段展开：
+     * dataitem.type → compdataitem.type 匹配 → compdataitem.id
+     * → dataitem.compdata_id = compdataitem.id → 子字段
+     */
+    private List<Map<String, Object>> fetchComplexSubFields(Connection conn, String modelDb, String typeName)
+            throws java.sql.SQLException {
+        List<Map<String, Object>> subFields = new ArrayList<>();
+        // 查 compdataitem 拿到 id（通过 type 匹配）
+        String compId = null;
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM `" + modelDb + "`.compdataitem WHERE type = ?")) {
+            ps.setString(1, typeName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) compId = String.valueOf(rs.getInt(1));
+            }
+        }
+        if (compId == null || compId.trim().isEmpty()) return subFields;
+
+        // 用 compdataitem.id 回查 dataitem.compdata_id 匹配的子字段
+        // 注意：dataitem 表没有 simu_id / id 列（列：simulatmutual_id, meaning, name,
+        // type, instruction_type, compdata_id），因此不排序，按数据库自然顺序返回。
+        String sql = "SELECT name, meaning, type FROM `" + modelDb + "`.dataitem "
+                + "WHERE compdata_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, compId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> f = new LinkedHashMap<>();
+                    f.put("fieldName", rs.getString(1));
+                    f.put("fieldAlias", rs.getString(2));
+                    f.put("fieldType", rs.getString(3));
+                    subFields.add(f);
+                }
+            }
+        }
+        return subFields;
     }
 
     private DatabaseSource loadMysqlDatasource(Long dbId) {

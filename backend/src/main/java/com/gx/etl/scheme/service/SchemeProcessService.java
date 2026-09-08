@@ -402,7 +402,13 @@ public class SchemeProcessService {
     }
 
     /**
-     * 按 T_TOPIC_FIELD 字段顺序，从解包数据（List）中按位置取值
+     * 按 T_TOPIC_FIELD 字段顺序生成插入值。
+     * 导入主题时每个字段已记录其在 msgpack 中的位置：
+     * - simpleType：arrayIndex = 值在根数组中的下标
+     * - complexType 展开子字段：arrayIndex = 父字段在根数组中的下标（该位置是嵌套数组），
+     *   subIndex = 子字段在嵌套数组内的下标
+     * 因此这里按 arrayIndex/subIndex 精确定位取值，而不是逐下标。
+     * 兼容旧数据（arrayIndex 为空）：退回按下标顺序取值，complexType 用 matchByType。
      */
     @SuppressWarnings("unchecked")
     private List<Object> mapToFieldValues(Object unpacked, List<TopicField> fields) {
@@ -411,14 +417,61 @@ public class SchemeProcessService {
         if (unpacked instanceof List) {
             dataList = (List<Object>) unpacked;
         } else {
-            // 单值包装成列表
             dataList = Collections.singletonList(unpacked);
         }
-        for (int i = 0; i < fields.size(); i++) {
-            Object val = i < dataList.size() ? dataList.get(i) : null;
+        int dataIndex = 0;
+        for (TopicField field : fields) {
+            Object val;
+            Integer arrayIndex = field.getArrayIndex();
+            if (arrayIndex != null) {
+                // 新格式：按记录的位置引用取值
+                Object rootVal = arrayIndex < dataList.size() ? dataList.get(arrayIndex) : null;
+                if ("Y".equalsIgnoreCase(field.getComplexType()) && field.getSubIndex() != null
+                        && rootVal instanceof List) {
+                    List<?> nested = (List<?>) rootVal;
+                    val = field.getSubIndex() < nested.size() ? nested.get(field.getSubIndex()) : null;
+                } else {
+                    val = rootVal;
+                }
+            } else {
+                // 旧格式：按下标顺序取值
+                val = dataIndex < dataList.size() ? dataList.get(dataIndex) : null;
+                if ("Y".equalsIgnoreCase(field.getComplexType()) && val instanceof List) {
+                    val = matchByType((List<?>) val, field.getFieldType());
+                }
+            }
             result.add(val);
+            dataIndex++;
         }
         return result;
+    }
+
+    /**
+     * 在嵌套数组中按类型匹配取值。
+     * 遍历数组，找到与目标类型匹配的元素。
+     */
+    private Object matchByType(List<?> nested, String targetType) {
+        if (nested == null || nested.isEmpty()) return null;
+        if (targetType == null || targetType.trim().isEmpty()) {
+            return nested.isEmpty() ? null : nested.get(nested.size() - 1);
+        }
+        String t = targetType.trim().toLowerCase();
+        for (Object item : nested) {
+            if (item == null) continue;
+            if ("string".equals(t) && item instanceof String) return item;
+            if (("long".equals(t) || "int".equals(t) || "integer".equals(t)) && item instanceof Number) {
+                return ((Number) item).longValue();
+            }
+            if (("double".equals(t) || "float".equals(t)) && item instanceof Number) {
+                return ((Number) item).doubleValue();
+            }
+            if ("boolean".equals(t) && item instanceof Boolean) return item;
+        }
+        // 兜底：取最后一个非 null 元素
+        for (int i = nested.size() - 1; i >= 0; i--) {
+            if (nested.get(i) != null) return nested.get(i);
+        }
+        return null;
     }
 
     /** 构建INSERT语句 */
