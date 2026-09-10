@@ -19,6 +19,10 @@ public class DynamicDataSourceManager {
 
     private static final DynamicDataSourceManager INSTANCE = new DynamicDataSourceManager();
     private final Map<Long, HikariDataSource> dataSourceMap = new ConcurrentHashMap<>();
+    /** 数据源 id -> 当前连接配置指纹，配置未变时直接复用池 */
+    private final Map<Long, String> dataSourceFingerprints = new ConcurrentHashMap<>();
+    /** 数据源 id -> 锁对象，避免多线程并发重建池 */
+    private final Map<Long, Object> dataSourceLocks = new ConcurrentHashMap<>();
 
     private DynamicDataSourceManager() {}
 
@@ -29,11 +33,12 @@ public class DynamicDataSourceManager {
     public DataSource getDataSource(Long id, String dbType, String host, int port,
                                      String databaseName, String username, String password,
                                      String sid) {
-        return dataSourceMap.computeIfAbsent(id, k -> createDataSource(dbType, host, port, databaseName, username, password, sid));
+        return getDataSource(id, dbType, host, port, databaseName, username, password, sid, null);
     }
 
     /**
-     * 获取或创建 DataSource，支持 MySQL 用 schema 覆盖 databaseName
+     * 获取或创建 DataSource，支持 MySQL 用 schema 覆盖 databaseName。
+     * 配置未变化时复用已有连接池，避免批量多线程下 close 掉在用连接。
      */
     public DataSource getDataSource(Long id, String dbType, String host, int port,
                                      String databaseName, String username, String password,
@@ -45,16 +50,65 @@ public class DynamicDataSourceManager {
         } else {
             actualDbName = databaseName;
         }
-        // 如果需要的库名和缓存的不同，清除旧缓存
-        HikariDataSource cached = dataSourceMap.get(id);
-        if (cached != null) {
-            cached.close();
-            dataSourceMap.remove(id);
+
+        final String fingerprint = buildFingerprint(dbType, host, port, actualDbName, username, password, sid);
+
+        HikariDataSource existing = dataSourceMap.get(id);
+        if (existing != null && !existing.isClosed()
+                && fingerprint.equals(dataSourceFingerprints.get(id))) {
+            return existing;
         }
-        return dataSourceMap.computeIfAbsent(id, k -> createDataSource(dbType, host, port, actualDbName, username, password, sid));
+
+        Object lock = dataSourceLocks.computeIfAbsent(id, k -> new Object());
+        synchronized (lock) {
+            existing = dataSourceMap.get(id);
+            if (existing != null && !existing.isClosed()
+                    && fingerprint.equals(dataSourceFingerprints.get(id))) {
+                return existing;
+            }
+
+            HikariDataSource created = createDataSource(id, dbType, host, port, actualDbName, username, password, sid);
+            HikariDataSource old = dataSourceMap.put(id, created);
+            dataSourceFingerprints.put(id, fingerprint);
+            // 旧池延迟关闭：给已借出的连接留出归还时间，避免批量执行时「连接已关闭」
+            closeQuietlyLater(old);
+            return created;
+        }
     }
 
-    private HikariDataSource createDataSource(String dbType, String host, int port,
+    private static String buildFingerprint(String dbType, String host, int port,
+                                           String dbName, String username, String password, String sid) {
+        return String.join("|",
+                String.valueOf(dbType),
+                String.valueOf(host),
+                String.valueOf(port),
+                String.valueOf(dbName),
+                String.valueOf(username),
+                String.valueOf(password),
+                String.valueOf(sid));
+    }
+
+    private void closeQuietlyLater(HikariDataSource ds) {
+        if (ds == null) {
+            return;
+        }
+        Thread t = new Thread(() -> {
+            try {
+                // 等待在途业务释放连接后再真正关闭
+                Thread.sleep(30_000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            try {
+                ds.close();
+            } catch (Exception ignored) {
+            }
+        }, "hikari-ds-soft-close");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private HikariDataSource createDataSource(Long id, String dbType, String host, int port,
                                                String databaseName, String username, String password,
                                                String sid) {
         // 对于 DM 数据库，如果 databaseName 不是有效的 schema 名称，则不使用
@@ -66,19 +120,23 @@ public class DynamicDataSourceManager {
         config.setJdbcUrl(buildJdbcUrl(dbType, host, port, actualDbName, sid));
         config.setUsername(username);
         config.setPassword(password);
-        config.setMaximumPoolSize(5);
-        config.setMinimumIdle(1);
+        // 批量并行时表输入/表输出会同时借连接，池给大一些
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(2);
         config.setIdleTimeout(60000);
-        config.setMaxLifetime(300000);
-        config.setConnectionTimeout(10000);
+        config.setMaxLifetime(1800000);
+        config.setConnectionTimeout(30000);
         config.setDriverClassName(getDriverClass(dbType));
+        config.setPoolName("dynamic-ds-" + id + "-" + host + "-" + port);
         return new HikariDataSource(config);
     }
 
     public void removeDataSource(Long id) {
         HikariDataSource ds = dataSourceMap.remove(id);
+        dataSourceFingerprints.remove(id);
+        dataSourceLocks.remove(id);
         if (ds != null) {
-            ds.close();
+            closeQuietlyLater(ds);
         }
     }
 

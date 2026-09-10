@@ -169,7 +169,7 @@
     </el-dialog>
 
     <!-- 查看详情弹窗 -->
-    <el-dialog title="仿真方案详情" :visible.sync="detailVisible" width="700px">
+    <el-dialog title="仿真方案详情" :visible.sync="detailVisible" width="960px" top="6vh">
       <template v-if="detailData">
         <table class="detail-table" style="width: 100%; border-collapse: collapse;">
           <tr>
@@ -198,16 +198,24 @@
           </tr>
         </table>
 
-        <el-table :data="pagedDetailList" border size="small" style="margin-top: 15px" v-if="detailData.detailList && detailData.detailList.length > 0">
-          <el-table-column type="index" label="序号" width="60">
+        <!-- max-height 固定表头；列 min-width 防挤扁，总宽超出时出现横向滚动条 -->
+        <el-table
+          v-if="detailData.detailList && detailData.detailList.length > 0"
+          :data="pagedDetailList"
+          border
+          size="small"
+          max-height="420"
+          style="margin-top: 15px; width: 100%"
+        >
+          <el-table-column type="index" label="序号" width="60" fixed="left">
             <template slot-scope="scope">
               {{ (detailPage - 1) * detailPageSize + scope.$index + 1 }}
             </template>
           </el-table-column>
-          <el-table-column prop="ybName" label="样本名" />
-          <el-table-column prop="ybId" label="样本id" width="80" />
-          <el-table-column prop="ybList" label="样本集" />
-          <el-table-column label="状态" width="80">
+          <el-table-column prop="ybName" label="样本名" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="ybId" label="样本id" width="90" />
+          <el-table-column prop="ybList" label="样本集" min-width="240" show-overflow-tooltip />
+          <el-table-column label="状态" width="80" fixed="right">
             <template slot-scope="scope">
               <el-tag :type="scope.row.status === 1 ? 'success' : 'info'" size="small">
                 {{ scope.row.status === 1 ? '完成' : '未完成' }}
