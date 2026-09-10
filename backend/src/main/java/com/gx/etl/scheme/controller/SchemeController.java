@@ -401,7 +401,7 @@ public class SchemeController {
                 java.sql.ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getInt("id"));
+                    row.put("id", rs.getString("id"));
                     row.put("planName", rs.getString("experiment_design_name"));
                     list.add(row);
                 }
@@ -424,7 +424,7 @@ public class SchemeController {
     public Result<?> getBigSampleList(
             @RequestParam Long dbId,
             @RequestParam(defaultValue = "big_sample_db") String dbName,
-            @RequestParam Integer experimentDesignId) {
+            @RequestParam String experimentDesignId) {
         try {
             DatabaseSource ds = databaseSourceMapper.selectById(dbId);
             if (ds == null) return Result.fail("数据源不存在: " + dbId);
@@ -438,11 +438,11 @@ public class SchemeController {
             try {
                 java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT id, name FROM big_sample WHERE experiment_design_id = ? ORDER BY id");
-                ps.setInt(1, experimentDesignId);
+                ps.setString(1, experimentDesignId);
                 java.sql.ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getInt("id"));
+                    row.put("id", rs.getString("id"));
                     row.put("dataName", rs.getString("name"));
                     list.add(row);
                 }
@@ -466,7 +466,7 @@ public class SchemeController {
     public Result<?> getTaskDesignExampleList(
             @RequestParam Long dbId,
             @RequestParam(defaultValue = "sim_control_db_copy") String dbName,
-            @RequestParam Integer deduceConfigId) {
+            @RequestParam String deduceConfigId) {
         try {
             DatabaseSource ds = databaseSourceMapper.selectById(dbId);
             if (ds == null) return Result.fail("数据源不存在: " + dbId);
@@ -480,11 +480,11 @@ public class SchemeController {
             try {
                 java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT id, name FROM task_design_example WHERE deduce_config_id = ? ORDER BY id");
-                ps.setInt(1, deduceConfigId);
+                ps.setString(1, deduceConfigId);
                 java.sql.ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getInt("id"));
+                        row.put("id", rs.getString("id"));
                     row.put("subName", rs.getString("name"));
                     list.add(row);
                 }
@@ -508,7 +508,7 @@ public class SchemeController {
     public Result<?> getDeduceTaskList(
             @RequestParam Long dbId,
             @RequestParam(defaultValue = "sim_control_db_copy") String dbName,
-            @RequestParam Integer taskDesignExampleId) {
+            @RequestParam String taskDesignExampleId) {
         try {
             DatabaseSource ds = databaseSourceMapper.selectById(dbId);
             if (ds == null) return Result.fail("数据源不存在: " + dbId);
@@ -521,12 +521,12 @@ public class SchemeController {
             java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, ds.getUsername(), ds.getPassword());
             try {
                 java.sql.PreparedStatement ps = conn.prepareStatement(
-                        "SELECT id, deduce_task_id FROM task_design_example_id WHERE task_design_example_id = ? ORDER BY id");
-                ps.setInt(1, taskDesignExampleId);
+                        "SELECT id, deduce_task_id FROM task_example_correlation WHERE task_design_example_id = ? ORDER BY id");
+                ps.setString(1, taskDesignExampleId);
                 java.sql.ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getInt("id"));
+                    row.put("id", rs.getString("id"));
                     row.put("dataName", rs.getString("deduce_task_id"));
                     list.add(row);
                 }
