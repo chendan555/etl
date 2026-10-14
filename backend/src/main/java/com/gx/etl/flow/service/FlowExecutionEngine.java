@@ -280,8 +280,27 @@ public class FlowExecutionEngine {
     /**
      * 规范化 DataSet：将所有行中的 Clob/NClob 等数据库特殊类型转换为 String
      * 这样算子中就可以直接使用 toString() 或转型为 String
+     *
+     * 大数据量优化：先做一次无分配的扫描，没有特殊类型就原样返回，
+     * 避免每个节点都对全量行做一次深拷贝（表输入已在读取时转换 Clob，多数情况直接短路）
      */
     private DataSet normalizeDataSet(DataSet ds) {
+        if (ds.isMaterialized()) {
+            boolean hasSpecial = false;
+            outer:
+            for (DataRow row : ds) {
+                for (String col : ds.getColumnNames()) {
+                    Object v = row.get(col);
+                    if (v instanceof Clob || v instanceof NClob) {
+                        hasSpecial = true;
+                        break outer;
+                    }
+                }
+            }
+            if (!hasSpecial) {
+                return ds;
+            }
+        }
         List<String> columns = ds.getColumnNames();
         List<DataRow> normalizedRows = new ArrayList<>();
         for (DataRow row : ds) {

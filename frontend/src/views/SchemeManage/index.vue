@@ -72,7 +72,7 @@
         <el-form-item label="方案描述" prop="schemeDesc">
           <el-input v-model="form.schemeDesc" type="textarea" :rows="2" placeholder="请输入方案描述" />
         </el-form-item>
-        <el-form-item label="数据采集配置" prop="cjListId" v-if="!form.id">
+        <el-form-item label="数据采集配置" prop="cjListId">
           <el-select v-model="form.cjListId" placeholder="请选择数据采集配置" style="width: 100%">
             <el-option
               v-for="item in cjConfigList"
@@ -272,7 +272,7 @@ export default {
       schemeList: [],
       total: 0,
       pageIndex: 1,
-      pageSize: 20,
+      pageSize: 10,
       searchName: '',
 
       // 弹窗
@@ -481,12 +481,12 @@ export default {
               transId: scheme.transId,
               status: scheme.status
             };
-            // 回显级联数据
-            if (scheme.detailList && scheme.detailList.length > 0) {
-              const firstDetail = scheme.detailList[0];
-              this.cascade.dataId = firstDetail.ybId;
-              this.cascade.subDataIds = firstDetail.ybList ? firstDetail.ybList.split(',').map(Number) : [];
-            }
+            // 编辑模式只改方案主表：级联选择不回显、不参与保存，避免误动样本明细
+            this.cascade = { planId: null, dataId: null, subDataIds: [], instanceIds: [] };
+            this.sampleDataList = [];
+            this.sampleSubDataList = [];
+            this.sampleDetailMap = {};
+            this.instanceListMap = {};
             this.dialogVisible = true;
           }
         });
@@ -524,9 +524,17 @@ export default {
           schemeDesc: this.form.schemeDesc,
           cjListId: this.form.cjListId,
           transId: this.form.transId,
-          status: this.form.status,
-          detailList: []
+          status: this.form.status
         };
+
+        // 编辑模式：只更新方案主表，不传 detailList，后端不动样本明细
+        if (this.form.id) {
+          this.doSave(params);
+          return;
+        }
+
+        // 新增模式才走样本级联构建明细
+        params.detailList = [];
 
         if (!this.cascade.dataId) {
           // 没选二级，直接保存

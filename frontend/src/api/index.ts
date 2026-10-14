@@ -807,6 +807,18 @@ function cancelBatch(taskId: string) {
 }
 
 /**
+ * 查询批量执行进度（WebSocket 失败时的 HTTP 轮询兜底）
+ */
+function getBatchProgress(taskId: string) {
+  return new Promise((resolve, reject) => {
+    axios
+      .get('/api/transNew/batchProgress', { params: { taskId } })
+      .then(resolve)
+      .catch(reject);
+  });
+}
+
+/**
  * 流程执行
  * params：参数
  */
@@ -2235,6 +2247,7 @@ export default {
   execModel,
   execBatchRun,
   cancelBatch,
+  getBatchProgress,
   execRunResult,
   getInputOutputFields,
   getIputOutputFieldsName,

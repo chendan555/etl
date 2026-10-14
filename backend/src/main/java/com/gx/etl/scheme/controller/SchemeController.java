@@ -23,6 +23,7 @@ import com.gx.etl.scheme.service.SchemeProcessService;
 import com.gx.etl.sample.service.SampleCascadeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import com.gx.etl.datasource.entity.DatabaseSource;
@@ -45,6 +46,10 @@ import java.util.Map;
 public class SchemeController {
 
     private static final Logger log = LoggerFactory.getLogger(SchemeController.class);
+
+    /** 达梦数据表所在 schema：数据表已随库迁移至 CASIC_ASSESS（原 ETL schema 已废弃），与 SchemeProcessService 保持一致 */
+    @Value("${scheme.ingest.dm-schema:CASIC_ASSESS}")
+    private String dmSchema;
 
     @Resource
     private SchemeService schemeService;
@@ -593,7 +598,7 @@ public class SchemeController {
             DataSource dmDataSource = schemeProcessService.getDmDataSource();
             try (Connection conn = dmDataSource.getConnection()) {
                 try (Statement stmt = conn.createStatement()) {
-                    stmt.execute("SET SCHEMA ETL");
+                    stmt.execute("SET SCHEMA " + dmSchema);
                 }
                 int topicIdx = 0;
                 for (TopicConfig topic : topics) {
@@ -626,7 +631,7 @@ public class SchemeController {
                     topicData.put("columns", columns);
 
                     String colNames = columns.stream().map(c -> c.get("name")).reduce((a, b) -> a + ", " + b).orElse("");
-                    String baseSql = " FROM ETL." + tableName + " WHERE SCHEME_ID = " + instanceId;
+                    String baseSql = " FROM " + tableName + " WHERE SCHEME_ID = " + instanceId;
 
                     // 先查总数
                     int total = 0;

@@ -19,3 +19,6 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 backend/uploads/
+
+# 本地草稿
+.scratch/

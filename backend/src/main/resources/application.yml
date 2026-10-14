@@ -8,8 +8,8 @@ spring:
     name: gx-etl-springboot
   datasource:
     driver-class-name: dm.jdbc.driver.DmDriver
-    url: jdbc:dm://127.0.0.1:5236/ETL?schema=SYSDBA&compatibleMode=mysql
-    username: ETL
+    url: jdbc:dm://127.0.0.1:5236/CASIC_ASSESS?schema=SYSDBA&compatibleMode=mysql
+    username: CASIC_ASSESS
     password: 123456789
     hikari:
       minimum-idle: 5
@@ -55,5 +55,17 @@ file:
 # 批量执行配置
 batch:
   execution:
-    # 并行执行的线程数
-    parallel-size: 2
+    # 并行执行的线程数（流程批处理：每个流程批同时占用2个连接=表输入+表输出，
+    # 动态数据源Hikari池为20/数据源，此值不要超过10；与引接的 scheme.ingest.parallel-size 相互独立）
+    parallel-size: 4
+
+# 方案数据引接配置
+scheme:
+  ingest:
+    # 引接并行线程数（任务按实例展开；每个线程同时占用1个MySQL连接+1个达梦连接，
+    # 动态数据源Hikari池上限为10/数据源，此值不要超过10）
+    parallel-size: 6
+    # 达梦数据表所在 schema：数据表已从 ETL 迁移到 CASIC_ASSESS（2026-09-26）。
+    # 引接连接(T_DATABASE id=1)账号默认 schema 不一定是数据表所在库，代码统一 SET SCHEMA 此值。
+    # 后续若库再迁移，只改这里，不要改代码。
+    dm-schema: CASIC_ASSESS

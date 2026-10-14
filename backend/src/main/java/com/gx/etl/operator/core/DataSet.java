@@ -117,4 +117,9 @@ public class DataSet implements Iterable<DataRow> {
         Iterator<DataRow> it = iterator();
         return !it.hasNext();
     }
+
+    /** 是否已物化为内存列表（物化后可安全多次遍历） */
+    public boolean isMaterialized() {
+        return materialized;
+    }
 }

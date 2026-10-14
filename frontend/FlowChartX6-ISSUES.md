@@ -1,6 +1,7 @@
 # FlowChartX6 画布模块问题记录
 
 ## 当前状态
+- **已列入第二版本待办（见项目根目录 `待办.md`），本版本不再投入，当前统一使用旧版 FlowChart**
 - 已从导航菜单隐藏（`hidden: true`）
 - 路由仍可通过 `/FlowChartX6?path=...` 直接访问
 - 旧版 FlowChart（基于 jsPlumb）正常工作

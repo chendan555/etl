@@ -33,7 +33,9 @@ module.exports = {
         changeOrigin: true
       },
       '/ws': {
-        target: `ws://${apiUrl}:9056`,
+        // http-proxy 的 target 用 http(s) 即可，ws:true 负责升级；
+        // 写成 ws:// 在部分 webpack-dev-server 版本下握手会失败
+        target: `http://${apiUrl}:9056`,
         ws: true,
         changeOrigin: true
       }

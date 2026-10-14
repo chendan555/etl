@@ -34,6 +34,9 @@ public class BatchExecutionService {
     // 存储取消标志
     private static final ConcurrentHashMap<String, AtomicBoolean> cancelFlags = new ConcurrentHashMap<>();
 
+    /** taskId -> 最近一次进度快照（WebSocket 不可用时供 HTTP 轮询） */
+    private static final ConcurrentHashMap<String, ProgressMessage> latestProgress = new ConcurrentHashMap<>();
+
     /**
      * 异步执行批量任务
      */
@@ -205,6 +208,7 @@ public class BatchExecutionService {
         message.setStatus("running");
         message.setBatchDetails(batchDetails);
 
+        latestProgress.put(taskId, message);
         BatchProgressWebSocket.sendProgress(taskId, message);
     }
 
@@ -225,6 +229,7 @@ public class BatchExecutionService {
         message.setStatus("completed");
         message.setBatchDetails(batchDetails);
 
+        latestProgress.put(taskId, message);
         BatchProgressWebSocket.sendProgress(taskId, message);
     }
 
@@ -245,6 +250,7 @@ public class BatchExecutionService {
         message.setStatus("cancelled");
         message.setBatchDetails(batchDetails);
 
+        latestProgress.put(taskId, message);
         BatchProgressWebSocket.sendProgress(taskId, message);
     }
 
@@ -260,8 +266,17 @@ public class BatchExecutionService {
         errorDetail.setErrorMsg(errorMsg);
         message.setBatchDetails(Collections.singletonList(errorDetail));
 
+        latestProgress.put(taskId, message);
         BatchProgressWebSocket.sendProgress(taskId, message);
-        cleanup(taskId);
+        // 保留进度快照一段时间供轮询读取，再清取消标志
+        cancelFlags.remove(taskId);
+    }
+
+    /**
+     * 查询任务最近进度（WebSocket 失败时的 HTTP 兜底）
+     */
+    public ProgressMessage getLatestProgress(String taskId) {
+        return latestProgress.get(taskId);
     }
 
     /**
@@ -300,9 +315,19 @@ public class BatchExecutionService {
     }
 
     /**
-     * 清理任务资源
+     * 清理任务资源。进度快照延迟清理，方便 WebSocket 失败后 HTTP 轮询读到终态。
      */
     private void cleanup(String taskId) {
         cancelFlags.remove(taskId);
+        Thread t = new Thread(() -> {
+            try {
+                Thread.sleep(10 * 60_000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            latestProgress.remove(taskId);
+        }, "batch-progress-snapshot-evict");
+        t.setDaemon(true);
+        t.start();
     }
 }

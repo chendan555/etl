@@ -56,8 +56,10 @@ public class TableInputOperator extends AbstractOperator {
         Map<String, String> columnComments = new LinkedHashMap<>();
 
         try (Connection conn = ds.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            // 大表读取提速：加大每次网络往返抓取的行数（驱动默认抓取行数很小，来回次数是主要瓶颈之一）
+            ps.setFetchSize(5000);
+            try (ResultSet rs = ps.executeQuery()) {
 
             System.out.println("[TableInput] 数据库连接: " + conn.getMetaData().getURL());
 
@@ -103,11 +105,29 @@ public class TableInputOperator extends AbstractOperator {
             while (rs.next()) {
                 DataRow row = new DataRow();
                 for (int i = 1; i <= colCount; i++) {
-                    row.put(columns.get(i - 1), rs.getObject(i));
+                    Object val = rs.getObject(i);
+                    // Clob/NClob 读取时就地转 String：下游算子与引擎无需再做特殊类型处理
+                    if (val instanceof Clob) {
+                        try {
+                            Clob clob = (Clob) val;
+                            val = clob.getSubString(1, (int) clob.length());
+                        } catch (SQLException ignore) {
+                            val = String.valueOf(val);
+                        }
+                    } else if (val instanceof NClob) {
+                        try {
+                            NClob nclob = (NClob) val;
+                            val = nclob.getSubString(1, (int) nclob.length());
+                        } catch (SQLException ignore) {
+                            val = String.valueOf(val);
+                        }
+                    }
+                    row.put(columns.get(i - 1), val);
                 }
                 rows.add(row);
             }
             System.out.println("[TableInput] 查询完成，返回 " + rows.size() + " 行");
+            }
         } catch (SQLException e) {
             throw new RuntimeException("表输入执行失败: " + e.getMessage(), e);
         }

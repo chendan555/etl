@@ -57,6 +57,7 @@
             :data="paginatedRows(topicData)"
             border
             size="small"
+            :fit="false"
             style="width: 100%"
             max-height="500"
           >
@@ -65,6 +66,7 @@
               :key="col.name"
               :prop="col.name"
               :label="col.alias"
+              min-width="120"
               show-overflow-tooltip
             />
           </el-table>

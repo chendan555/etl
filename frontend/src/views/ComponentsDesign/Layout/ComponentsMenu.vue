@@ -29,6 +29,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+@import '@/styles/theme.scss';
 .comp {
   .comp-list {
     height: 100%;
@@ -39,6 +40,11 @@ export default {
       height: 30px;
       line-height: 30px;
       text-align: center;
+      color: $normalWordsClr;
+      cursor: move;
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
     }
   }
 }

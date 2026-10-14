@@ -482,6 +482,11 @@ export default Vue.extend({
       },
       // WebSocket 连接
       websocket: null,
+      wsOpened: false,
+      wsIntentionallyClosed: false,
+      progressPollTimer: null,
+      activeBatchTaskId: '',
+      batchTerminalNotified: false,
       // 多tab弹框配置
       isShowTab: false,
       tabList: [],
@@ -575,6 +580,8 @@ export default Vue.extend({
       });
   },
   destroyed() {
+    this.closeWebSocket(true);
+    this.stopProgressPolling();
     this.$eventBus.$off('clearTable');
     this.tableColumnConfig = [];
     this.tableColumnConfigList = [];
@@ -1587,23 +1594,69 @@ export default Vue.extend({
           });
       });
     },
-    connectWebSocket(taskId: string) {
-      // 关闭现有连接
-      if (this.websocket) {
+    closeWebSocket(intentional: boolean) {
+      if (!this.websocket) return;
+      this.wsIntentionallyClosed = intentional;
+      try {
         this.websocket.close();
+      } catch (e) {
+        // ignore
       }
+      this.websocket = null;
+    },
+    stopProgressPolling() {
+      if (this.progressPollTimer) {
+        clearInterval(this.progressPollTimer);
+        this.progressPollTimer = null;
+      }
+    },
+    startProgressPolling(taskId: string) {
+      if (this.progressPollTimer) return;
+      this.progressPollTimer = setInterval(() => {
+        this.fetchBatchProgress(taskId);
+      }, 2000);
+      this.fetchBatchProgress(taskId);
+    },
+    fetchBatchProgress(taskId: string) {
+      API.getBatchProgress(taskId)
+        .then((response: any) => {
+          const res = response.data?.data || response.data;
+          if (!res || res.status === 'unknown') return;
+          this.updateBatchProgress(res);
+        })
+        .catch(() => {
+          // 轮询失败静默，下一轮重试
+        });
+    },
+    connectWebSocket(taskId: string) {
+      this.activeBatchTaskId = taskId;
+      this.batchTerminalNotified = false;
+      this.stopProgressPolling();
+      // 主动关旧连接：CONNECTING 时 close 会触发 onerror，用标志位吞掉误报
+      this.closeWebSocket(true);
 
-      // 建立新连接
       // 使用相对路径，让 devServer 代理处理 WebSocket
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws/batchProgress/${taskId}`;
-      this.websocket = new WebSocket(wsUrl);
 
-      this.websocket.onopen = () => {
+      let ws: WebSocket;
+      try {
+        ws = new WebSocket(wsUrl);
+      } catch (e) {
+        console.error('[WebSocket] 创建失败:', e);
+        this.startProgressPolling(taskId);
+        return;
+      }
+      this.websocket = ws;
+      this.wsOpened = false;
+      this.wsIntentionallyClosed = false;
+
+      ws.onopen = () => {
+        this.wsOpened = true;
         console.log('[WebSocket] 连接建立:', taskId);
       };
 
-      this.websocket.onmessage = (event) => {
+      ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
           this.updateBatchProgress(message);
@@ -1612,46 +1665,62 @@ export default Vue.extend({
         }
       };
 
-      this.websocket.onclose = () => {
+      ws.onclose = () => {
         console.log('[WebSocket] 连接关闭:', taskId);
+        if (this.websocket === ws) {
+          this.websocket = null;
+        }
+        // 非主动关闭且任务仍在跑 → 切 HTTP 轮询
+        if (!this.wsIntentionallyClosed && this.batchProgress.status === 'running') {
+          this.startProgressPolling(taskId);
+        }
       };
 
-      this.websocket.onerror = (error) => {
+      ws.onerror = (error) => {
+        // 主动 close 的 CONNECTING 连接也会走这里，不弹错
+        if (this.wsIntentionallyClosed) {
+          return;
+        }
         console.error('[WebSocket] 连接错误:', error);
-        this.$message.error('WebSocket 连接失败，请刷新页面重试');
+        if (!this.wsOpened) {
+          this.$message.warning('WebSocket 不可用，已改为轮询获取进度');
+        }
+        this.startProgressPolling(taskId);
       };
     },
     updateBatchProgress(message: any) {
       this.batchProgress = {
-        taskId: message.taskId,
-        current: message.current,
-        total: message.total,
-        successCount: message.successCount,
-        failCount: message.failCount,
-        elapsedTime: message.elapsedTime,
-        estimatedRemaining: message.estimatedRemaining,
-        totalRows: message.totalRows,
+        taskId: message.taskId || this.activeBatchTaskId,
+        current: message.current || 0,
+        total: message.total || 0,
+        successCount: message.successCount || 0,
+        failCount: message.failCount || 0,
+        elapsedTime: message.elapsedTime || 0,
+        estimatedRemaining: message.estimatedRemaining || 0,
+        totalRows: message.totalRows || 0,
         status: message.status,
         batchDetails: message.batchDetails || []
       };
 
-      // 执行完成或取消时关闭 WebSocket
-      if (message.status === 'completed' || message.status === 'cancelled' || message.status === 'error') {
-        if (this.websocket) {
-          this.websocket.close();
-          this.websocket = null;
-        }
+      const terminal = message.status === 'completed' || message.status === 'cancelled' || message.status === 'error';
+      if (!terminal) return;
 
-        // 显示消息
-        if (message.status === 'completed') {
-          this.$message.success(`批量执行完成：成功 ${message.successCount}，失败 ${message.failCount}，共 ${message.total} 批`);
-        } else if (message.status === 'cancelled') {
-          this.$message.warning('批量执行已取消');
-        }
+      this.stopProgressPolling();
+      this.closeWebSocket(true);
 
-        // 刷新日志
-        this.getLog({ transformationId: this.transformationId });
+      if (this.batchTerminalNotified) return;
+      this.batchTerminalNotified = true;
+
+      if (message.status === 'completed') {
+        this.$message.success(`批量执行完成：成功 ${message.successCount}，失败 ${message.failCount}，共 ${message.total} 批`);
+      } else if (message.status === 'cancelled') {
+        this.$message.warning('批量执行已取消');
+      } else if (message.status === 'error') {
+        const detail = (message.batchDetails || []).find((d: any) => d && d.errorMsg);
+        this.$message.error('批量执行异常：' + (detail?.errorMsg || '未知错误'));
       }
+
+      this.getLog({ transformationId: this.transformationId });
     },
     cancelBatch(taskId: string) {
       if (!taskId) return;

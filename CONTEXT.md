@@ -21,3 +21,10 @@
 - 前端：Vue 2 + jsPlumb + Element UI + TypeScript
 - 后端：Spring Boot 2.7.18 + MyBatis-Plus + DM8 数据库
 - 引接模块和流程设计模块是独立的两套代码体系
+
+## 数据库 schema 约定（重要，2026-09-26 起生效）
+
+- 达梦主库(127.0.0.1:5236)中**主题数据表(t_topic\*)已从 ETL schema 迁移到 CASIC_ASSESS schema**，ETL schema 里的同名表是废弃的遗留拷贝，不要再往里写、也不要从中读；
+- 配置表(T_SCHEME/T_TOPIC_CONFIG/T_CJ_CONFIG 等)一直在 CASIC_ASSESS schema（应用主数据源账号 CASIC_ASSESS 的默认 schema，MyBatis 免前缀访问）；
+- 引接/删除/详细数据查询用的达梦连接是 `T_DATABASE` id=1（SYSDBA 账号），默认 schema 不是数据表所在库，所以代码统一 `SET SCHEMA` 后再操作表；
+- schema 名统一走配置 `scheme.ingest.dm-schema`（默认 CASIC_ASSESS，见 application.yml），**代码里禁止写死 schema 名**；库再迁移只改配置。

@@ -115,8 +115,8 @@ public class SchemeService extends ServiceImpl<SchemeMapper, Scheme> {
         // 保存主表
         saveOrUpdate(scheme);
 
-        // 保存子表
-        if (scheme.getDetailList() != null) {
+        // 保存子表：detailList 为空(含空数组)时不动明细，只更新方案主表
+        if (scheme.getDetailList() != null && !scheme.getDetailList().isEmpty()) {
             // 先删除旧的
             schemeDetailMapper.delete(
                     new LambdaQueryWrapper<SchemeDetail>().eq(SchemeDetail::getSchemeId, scheme.getId())

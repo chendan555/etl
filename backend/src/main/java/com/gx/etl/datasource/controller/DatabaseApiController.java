@@ -60,41 +60,55 @@ public class DatabaseApiController {
 
     /**
      * 获取数据库表列表
+     * tableName：按表名关键字模糊过滤（不区分大小写）
      */
     @PostMapping("/getDataTables")
     public Result<?> getDataTables(@RequestParam(required = false) String connection,
-                                   @RequestParam(required = false) String schema) {
+                                   @RequestParam(required = false) String schema,
+                                   @RequestParam(required = false) String tableName,
+                                   @RequestParam(required = false, defaultValue = "1") int pageIndex,
+                                   @RequestParam(required = false, defaultValue = "0") int pageSize) {
         try {
             if (connection == null || connection.isEmpty()) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("records", new ArrayList<>());
-                result.put("total", 0);
-                return Result.ok(result);
+                return Result.ok(buildTablePage(new ArrayList<>(), pageIndex, pageSize));
             }
             DatabaseSource ds = databaseSourceService.getByName(connection);
             if (ds == null) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("records", new ArrayList<>());
-                result.put("total", 0);
-                return Result.ok(result);
+                return Result.ok(buildTablePage(new ArrayList<>(), pageIndex, pageSize));
             }
             List<String> tables = databaseSourceService.getTables(ds.getId(), schema);
-            // 前端期望 {records: [{tableName, keyNums, remarks}, ...], total: N}
+            String keyword = tableName == null ? "" : tableName.trim();
             List<Map<String, Object>> records = new ArrayList<>();
             for (String table : tables) {
+                if (!keyword.isEmpty()
+                        && !table.toLowerCase().contains(keyword.toLowerCase())) {
+                    continue;
+                }
                 Map<String, Object> record = new HashMap<>();
                 record.put("tableName", table);
                 record.put("keyNums", 0);
                 record.put("remarks", "");
                 records.add(record);
             }
-            Map<String, Object> result = new HashMap<>();
-            result.put("records", records);
-            result.put("total", records.size());
-            return Result.ok(result);
+            return Result.ok(buildTablePage(records, pageIndex, pageSize));
         } catch (Exception e) {
             return Result.fail(e.getMessage());
         }
+    }
+
+    /** 表列表分页：pageSize<=0 表示不分页（兼容旧调用） */
+    private Map<String, Object> buildTablePage(List<Map<String, Object>> records, int pageIndex, int pageSize) {
+        int total = records.size();
+        List<Map<String, Object>> pageRecords = records;
+        if (pageSize > 0) {
+            int from = Math.max(0, (Math.max(pageIndex, 1) - 1) * pageSize);
+            int to = Math.min(total, from + pageSize);
+            pageRecords = from >= total ? new ArrayList<>() : new ArrayList<>(records.subList(from, to));
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", pageRecords);
+        result.put("total", total);
+        return result;
     }
 
     /**
@@ -146,9 +160,10 @@ public class DatabaseApiController {
     @PostMapping("/yj/getDataTables")
     public Result<?> yjGetDataTables(@RequestParam(required = false) String connection,
                                      @RequestParam(required = false) String schema,
-                                     @RequestParam(required = false, defaultValue = "1") String pageIndex,
-                                     @RequestParam(required = false, defaultValue = "10") String pageSize) {
-        return getDataTables(connection, schema);
+                                     @RequestParam(required = false) String tableName,
+                                     @RequestParam(required = false, defaultValue = "1") int pageIndex,
+                                     @RequestParam(required = false, defaultValue = "0") int pageSize) {
+        return getDataTables(connection, schema, tableName, pageIndex, pageSize);
     }
 
     /**

@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -91,13 +92,13 @@ public class SchemeProcessService {
             DataSource dmDataSource = getDmDataSource();
             try (Connection conn = dmDataSource.getConnection()) {
                 try (Statement stmt = conn.createStatement()) {
-                    stmt.execute("SET SCHEMA ETL");
+                    stmt.execute("SET SCHEMA " + dmSchema);
                 }
                 for (TopicConfig topic : topics) {
                     String tableName = topic.getTableName();
                     if (tableName == null || tableName.isEmpty() || allInstanceIds.isEmpty()) continue;
                     try {
-                        String deleteSql = "DELETE FROM ETL." + tableName
+                        String deleteSql = "DELETE FROM " + tableName
                                 + " WHERE SCHEME_ID IN (" + String.join(",", allInstanceIds) + ")";
                         log.info("DELETE旧数据: {}", deleteSql);
                         try (Statement stmt = conn.createStatement()) {
@@ -139,16 +140,26 @@ public class SchemeProcessService {
         return progressMap.get(schemeId);
     }
 
-    @Value("${batch.execution.parallel-size:5}")
+    /** 引接并行线程数（任务按实例展开）。独立成键，避免影响流程批处理的 batch.execution.parallel-size */
+    @Value("${scheme.ingest.parallel-size:${batch.execution.parallel-size:5}}")
     private int poolSize;
 
+    /** 达梦数据表所在 schema：数据表已随库迁移至 CASIC_ASSESS（原 ETL schema 已废弃）。再迁移只改此配置，勿在代码里写死 schema 名 */
+    @Value("${scheme.ingest.dm-schema:CASIC_ASSESS}")
+    private String dmSchema;
+
     public void initProgress(Long schemeId) {
-        long count = schemeDetailMapper.selectCount(
+        // 进度按实例数计：每条明细(样本)的 YB_LIST 是逗号分隔的实例ID，汇总所有待处理明细的实例总数
+        List<SchemeDetail> details = schemeDetailMapper.selectList(
                 new LambdaQueryWrapper<SchemeDetail>()
                         .eq(SchemeDetail::getSchemeId, schemeId)
                         .eq(SchemeDetail::getStatus, 0));
-        log.info("initProgress: schemeId={}, count={}", schemeId, count);
-        ProcessProgress progress = new ProcessProgress((int) count);
+        int total = 0;
+        for (SchemeDetail detail : details) {
+            total += parseIdListRaw(detail.getYbList()).size();
+        }
+        log.info("initProgress: schemeId={}, detailCount={}, instanceTotal={}", schemeId, details.size(), total);
+        ProcessProgress progress = new ProcessProgress(total);
         progress.setRunning(true);
         progressMap.put(schemeId, progress);
     }
@@ -221,25 +232,52 @@ public class SchemeProcessService {
 
         ProcessProgress progress = progressMap.get(schemeId);
 
-        // 6. 多线程处理
+        // 6. 预构建各主题的 INSERT 计划（SQL 与实例无关，整个方案复用一份）
+        List<TopicInsertPlan> plans = buildTopicInsertPlans(topics, topicFieldsMap);
+        if (plans.isEmpty()) {
+            // 与原逻辑一致：无可用主题时不写入数据，明细直接按完成处理
+            log.error("无可用主题(字段定义或目标表名缺失)，本次引接不写入数据: schemeId={}", schemeId);
+        }
+
+        // 7. 任务拍平到 (明细, 实例) 粒度并行：单实例几十万~百万行时，各实例互不阻塞
         ExecutorService executor = Executors.newFixedThreadPool(poolSize);
-        CountDownLatch latch = new CountDownLatch(details.size());
+        int taskCount = plans.isEmpty() ? 0
+                : details.stream().mapToInt(d -> parseIdList(d.getYbList()).size()).sum();
+        log.info("引接任务: schemeId={}, 明细{}条, 实例任务{}个, 并行线程{}",
+                schemeId, details.size(), taskCount, poolSize);
+        CountDownLatch latch = new CountDownLatch(taskCount);
 
         for (SchemeDetail detail : details) {
-            executor.submit(() -> {
-                try {
-                    processDetail(detail, topics, topicFieldsMap, mysqlDs);
-                    detail.setStatus(1);
-                    schemeDetailMapper.updateById(detail);
-                } catch (Exception e) {
-                    log.error("处理明细失败: detailId={}, ybName={}", detail.getId(), detail.getYbName(), e);
-                    detail.setStatus(2); // 失败标记
-                    schemeDetailMapper.updateById(detail);
-                } finally {
-                    if (progress != null) progress.incrementAndGet();
-                    latch.countDown();
+            List<Long> instanceIds = parseIdList(detail.getYbList());
+            if (plans.isEmpty() || instanceIds.isEmpty()) {
+                if (instanceIds.isEmpty()) {
+                    log.warn("明细无实例ID，直接标记完成: detailId={}, ybList={}", detail.getId(), detail.getYbList());
                 }
-            });
+                detail.setStatus(1);
+                schemeDetailMapper.updateById(detail);
+                continue;
+            }
+            // 该明细的所有实例都结束后统一回写明细状态（任一实例失败则整条明细标失败）
+            AtomicInteger remaining = new AtomicInteger(instanceIds.size());
+            AtomicBoolean failed = new AtomicBoolean(false);
+            for (Long instanceId : instanceIds) {
+                executor.submit(() -> {
+                    try {
+                        processInstance(detail, instanceId, plans, mysqlDs);
+                    } catch (Exception e) {
+                        log.error("处理实例失败: detailId={}, ybName={}, instanceId={}",
+                                detail.getId(), detail.getYbName(), instanceId, e);
+                        failed.set(true);
+                    } finally {
+                        if (progress != null) progress.incrementAndGet();
+                        if (remaining.decrementAndGet() == 0) {
+                            detail.setStatus(failed.get() ? 2 : 1);
+                            schemeDetailMapper.updateById(detail);
+                        }
+                        latch.countDown();
+                    }
+                });
+            }
         }
 
         try {
@@ -251,7 +289,7 @@ public class SchemeProcessService {
             executor.shutdown();
         }
 
-        // 7. 所有明细完成后，更新方案状态
+        // 8. 所有明细完成后，更新方案状态
         long remaining = schemeDetailMapper.selectCount(
                 new LambdaQueryWrapper<SchemeDetail>()
                         .eq(SchemeDetail::getSchemeId, schemeId)
@@ -263,18 +301,17 @@ public class SchemeProcessService {
         }
     }
 
-    /**
-     * 处理单条明细：对每个实例ID × 每个主题，查MySQL、解包msgpack、写入达梦
-     */
-    private void processDetail(SchemeDetail detail, List<TopicConfig> topics,
-                               Map<Long, List<TopicField>> topicFieldsMap,
-                               DatabaseSource mysqlDs) {
-        List<Long> instanceIds = parseIdList(detail.getYbList());
-        if (instanceIds.isEmpty()) {
-            log.warn("明细无实例ID: detailId={}, ybList={}", detail.getId(), detail.getYbList());
-            return;
-        }
+    /** JDBC 批量执行大小：每累积这么多行 executeBatch 一次（减少网络往返） */
+    private static final int INSERT_BATCH_SIZE = 5000;
+    /** 提交窗口行数：每累积这么多行 commit 一次。事务有界（失败最多回滚一个窗口），又不必小批频繁刷盘 */
+    private static final int COMMIT_ROWS = 50000;
 
+    /**
+     * 处理单个实例：对每个主题查MySQL、解包msgpack、批量写入达梦。
+     * 并行粒度为实例，任务独享一对 MySQL/达梦连接；实例跑完所有主题后由调用方进度 +1。
+     */
+    private void processInstance(SchemeDetail detail, Long instanceId,
+                                 List<TopicInsertPlan> plans, DatabaseSource mysqlDs) {
         // 连接MySQL data_collect
         DataSource mysqlDataSource = DynamicDataSourceManager.getInstance().getDataSource(
                 mysqlDs.getId(), mysqlDs.getDbType(), mysqlDs.getHost(),
@@ -285,92 +322,80 @@ public class SchemeProcessService {
         DataSource dmDataSource = getDmDataSource();
 
         int totalRows = 0;
-        // 批量写入批次大小：每累积 BATCH_SIZE 行 executeBatch + commit 一次
-        final int BATCH_SIZE = 1000;
         Connection mysqlConn = null;
         Connection dmConn = null;
         try {
             mysqlConn = mysqlDataSource.getConnection();
             dmConn = dmDataSource.getConnection();
-            // 确保使用 ETL schema
+            // 切到数据表所在 schema（引接连接账号默认 schema 不一定是数据表所在库）
             try (Statement stmt = dmConn.createStatement()) {
-                stmt.execute("SET SCHEMA ETL");
+                stmt.execute("SET SCHEMA " + dmSchema);
             }
-            // 关闭自动提交：批量 executeBatch + 分批 commit，十几万级数据写入性能大幅提升
+            // 关闭自动提交：批量 executeBatch，攒够提交窗口再 commit
             dmConn.setAutoCommit(false);
 
-            for (TopicConfig topic : topics) {
-                List<TopicField> fields = topicFieldsMap.getOrDefault(topic.getId(), Collections.emptyList());
-                if (fields.isEmpty()) {
-                    log.warn("主题无字段定义: topicId={}, topicCode={}", topic.getId(), topic.getTopicCode());
-                    continue;
-                }
+            int uncommitted = 0; // 已 executeBatch、尚未 commit 的行数
+            for (TopicInsertPlan plan : plans) {
+                // 表名 = t + 实例ID，只按 topic 条件过滤
+                String tableName = "t" + instanceId;
+                // 采集端的 t{实例ID} 表通常没有 topic 索引；引接按 topic 过滤，
+                // 缺索引会全表扫描。此处由本系统在查询前自动补齐索引。
+                ensureTopicIndex(mysqlConn, tableName);
+                String querySql = "SELECT msg_info FROM " + tableName + " WHERE topic = ?";
+                // MySQL 流式读取：百万行不会一次性载入内存
+                try (PreparedStatement insertPs = dmConn.prepareStatement(plan.insertSql);
+                     PreparedStatement ps = mysqlConn.prepareStatement(querySql,
+                            ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+                    ps.setFetchSize(Integer.MIN_VALUE);
+                    ps.setString(1, plan.topicCode);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        int pending = 0;
+                        while (rs.next()) {
+                            Object unpacked = tryUnpack(rs);
+                            if (unpacked == null) {
+                                log.warn("msgpack解包失败: instanceId={}, topic={}", instanceId, plan.topicCode);
+                                continue;
+                            }
 
-                String targetTable = topic.getTableName();
-                if (targetTable == null || targetTable.isEmpty()) {
-                    log.warn("主题无目标表名: topicId={}", topic.getId());
-                    continue;
-                }
+                            // 映射字段值（可能一行，也可能因数组套数组展开成多行）
+                            List<List<Object>> valueRows = mapToFieldRows(unpacked, plan.fields);
 
-                // 构建INSERT语句（同一主题只 prepare 一次，循环内复用）
-                String insertSql = buildInsertSql(targetTable, detail.getId(), fields);
-                log.info("INSERT SQL: {}", insertSql);
-
-                try (PreparedStatement insertPs = dmConn.prepareStatement(insertSql)) {
-                    int pending = 0;
-                    for (Long instanceId : instanceIds) {
-                        // 表名 = t + 实例ID，只按 topic 条件过滤
-                        String tableName = "t" + instanceId;
-                        // 采集端的 t{实例ID} 表通常没有 topic 索引；引接按 topic 过滤，
-                        // 缺索引会全表扫描。此处由本系统在查询前自动补齐索引。
-                        ensureTopicIndex(mysqlConn, tableName);
-                        String querySql = "SELECT msg_info FROM " + tableName + " WHERE topic = ?";
-                        // MySQL 流式读取：十几万行不会一次性载入内存
-                        try (PreparedStatement ps = mysqlConn.prepareStatement(querySql,
-                                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-                            ps.setFetchSize(Integer.MIN_VALUE);
-                            ps.setString(1, topic.getTopicCode());
-                            try (ResultSet rs = ps.executeQuery()) {
-                                while (rs.next()) {
-                                    Object unpacked = tryUnpack(rs);
-                                    if (unpacked == null) {
-                                        log.warn("msgpack解包失败: instanceId={}, topic={}", instanceId, topic.getTopicCode());
-                                        continue;
-                                    }
-
-                                    // 映射字段值（可能一行，也可能因数组套数组展开成多行）
-                                    List<List<Object>> valueRows = mapToFieldRows(unpacked, fields);
-
-                                    for (List<Object> values : valueRows) {
-                                        insertPs.setLong(1, instanceId);
-                                        for (int i = 0; i < values.size(); i++) {
-                                            insertPs.setObject(i + 2, values.get(i));
-                                        }
-                                        insertPs.addBatch();
-                                        pending++;
-                                        if (pending >= BATCH_SIZE) {
-                                            insertPs.executeBatch();
-                                            insertPs.clearBatch();
-                                            dmConn.commit();
-                                            totalRows += pending;
-                                            pending = 0;
-                                        }
+                            for (List<Object> values : valueRows) {
+                                insertPs.setLong(1, instanceId);
+                                for (int i = 0; i < values.size(); i++) {
+                                    insertPs.setObject(i + 2, values.get(i));
+                                }
+                                insertPs.addBatch();
+                                pending++;
+                                if (pending >= INSERT_BATCH_SIZE) {
+                                    insertPs.executeBatch();
+                                    insertPs.clearBatch();
+                                    totalRows += pending;
+                                    uncommitted += pending;
+                                    pending = 0;
+                                    if (uncommitted >= COMMIT_ROWS) {
+                                        dmConn.commit();
+                                        uncommitted = 0;
                                     }
                                 }
                             }
                         }
-                    }
-                    // 收尾：提交剩余未满一批的数据
-                    if (pending > 0) {
-                        insertPs.executeBatch();
-                        insertPs.clearBatch();
-                        dmConn.commit();
-                        totalRows += pending;
+                        // 收尾：该主题剩余未满一批的数据先落库（是否 commit 由提交窗口决定）
+                        if (pending > 0) {
+                            insertPs.executeBatch();
+                            insertPs.clearBatch();
+                            totalRows += pending;
+                            uncommitted += pending;
+                        }
                     }
                 }
             }
+            // 实例所有主题写完，提交剩余窗口
+            if (uncommitted > 0) {
+                dmConn.commit();
+            }
         } catch (Exception e) {
-            // 回滚当前未提交批次（已提交批次保留）
+            // 回滚当前未提交窗口（已提交数据保留）
             if (dmConn != null) {
                 try {
                     dmConn.rollback();
@@ -378,8 +403,8 @@ public class SchemeProcessService {
                     // 忽略回滚异常
                 }
             }
-            log.error("处理明细失败: detailId={}", detail.getId(), e);
-            throw new RuntimeException("处理明细失败: " + e.getMessage(), e);
+            log.error("处理实例失败: detailId={}, instanceId={}", detail.getId(), instanceId, e);
+            throw new RuntimeException("处理实例失败: " + e.getMessage(), e);
         } finally {
             if (dmConn != null) {
                 try {
@@ -393,7 +418,44 @@ public class SchemeProcessService {
                 try { mysqlConn.close(); } catch (Exception ignore) { }
             }
         }
-        log.info("明细处理完成: detailId={}, ybName={}, 写入{}条", detail.getId(), detail.getYbName(), totalRows);
+        log.info("实例处理完成: detailId={}, instanceId={}, 写入{}条", detail.getId(), instanceId, totalRows);
+    }
+
+    /** 预构建各主题的 INSERT 计划：字段定义或目标表名缺失的主题跳过并告警 */
+    private List<TopicInsertPlan> buildTopicInsertPlans(List<TopicConfig> topics,
+                                                        Map<Long, List<TopicField>> topicFieldsMap) {
+        List<TopicInsertPlan> plans = new ArrayList<>();
+        for (TopicConfig topic : topics) {
+            List<TopicField> fields = topicFieldsMap.getOrDefault(topic.getId(), Collections.emptyList());
+            if (fields.isEmpty()) {
+                log.warn("主题无字段定义: topicId={}, topicCode={}", topic.getId(), topic.getTopicCode());
+                continue;
+            }
+
+            String targetTable = topic.getTableName();
+            if (targetTable == null || targetTable.isEmpty()) {
+                log.warn("主题无目标表名: topicId={}", topic.getId());
+                continue;
+            }
+
+            String insertSql = buildInsertSql(targetTable, fields);
+            log.info("INSERT SQL: {}", insertSql);
+            plans.add(new TopicInsertPlan(topic.getTopicCode(), insertSql, fields));
+        }
+        return plans;
+    }
+
+    /** 主题的写入准备信息：INSERT语句 + 字段定义（与实例无关，同一明细的所有实例复用） */
+    private static class TopicInsertPlan {
+        final String topicCode;
+        final String insertSql;
+        final List<TopicField> fields;
+
+        TopicInsertPlan(String topicCode, String insertSql, List<TopicField> fields) {
+            this.topicCode = topicCode;
+            this.insertSql = insertSql;
+            this.fields = fields;
+        }
     }
 
 
@@ -619,10 +681,10 @@ public class SchemeProcessService {
         return null;
     }
 
-    /** 构建INSERT语句 */
-    private String buildInsertSql(String tableName, Long schemeId, List<TopicField> fields) {
+    /** 构建INSERT语句（注意：SCHEME_ID 列实际存的是实例ID，由执行时绑定） */
+    private String buildInsertSql(String tableName, List<TopicField> fields) {
         StringBuilder sb = new StringBuilder();
-        sb.append("INSERT INTO ").append("ETL."+tableName).append(" (SCHEME_ID");
+        sb.append("INSERT INTO ").append(tableName).append(" (SCHEME_ID");
         for (TopicField f : fields) {
             sb.append(", ").append(f.getFieldName());
         }

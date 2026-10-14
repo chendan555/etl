@@ -121,7 +121,8 @@ public class DynamicDataSourceManager {
         config.setUsername(username);
         config.setPassword(password);
         // 批量并行时表输入/表输出会同时借连接，池给大一些
-        config.setMaximumPoolSize(10);
+        // （流程批处理4线程×2连接 + 引接6线程×1连接，同一数据源峰值可到14，取20留余量）
+        config.setMaximumPoolSize(20);
         config.setMinimumIdle(2);
         config.setIdleTimeout(60000);
         config.setMaxLifetime(1800000);

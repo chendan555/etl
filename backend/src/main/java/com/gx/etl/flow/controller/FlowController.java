@@ -291,6 +291,22 @@ public class FlowController {
     }
 
     /**
+     * 查询批量执行进度（WebSocket 失败时的 HTTP 轮询兜底）
+     */
+    @GetMapping("/batchProgress")
+    public Result<?> getBatchProgress(@RequestParam String taskId) {
+        com.gx.etl.flow.websocket.ProgressMessage progress = batchExecutionService.getLatestProgress(taskId);
+        if (progress == null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("taskId", taskId);
+            data.put("status", "unknown");
+            data.put("message", "尚无进度或任务不存在");
+            return Result.ok(data);
+        }
+        return Result.ok(progress);
+    }
+
+    /**
      * 取消批量执行任务
      */
     @PostMapping("/cancelBatch")
