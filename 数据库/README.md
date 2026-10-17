@@ -38,3 +38,7 @@ java -cp "test/ingest-testdata/classes;backend/lib/DmJdbcDriver18.jar" DumpDb �
 ## 历史文件
 
 - `ETL_*.sql`、`1.sql`、`ETL_TABLE_*.sql`：迁移前的旧导出，仅作对照，**不要**再导入当前库。
+
+## MySQL 引接/仿真库
+
+见 [mysql/README.md](mysql/README.md)（`data_collect` / `big_sample_db` / `modelmanager` 等）。
